@@ -15,65 +15,90 @@ function uploadPage() {
     window.location.href = './upload.html';
 }
 
+let isDataTableInitialized = false;
+
 function loadProfile(){
     let profileTbl = document.getElementById('profileTable');
-    let header = '<tr class="profHeadRow">' +
-    '<th class="profHeadElem">Player</th>' +
-    '<th class="profHeadElem">Tournament</th>' +
-    '<th class="profHeadElem">Finish</th>' +
-    '<th class="profHeadElem">Date</th>' +
-    '<th class="profHeadElem">Round</th>' +
-    '<th class="profHeadElem">SG: Putt</th>' +
-    '<th class="profHeadElem">SG: Arg</th>' +
-    '<th class="profHeadElem">SG: App</th>' +
-    '<th class="profHeadElem">SG: Ott</th>' +
-    '<th class="profHeadElem">SG: T2G</th>' +
-    '<th class="profHeadElem">SG: Tot</th>' +
-    '</tr>';
+    let currGolfer = document.getElementById('playerNameProf');
 
-    let url = '/get/golferProf/' + 'Viktor Hovland'; // Eventually change this to pass which golfer to get.
+
+    let url = '/get/golferProf/' + currGolfer.value; // Eventually change this to pass which golfer to get.
 
     let p = fetch(url);
     p.then((response) => {
-        return response.text();
+        return response.json();
     })
-    .then((text) => {
-        let listOfObjs = JSON.parse(text);
-        let htmlString = header;
+    .then((jsonData) => {
+        if (!isDataTableInitialized) {
+            // DataTable not initialized, initialize it
+            const columnsAndHeaders = [
+                // Specify custom column keys and headers
+                { data: 'dates', title: 'Date' },
+                { data: 'finish', title: 'Finish' },
+                { data: 'tournament', title: 'Tournament' },
+                { data: 'Round', title: 'Round' },
+                { data: 'sgPutt', title: 'SG: Putt', className: 'numeric-cell putt-cell' },
+                { data: 'sgArg', title: 'SG: Arg', className: 'numeric-cell arg-cell' },
+                { data: 'sgApp', title: 'SG: App', className: 'numeric-cell app-cell' },
+                { data: 'sgOtt', title: 'SG: Ott', className: 'numeric-cell ott-cell' },
+                { data: 'sgT2G', title: 'SG: T2G', className: 'numeric-cell t2g-cell' },
+                { data: 'sgTot', title: 'SG: TOT', className: 'numeric-cell tot-cell' }
+                // Add more columns as needed
+            ];
 
-        for (let i=0; i<listOfObjs.length; i++){
-            object = listOfObjs[i];
+            // Dynamically generate table header
+            $('#myDataTable').DataTable({
+                data: jsonData,
+                columns: columnsAndHeaders,
+                createdRow: function (row, data, dataIndex) {
+                    // Loop through specific numeric cells in the row
+                    $(row).find('.putt-cell, .arg-cell, .app-cell, .ott-cell, .t2g-cell, .tot-cell').each(function (index) {
+                        // Get the numeric value
+                        var numericValue = parseFloat($(this).text());
 
-            let player = object.player;
-            let tournament = object.tournament;
-            let finish = object.finish;
-            let date = object.dates;
-            let round = object.Round;
-            let sgPutt = object.sgPutt;
-            let sgArg = object.sgArg;
-            let sgApp = object.sgApp;
-            let sgOtt = object.sgOtt;
-            let sgT2G = object.sgT2G;
-            let sgTot = object.sgTot;
+                        // Apply different classes based on numeric value
+                        if (numericValue < -2) {
+                            $(this).addClass('lowest-value');
+                        } else if (numericValue >= -2 && numericValue <= -1) {
+                            $(this).addClass('low-value');
+                        } else if (numericValue >= -1 && numericValue <= 1) {
+                            $(this).addClass('medium-value');
+                        } else if (numericValue >= 1 && numericValue <= 2) {
+                            $(this).addClass('high-value');
+                        } else {
+                            $(this).addClass('highest-value');
+                        }
+                    });
 
-            htmlString += '<tr class="profBodyRow">' +
-                '<td class="profBodyElem" >' + player + '</td>' +
-                '<td class="profBodyElem" >' + tournament + '</td>' +
-                '<td class="profBodyElem" >' + finish + '</td>' +
-                '<td class="profBodyElem" >' + date + '</td>' +
-                '<td class="profBodyElem" >' + round + '</td>' +
-                '<td class="profBodyElem" >' + sgPutt + '</td>' +
-                '<td class="profBodyElem" >' + sgArg + '</td>' +
-                '<td class="profBodyElem" >' + sgApp + '</td>' +
-                '<td class="profBodyElem" >' + sgOtt + '</td>' +
-                '<td class="profBodyElem" >' + sgT2G + '</td>' +
-                '<td class="profBodyElem" >' + sgTot + '</td>' +
-            '</tr>';
+                    $(row).find('.t2g-cell, .tot-cell').each(function (index) {
+                        // Get the numeric value
+                        var numericValue = parseFloat($(this).text());
+
+                        // Apply different classes based on numeric value
+                        if (numericValue < -4) {
+                            $(this).addClass('lowest-value');
+                        } else if (numericValue >= -4 && numericValue <= -2) {
+                            $(this).addClass('low-value');
+                        } else if (numericValue >= -2 && numericValue <= 2) {
+                            $(this).addClass('medium-value');
+                        } else if (numericValue >= 2 && numericValue <= 4) {
+                            $(this).addClass('high-value');
+                        } else {
+                            $(this).addClass('highest-value');
+                        }
+                    });
+                }
+            });
+
+            isDataTableInitialized = true; // Set the flag to indicate DataTable is now initialized
+        } else {
+            // DataTable already initialized, update the rows
+            var table = $('#myDataTable').DataTable();
+            table.clear().rows.add(jsonData).draw();
         }
 
-        profileTbl.innerHTML = htmlString;
     })
     .catch((error) => {
-        console.log('there was an error setting the profile table');
+        console.error('Error:', error.message);
     });
 }

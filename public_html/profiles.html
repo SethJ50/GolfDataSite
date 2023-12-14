@@ -2,11 +2,9 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
         <link rel="stylesheet" type="text/css" href="css/style.css">
-        <link href="https://fonts.googleapis.com/css2?family=Lato:wght@900&display=swap" rel="stylesheet">
         <title>Golf Data</title>
-  </head>
     </head>
     <body onload="loadProfile();">
         <div id="headerBar">
@@ -18,7 +16,16 @@
         </div>
         <div id="mainBodyGolferProfiles">
             <img src="img/viktorhovland.png" alt="Viktor Hovland" class="profilePic">
-            <h1 id="playerName">Viktor Hovland</h1>
+            <div id="selectPlayer">
+                <select id="playerNameProf" name="cars" onchange="loadProfile();">
+                    <!-- Each option element represents an option in the dropdown -->
+                    <option value="Viktor Hovland" default>Viktor Hovland</option>
+                    <option value="Rory McIlroy">Rory McIlroy</option>
+                    <option value="Tiger Woods">Tiger Woods</option>
+                    <option value="Scottie Scheffler">Scottie Scheffler</option>
+                </select>
+            </div>
+            
             <table id="overallStatsProfile">
                 <tr>
                     <th class="profStatHead">Stat</th>
@@ -49,49 +56,18 @@
         </div>
         <div id="profileStats">
             <div id="profTableDiv">
-                <table id="profileTable">
-                    <tr class="profHeadRow">
-                        <th class="profHeadElem">Player</th>
-                        <th class="profHeadElem">Tournamet</th>
-                        <th class="profHeadElem">Finish</th>
-                        <th class="profHeadElem">Date</th>
-                        <th class="profHeadElem">Round</th>
-                        <th class="profHeadElem">SG: Putt</th>
-                        <th class="profHeadElem">SG: Arg</th>
-                        <th class="profHeadElem">SG: App</th>
-                        <th class="profHeadElem">SG: Ott</th>
-                        <th class="profHeadElem">SG: T2G</th>
-                        <th class="profHeadElem">SG: Tot</th>
-                    </tr>
-                    <tr class="profBodyRow">
-                        <td class="profBodyElem">Scottie Scheffler</td>
-                        <td class="profBodyElem">Tournament</td>
-                        <td class="profBodyElem">2</td>
-                        <td class="profBodyElem">3/4/12</td>
-                        <td class="profBodyElem">1</td>
-                        <td class="profBodyElem">1.22</td>
-                        <td class="profBodyElem">2.11</td>
-                        <td class="profBodyElem">2.33</td>
-                        <td class="profBodyElem">1.22</td>
-                        <td class="profBodyElem">1.22</td>
-                        <td class="profBodyElem">1.22</td>
-                    </tr>
-                    <tr class="profBodyRow">
-                        <td class="profBodyElem">Viktor Hovland</td>
-                        <td class="profBodyElem">Tournament</td>
-                        <td class="profBodyElem">1</td>
-                        <td class="profBodyElem">1/2/12</td>
-                        <td class="profBodyElem">Event</td>
-                        <td class="profBodyElem">1.22</td>
-                        <td class="profBodyElem">1.22</td>
-                        <td class="profBodyElem">2.11</td>
-                        <td class="profBodyElem">2.11</td>
-                        <td class="profBodyElem">2.11</td>
-                        <td class="profBodyElem">2.11</td>
-                    </tr>
+                <table id="myDataTable" class="display">
+                    <thead>
+
+                    </thead>
+                    <tbody>
+
+                    </tbody>
                 </table> 
             </div>
         </div>
         <script src="functions.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     </body>
 </html>

@@ -161,8 +161,11 @@ tr.tableBodyRow:hover {
     margin-right: auto;
     margin-top: 10px;
     text-align: center;
-    padding-top: 10px;
+    padding-top: 15px;
     padding-bottom: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    width: fit-content;
 }
 
 #profileTable {
@@ -203,3 +206,77 @@ tr.profBodyRow:hover {
     padding-bottom: 2px;
     font-size: 15px;
 }
+
+#myDataTable thead {
+    background-color: rgb(0,0,70);
+    color: white;
+    font-family: Verdana;
+    font-size: 12px;
+}
+
+#myDataTable tbody tr {
+    background-color: white;
+    font-family: Verdana;
+    font-size: 12px;
+}
+
+#myDataTable tbody tr td {
+    border: 1px solid grey;
+}
+
+#myDataTable tbody tr:hover {
+    filter: brightness(0.7);
+}
+
+#myDataTable tbody td {
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.dataTables_filter {
+    margin-bottom: 20px;
+    font-family: Verdana;
+    font-size: 15px;
+}
+
+.lowest-value {
+    background-color: #ff5e5e;
+}
+
+.low-value {
+    background-color: #ffcbcb;
+}
+
+.medium-value {
+    background-color: white;
+}
+
+.high-value {
+    background-color: #E5EDFF;
+}
+
+.highest-value {
+    background-color: #99B8FF ; 
+}
+
+#selectPlayer {
+    display: flex;
+    align-items: center;
+    width: fit-content;
+    height: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#playerNameProf {
+    display: inline;
+    width: 200px;
+    height: 30px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 18px;
+    margin-top: 0px;
+}
+
