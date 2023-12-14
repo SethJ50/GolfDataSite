@@ -15,11 +15,13 @@
             <a href="#" class="navText" onclick="cheatSheet();">Cheat Sheet</a>
             <a href="#" class="navText" onclick="golferProfiles();">Golfer Profiles</a>
             <a href="#" class="navText">Flag Sheet</a>
-            <a href="#" class="navText" onclick="uploadPage();">Upload Data</a>
         </div>
         <div id="mainBody">
-            <p id="mainParagraph">Welcome to the greatest website for golf analytics... ANYWHERE!</p>
-            <img src="img/rory1.jpg" alt="Rory McIlroy" class="mainPagePic">
+            <h1>Upload Excel File Here: </h1>
+            <form enctype="multipart/form-data" action="/upload" method="post">
+                <input type="file" name="file" accept=".xls, .xlsx" required />
+                <button type="submit">Upload</button>
+            </form>
         </div>
         <script src="functions.js"></script>
     </body>

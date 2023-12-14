@@ -150,3 +150,56 @@ tr.tableBodyRow:hover {
     font-size: 15px;
     font-family: Verdana;
 }
+
+
+
+/* Below is for Golfer Profiles i.e. profiles.html */
+
+#profTableDiv {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    text-align: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#profileTable {
+    margin-left: auto;
+    margin-right: auto;
+    border: 2px solid rgb(0, 0, 70);
+    width: fit-content;
+    border-collapse: collapse;
+}
+
+.profHeadRow {
+    padding: 0px;
+    background-color: rgb(0, 0, 70);
+    color: white;
+    font-family: Verdana;
+    font-size: 15px;
+}
+
+tr.profBodyRow:hover {
+    background-color: lightgrey;
+}
+
+.profBodyRow {
+    background-color: white;
+    font-family: 'Arial';
+}
+
+.profHeadElem {
+    border: 2px solid grey;
+    padding: 5px;
+}
+
+.profBodyElem{
+    border: 2px solid grey;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 15px;
+}

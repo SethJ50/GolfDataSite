@@ -8,7 +8,7 @@
         <title>Golf Data</title>
   </head>
     </head>
-    <body>
+    <body onload="loadProfile();">
         <div id="headerBar">
             <a href="#" class="navText" id="navTitle" onclick="home();">Golf Data Title</a>
             <a href="#" class="navText" onclick="home();">Home</a>
@@ -48,7 +48,49 @@
             </table>
         </div>
         <div id="profileStats">
-            Hello profile
+            <div id="profTableDiv">
+                <table id="profileTable">
+                    <tr class="profHeadRow">
+                        <th class="profHeadElem">Player</th>
+                        <th class="profHeadElem">Tournamet</th>
+                        <th class="profHeadElem">Finish</th>
+                        <th class="profHeadElem">Date</th>
+                        <th class="profHeadElem">Round</th>
+                        <th class="profHeadElem">SG: Putt</th>
+                        <th class="profHeadElem">SG: Arg</th>
+                        <th class="profHeadElem">SG: App</th>
+                        <th class="profHeadElem">SG: Ott</th>
+                        <th class="profHeadElem">SG: T2G</th>
+                        <th class="profHeadElem">SG: Tot</th>
+                    </tr>
+                    <tr class="profBodyRow">
+                        <td class="profBodyElem">Scottie Scheffler</td>
+                        <td class="profBodyElem">Tournament</td>
+                        <td class="profBodyElem">2</td>
+                        <td class="profBodyElem">3/4/12</td>
+                        <td class="profBodyElem">1</td>
+                        <td class="profBodyElem">1.22</td>
+                        <td class="profBodyElem">2.11</td>
+                        <td class="profBodyElem">2.33</td>
+                        <td class="profBodyElem">1.22</td>
+                        <td class="profBodyElem">1.22</td>
+                        <td class="profBodyElem">1.22</td>
+                    </tr>
+                    <tr class="profBodyRow">
+                        <td class="profBodyElem">Viktor Hovland</td>
+                        <td class="profBodyElem">Tournament</td>
+                        <td class="profBodyElem">1</td>
+                        <td class="profBodyElem">1/2/12</td>
+                        <td class="profBodyElem">Event</td>
+                        <td class="profBodyElem">1.22</td>
+                        <td class="profBodyElem">1.22</td>
+                        <td class="profBodyElem">2.11</td>
+                        <td class="profBodyElem">2.11</td>
+                        <td class="profBodyElem">2.11</td>
+                        <td class="profBodyElem">2.11</td>
+                    </tr>
+                </table> 
+            </div>
         </div>
         <script src="functions.js"></script>
     </body>
