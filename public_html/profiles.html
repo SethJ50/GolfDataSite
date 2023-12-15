@@ -15,7 +15,7 @@
             <a href="#" class="navText">Flag Sheet</a>
         </div>
         <div id="mainBodyGolferProfiles">
-            <img src="img/viktorhovland.png" alt="Viktor Hovland" class="profilePic">
+            <img src="img/golferDefault.png" alt="Viktor Hovland" class="profilePic">
             <div id="selectPlayer">
                 <select id="playerNameProf" name="cars" onchange="loadProfile();">
                     <!-- Each option element represents an option in the dropdown -->
@@ -55,6 +55,15 @@
             </table>
         </div>
         <div id="profileStats">
+            <div id="selectRoundView">
+                <label for="selectRoundDrop" id="viewRoundLabel">View:</label>
+                <select id="selectRoundDrop" name="roundView" onchange="loadProfile();">
+                    <!-- Each option element represents an option in the dropdown -->
+                    <option value="roundByRound" default>Round By Round</option>
+                    <option value="event">Full Event</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
             <div id="profTableDiv">
                 <table id="myDataTable" class="display">
                     <thead>

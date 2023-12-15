@@ -125,6 +125,7 @@ tr.tableBodyRow:hover {
     top: 50px;
     background-color: lightgrey;
     z-index: 5;
+    overflow-x: auto;
 }
 
 #overallStatsProfile {
@@ -240,11 +241,15 @@ tr.profBodyRow:hover {
 }
 
 .lowest-value {
-    background-color: #ff5e5e;
+    background-color: #F83E3E;
+}
+
+.lower-value {
+    background-color: #F87C7C;
 }
 
 .low-value {
-    background-color: #ffcbcb;
+    background-color: #F8BABA;
 }
 
 .medium-value {
@@ -252,11 +257,15 @@ tr.profBodyRow:hover {
 }
 
 .high-value {
-    background-color: #E5EDFF;
+    background-color: #CAE2FE;
+}
+
+.higher-value {
+    background-color: #78B4FC;
 }
 
 .highest-value {
-    background-color: #99B8FF ; 
+    background-color: #4579F1 ; 
 }
 
 #selectPlayer {
@@ -279,4 +288,15 @@ tr.profBodyRow:hover {
     font-size: 18px;
     margin-top: 0px;
 }
+
+#selectRoundView {
+    margin-top: 10px;
+    width: fit-content;
+    margin-left: 20px;
+}
+
+#viewRoundLabel{
+    font-size: 18px;
+}
+
 

@@ -15,14 +15,34 @@ function uploadPage() {
     window.location.href = './upload.html';
 }
 
+function applyClassesBasedOnValue(element, numericValue, lowestCutoff, lowCutoff, mediumCutoff, highCutoff, higherCutoff, highestCutoff) {
+    if (!isNaN(numericValue)) {
+        if (numericValue < lowestCutoff) {
+            element.addClass('lowest-value');
+        } else if (numericValue >= lowestCutoff && numericValue <= lowCutoff) {
+            element.addClass('lower-value');
+        } else if (numericValue >= lowCutoff && numericValue <= mediumCutoff) {
+            element.addClass('low-value');
+        } else if (numericValue >= mediumCutoff && numericValue <= highCutoff) {
+            element.addClass('medium-value');
+        } else if (numericValue >= highCutoff && numericValue <= higherCutoff) {
+            element.addClass('high-value');
+        } else if (numericValue >= higherCutoff && numericValue <= highestCutoff) {
+            element.addClass('higher-value');
+        } else {
+            element.addClass('highest-value');
+        }
+    }
+}
+
 let isDataTableInitialized = false;
 
 function loadProfile(){
     let profileTbl = document.getElementById('profileTable');
     let currGolfer = document.getElementById('playerNameProf');
+    let roundView = document.getElementById('selectRoundDrop');
 
-
-    let url = '/get/golferProf/' + currGolfer.value; // Eventually change this to pass which golfer to get.
+    let url = '/get/golferProf/' + currGolfer.value + '/' + roundView.value; // Eventually change this to pass which golfer to get.
 
     let p = fetch(url);
     p.then((response) => {
@@ -50,42 +70,22 @@ function loadProfile(){
             $('#myDataTable').DataTable({
                 data: jsonData,
                 columns: columnsAndHeaders,
+                order: [[0, 'desc'], [3, 'desc']],
+                pageLength: 30,
                 createdRow: function (row, data, dataIndex) {
                     // Loop through specific numeric cells in the row
                     $(row).find('.putt-cell, .arg-cell, .app-cell, .ott-cell, .t2g-cell, .tot-cell').each(function (index) {
                         // Get the numeric value
                         var numericValue = parseFloat($(this).text());
 
-                        // Apply different classes based on numeric value
-                        if (numericValue < -2) {
-                            $(this).addClass('lowest-value');
-                        } else if (numericValue >= -2 && numericValue <= -1) {
-                            $(this).addClass('low-value');
-                        } else if (numericValue >= -1 && numericValue <= 1) {
-                            $(this).addClass('medium-value');
-                        } else if (numericValue >= 1 && numericValue <= 2) {
-                            $(this).addClass('high-value');
-                        } else {
-                            $(this).addClass('highest-value');
-                        }
+                        applyClassesBasedOnValue($(this), numericValue, -3, -1.5, -0.5, 0.5, 1.5, 3);
                     });
 
                     $(row).find('.t2g-cell, .tot-cell').each(function (index) {
                         // Get the numeric value
                         var numericValue = parseFloat($(this).text());
 
-                        // Apply different classes based on numeric value
-                        if (numericValue < -4) {
-                            $(this).addClass('lowest-value');
-                        } else if (numericValue >= -4 && numericValue <= -2) {
-                            $(this).addClass('low-value');
-                        } else if (numericValue >= -2 && numericValue <= 2) {
-                            $(this).addClass('medium-value');
-                        } else if (numericValue >= 2 && numericValue <= 4) {
-                            $(this).addClass('high-value');
-                        } else {
-                            $(this).addClass('highest-value');
-                        }
+                        applyClassesBasedOnValue($(this), numericValue, -7, -3, -1, 1, 3, 7);
                     });
                 }
             });
@@ -96,7 +96,6 @@ function loadProfile(){
             var table = $('#myDataTable').DataTable();
             table.clear().rows.add(jsonData).draw();
         }
-
     })
     .catch((error) => {
         console.error('Error:', error.message);

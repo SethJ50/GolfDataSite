@@ -105,11 +105,20 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     }
 });
 
-app.get('/get/golferProf/:PLAYER', (req, res) => {
+app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
     let playerName = req.params.PLAYER;
+    let roundView = req.params.ROUND;
 
-    let p = TournamentRow.find({'player':playerName}).exec();
+    let p;
+
+    if (roundView == 'event'){
+        p = TournamentRow.find({'player':playerName, 'Round': 'Event'}).exec();
+    } else if (roundView == 'all'){
+        p = TournamentRow.find({'player':playerName}).exec();
+    } else {
+        p = TournamentRow.find({'player':playerName, 'Round': { $ne: 'Event' } }).exec();
+    }
 
     p.then((document) => {
         res.json(document);
