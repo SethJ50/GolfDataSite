@@ -3,12 +3,16 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" type="text/css" href="css/style.css">
         <link href="https://fonts.googleapis.com/css2?family=Lato:wght@900&display=swap" rel="stylesheet">
         <title>Golf Data</title>
+
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+        <!-- DataTables ColVis -->
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.1.1/css/buttons.dataTables.min.css">
+        <link rel="stylesheet" type="text/css" href="css/style.css"> <!-- Your custom stylesheet -->
   </head>
     </head>
-    <body>
+    <body onload="loadCheatSheet();">
         <div id="headerBar">
             <a href="#" class="navText" id="navTitle" onclick="home();">Golf Data Title</a>
             <a href="#" class="navText" onclick="home();">Home</a>
@@ -19,27 +23,23 @@
         <div id="mainBody">
             <p id="mainParagraph">Welcome to the greatest fantasy cheat sheet known to man.
             </p>
-            <table id="cheatSheet">
-                <tr class="tableHeaderRow">
-                    <th class="tableHeaderElem">Player</th>
-                    <th class="tableHeaderElem">Salary</th>
-                    <th class="tableHeaderElem">SG: PUTT</th>
-                    <th class="tableHeaderElem">SG: ARG</th>
-                </tr>
-                <tr class="tableBodyRow">
-                    <td class="tableBodyElem">Scottie Scheffler</td>
-                    <td class="tableBodyElem">12000</td>
-                    <td class="tableBodyElem">0.34</td>
-                    <td class="tableBodyElem">1.25</td>
-                </tr>
-                <tr class="tableBodyRow">
-                    <td class="tableBodyElem">Viktor Hovland</td>
-                    <td class="tableBodyElem">11000</td>
-                    <td class="tableBodyElem">0.75</td>
-                    <td class="tableBodyElem">0.44</td>
-                </tr>
-            </table>
+            <div id="cheatSheetDiv">
+                <div id="numRoundsDiv">
+                    <label for="lastNRounds" id="numRoundsLabel">SG Round Sample:</label>
+                    <input type="text" id="lastNRounds" value="4">
+                </div>
+                <table id="cheatSheet" class="display">
+
+                </table>
+            </div>
         </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+        <!-- DataTables ColVis -->
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.1.1/js/dataTables.buttons.min.js"></script>
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.1.1/js/buttons.colVis.min.js"></script>
+
         <script src="functions.js"></script>
     </body>
 </html>

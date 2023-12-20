@@ -46,6 +46,86 @@ var TournamentRowSchema = mongoose.Schema({
 
 var TournamentRow = mongoose.model('TournamentRow', TournamentRowSchema);
 
+var salariesSchema = mongoose.Schema({
+    player: String,
+    fdSalary: Number,
+    dkSalary: Number
+})
+var salaries = mongoose.model('salaries', salariesSchema);
+
+var pgatourSchema = mongoose.Schema({
+    player: String,
+    sgPutt: Number,
+    sgPuttRank: Number,
+    sgArg: Number,
+    sgArgRank: Number,
+    sgApp: Number,
+    sgAppRank: Number,
+    sgOtt: Number,
+    sgOttRank: Number,
+    sgT2G: Number,
+    sgT2GRank: Number,
+    sgTot: Number,
+    sgTotRank: Number,
+    drDist: Number,
+    drDistRank: Number,
+    drAcc: Number,
+    drAccRank:Number,
+    gir: Number,
+    girRank: Number,
+    sandSave: Number,
+    sandSaveRank: Number,
+    scrambling: Number,
+    scramblingRank: Number,
+    app50_75: Number,
+    app50_75Rank: Number,
+    app75_100: Number,
+    app75_100Rank: Number,
+    app100_125: Number,
+    app100_125Rank: Number,
+    app125_150: Number,
+    app125_150Rank: Number,
+    app150_175: Number,
+    app150_175Rank: Number,
+    app175_200: Number,
+    app175_200Rank: Number,
+    app200_up: Number,
+    app200_upRank: Number,
+    bob: Number,
+    bobRank: Number,
+    bogAvd: Number,
+    bogAvdRank: Number,
+    par3Scoring: Number,
+    par3ScoringRank: Number,
+    par4Scoring: Number,
+    par4ScoringRank: Number,
+    par5Scoring: Number,
+    par5ScoringRank: Number,
+    prox: Number,
+    proxRank: Number,
+    roughProx: Number,
+    roughProxRank: Number,
+    puttingBob: Number,
+    puttingBobRank: Number,
+    threePuttAvd: Number,
+    threePuttAvdRank: Number,
+    bonusPutt: Number,
+    bonusPuttRank: Number,
+});
+
+var pgatour = mongoose.model('pgatour', pgatourSchema);
+
+var courseHistorySchema = mongoose.Schema({
+    player: String,
+    minus1: Number,
+    minus2: Number,
+    minus3: Number,
+    minus4: Number,
+    minus5: Number
+});
+
+var courseHistory = mongoose.model('courseHistory', courseHistorySchema);
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -105,6 +185,159 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     }
 });
 
+app.post('/uploadSalaries', upload.single('file'), async (req, res) => {
+    try {
+      // Clear existing entries
+      await salaries.deleteMany({});
+  
+      const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = xlsx.utils.sheet_to_json(sheet);
+  
+      for (const row of data) {
+        const player = row.player;
+        const fdSalary = row.fdSalary;
+        const dkSalary = row.dkSalary;
+  
+        await salaries.create({ player, fdSalary, dkSalary });
+      }
+  
+      res.status(200).send('File uploaded successfully.');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+  app.post('/uploadPgaStats', upload.single('file'), async (req, res) => {
+    try {
+      // Clear existing entries
+      await pgatour.deleteMany({});
+  
+      const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = xlsx.utils.sheet_to_json(sheet);
+  
+      for (const row of data) {
+        const player = row.player;
+        const sgPutt = row.sgPutt;
+        const sgPuttRank = row.sgPuttRank;
+        const sgArg = row.sgArg;
+        const sgArgRank = row.sgArgRank;
+        const sgApp = row.sgApp;
+        const sgAppRank = row.sgAppRank;
+        const sgOtt = row.sgOtt;
+        const sgOttRank = row.sgOttRank;
+        const sgT2G = row.sgT2G;
+        const sgT2GRank = row.sgT2GRank;
+        const sgTot = row.sgTot;
+        const sgTotRank = row.sgTotRank;
+        const drDist = row.drDist;
+        const drDistRank = row.drDistRank;
+        const drAcc = row.drAcc;
+        const drAccRank = row.drAccRank;
+        const gir = row.gir;
+        const girRank = row.girRank;
+        const sandSave = row.sandSave;
+        const sandSaveRank = row.sandSaveRank;
+        const scrambling = row.scrambling;
+        const scramblingRank = row.scramblingRank;
+        const app50_75 = row.app50_75;
+        const app50_75Rank = row.app50_75Rank;
+        const app75_100 = row.app75_100;
+        const app75_100Rank = row.app75_100Rank;
+        const app100_125 = row.app100_125;
+        const app100_125Rank = row.app100_125Rank;
+        const app125_150 = row.app125_150;
+        const app125_150Rank = row.app125_150Rank;
+        const app150_175 = row.app150_175;
+        const app150_175Rank = row.app150_175Rank;
+        const app175_200 = row.app175_200;
+        const app175_200Rank = row.app175_200Rank;
+        const app200_up = row.app200_up;
+        const app200_upRank = row.app200_upRank;
+        const bob = row.bob;
+        const bobRank = row.bobRank;
+        const bogAvd = row.bogAvd;
+        const bogAvdRank = row.bogAvdRank;
+        const par3Scoring = row.par3Scoring;
+        const par3ScoringRank = row.par3ScoringRank;
+        const par4Scoring = row.par4Scoring;
+        const par4ScoringRank = row.par4ScoringRank;
+        const par5Scoring = row.par5Scoring;
+        const par5ScoringRank = row.par5ScoringRank;
+        const prox = row.prox;
+        const proxRank = row.proxRank;
+        const roughProx = row.roughProx;
+        const roughProxRank = row.roughProxRank;
+        const puttingBob = row.puttingBob;
+        const puttingBobRank = row.puttingBobRank;
+        const threePuttAvd = row.threePuttAvd;
+        const threePuttAvdRank = row.threePuttAvdRank;
+        const bonusPutt = row.bonusPutt;
+        const bonusPuttRank = row.bonusPuttRank;
+  
+        await pgatour.create({
+          player, sgPutt, sgPuttRank, sgArg, sgArgRank,
+          sgApp, sgAppRank, sgOtt, sgOttRank, sgT2G, sgT2GRank,
+          sgTot, sgTotRank, drDist, drDistRank, drAcc, drAccRank,
+          gir, girRank, sandSave, sandSaveRank, scrambling, scramblingRank,
+          app50_75, app50_75Rank, app75_100, app75_100Rank, app100_125, app100_125Rank,
+          app125_150, app125_150Rank, app150_175, app150_175Rank, app175_200, app175_200Rank,
+          app200_up, app200_upRank, bob, bobRank, bogAvd, bogAvdRank,
+          par3Scoring, par3ScoringRank, par4Scoring, par4ScoringRank, par5Scoring, par5ScoringRank,
+          prox, proxRank, roughProx, roughProxRank, puttingBob, puttingBobRank,
+          threePuttAvd, threePuttAvdRank, bonusPutt, bonusPuttRank
+        });
+      }
+  
+      res.status(200).send('File uploaded successfully.');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      res.status(500).send('Internal Server Error');
+    }
+});
+
+app.post('/uploadCourseHistory', upload.single('file'), async (req, res) => {
+    try {
+      // Clear existing entries
+      await courseHistory.deleteMany({});
+  
+      const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = xlsx.utils.sheet_to_json(sheet, { header: 1 }); // Include headers
+  
+      // Get the headers from the first row of the sheet
+      const headers = data[0];
+  
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        const entry = { player: row[0] }; // The first column is always 'player'
+  
+        // Map each header (excluding the first one) to the corresponding field in the MongoDB schema
+        for (let j = 1; j < headers.length; j++) {
+          const header = headers[j];
+          const field = `minus${j}`; // Construct field name like "minus1", "minus2", etc.
+  
+          // Set the entry's field using the header and value from the row
+          entry[field] = row[j];
+        }
+  
+        // Create the course history entry in MongoDB
+        await courseHistory.create(entry);
+      }
+  
+      res.status(200).send('File uploaded successfully.');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+  
+
 app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
     let playerName = req.params.PLAYER;
@@ -127,6 +360,52 @@ app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
         res.send('there was an error');
     });
 });
+
+app.get('/get/profOverview/', (req, res) => {
+    let p = TournamentRow.find({ 'Round': { $ne: 'Event' } }).exec();
+
+    p.then((document) => {
+        res.json(document);
+    })
+    .catch((error) => {
+        res.send('There was an error');
+    })
+});
+
+app.get('/get/cheatSheet/', async (req, res) => {
+    try {
+      // Perform salariesResults query first
+      const salariesResults = await salaries.find({});
+  
+      if (salariesResults.length === 0) {
+        // No player found in salariesResults, return empty result
+        res.json([]);
+        return;
+      }
+  
+      // Extract player names from salariesResults
+      const playerNames = salariesResults.map(result => result.player);
+  
+      // Perform subsequent queries using the filtered player names
+      const tournamentRowResults = await TournamentRow.find({ player: { $in: playerNames }, 'Round': { $ne: 'Event' } });
+      const pgatourResults = await pgatour.find({ player: { $in: playerNames } });
+      const courseHistoryResults = await courseHistory.find({ player: { $in: playerNames } });
+  
+      // Combine the results into a single JSON object
+      const combinedResults = {
+        salaries: salariesResults,
+        tournamentRow: tournamentRowResults,
+        pgatour: pgatourResults,
+        courseHistory: courseHistoryResults,
+      };
+  
+      // Send the combined results as JSON
+      res.json(combinedResults);
+    } catch (error) {
+      console.error('Error retrieving data:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 
 app.listen(port, () =>
 console.log(

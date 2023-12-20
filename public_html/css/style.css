@@ -300,3 +300,34 @@ tr.profBodyRow:hover {
 }
 
 
+/* Cheat Sheet Styling*/
+#numRoundsDiv{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Custom styles for DataTables Buttons */
+div.dt-button-collection {
+    overflow-y: auto;
+}
+
+.dt-button-collection {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#cheatSheetDiv {
+    width: 95%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 10px;
+    padding-right: 15px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    overflow-x: auto;
+    height: fit-content;
+}

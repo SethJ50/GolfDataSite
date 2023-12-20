@@ -17,9 +17,27 @@
             <a href="#" class="navText">Flag Sheet</a>
         </div>
         <div id="mainBody">
-            <h1>Upload Excel File Here: </h1>
+            <h1>Upload Tournament File Here: </h1>
             <form enctype="multipart/form-data" action="/upload" method="post">
                 <input type="file" name="file" accept=".xls, .xlsx" required />
+                <button type="submit">Upload</button>
+            </form>
+
+            <h1>Upload Salaries File Here:</h1>
+            <form action="/uploadSalaries" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".xlsx">
+                <button type="submit">Upload</button>
+            </form>
+
+            <h1>Upload Pgatour Stats File Here:</h1>
+            <form action="/uploadPgaStats" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".xlsx">
+                <button type="submit">Upload</button>
+            </form>
+
+            <h1>Upload Course History Here:</h1>
+            <form action="/uploadCourseHistory" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".xlsx">
                 <button type="submit">Upload</button>
             </form>
         </div>
