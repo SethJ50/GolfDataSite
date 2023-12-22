@@ -1,4 +1,3 @@
-
 function home() {
     window.location.href = './index.html';
 }
@@ -14,6 +13,7 @@ function golferProfiles() {
 function uploadPage() {
     window.location.href = './upload.html';
 }
+
 
 function applyClassesBasedOnValue(element, numericValue, lowestCutoff, lowCutoff, mediumCutoff, highCutoff, higherCutoff, highestCutoff) {
     if (!isNaN(numericValue)) {
@@ -34,6 +34,11 @@ function applyClassesBasedOnValue(element, numericValue, lowestCutoff, lowCutoff
         }
     }
 }
+
+let isCheatSheetInitialized = false;
+
+let tournamentAbbreviations;
+let recentTournaments;
 
 function loadCheatSheet() {
     let lastNRounds = document.getElementById('lastNRounds');
@@ -92,6 +97,64 @@ function loadCheatSheet() {
                 });
             }
 
+            // Step 1: Sort tournamentRow Data in descending order by 'dates'
+            let sortedTournamentRow = jsonData.tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
+
+            // Step 2: Identify the 10 most recent tournaments
+            recentTournaments = Array.from(new Set(sortedTournamentRow.map(entry => entry.tournament))).slice(0, 10);
+
+            // Step 3: Create Abbreviations for Tournament Names
+            tournamentAbbreviations = recentTournaments.reduce((abbreviations, tournament, index) => {
+                // Split the tournament name into words
+                const words = tournament.split(' ');
+            
+                // Take the first 3 letters of the first word
+                let abbreviation = words[0].substring(0, 3);
+            
+                // Add the first letter of the remaining words, up to a total of 5 letters
+                abbreviation += words.slice(1).map(word => word[0]).join('').substring(0, 2);
+            
+                abbreviations[`recent${index + 1}`] = abbreviation.toUpperCase(); // Adjust the abbreviation logic as needed
+            
+                return abbreviations;
+            }, {});
+
+            // Ensure tournamentAbbreviations is of length 10
+            for (let index = 1; Object.keys(tournamentAbbreviations).length < 10; index++) {
+                let defaultAbbreviation = `Default${index}`;
+                let currentKey = `recent${index}`;
+
+                // Add default names only if the key doesn't already exist
+                if (!tournamentAbbreviations[currentKey]) {
+                    tournamentAbbreviations[currentKey] = defaultAbbreviation;
+                }
+            }
+
+            // Step 4: Compile Recent History Data for Each Player
+            let recentHistory = recentTournaments.map(tournament => {
+                let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
+                return entry ? entry.finish : null;
+            });
+
+            // Ensure recentHistory has 10 entries
+            while (recentHistory.length < 10) {
+                recentHistory.push(null);
+            }
+
+            // Step 5: Generate Finish Data for Recent Tournaments with Abbreviations
+            let recentFinishData = recentTournaments.reduce((finishData, tournament, index) => {
+                let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
+                let abbreviation = tournamentAbbreviations[`recent${index + 1}`]; // Get the abbreviation for the current tournament
+                finishData[abbreviation] = entry ? entry.finish : null; // Use abbreviation as column name
+
+                // Set null if the player has no data for the current tournament
+                if (!entry) {
+                    recentHistory[index] = null;
+                }
+
+                return finishData;
+            }, {});
+
             // Check if player exists in pgatour
             if (pgatourData) {
                 // Hard code the fields for pgatourData (excluding those with 'Rank' and 'player')
@@ -135,6 +198,12 @@ function loadCheatSheet() {
                     ...filteredPgatourData,
                     ...courseHistoryData, // Include course history data
                     ...avgRoundData, // Include average round data
+                    ...recentHistory.reduce((result, finish, index) => {
+                        result[`recent${index + 1}`] = finish;
+                        return result;
+                    }, {}),
+                    ...recentFinishData, // Include finish data for recent tournaments
+                    tournamentAbbreviations, // Include tournament abbreviations
                 };
             } else {
                 let filteredPgatourData = {
@@ -177,6 +246,12 @@ function loadCheatSheet() {
                     ...filteredPgatourData,
                     ...courseHistoryData, // Include course history data
                     ...avgRoundData, // Include average round data
+                    ...recentHistory.reduce((result, finish, index) => {
+                        result[`recent${index + 1}`] = finish;
+                        return result;
+                    }, {}),
+                    ...recentFinishData, // Include finish data for recent tournaments
+                    tournamentAbbreviations, // Include tournament abbreviations
                 };
             }
         }).filter(Boolean); // Remove null entries
@@ -224,6 +299,11 @@ function loadCheatSheet() {
                 { data: 'puttingBob', title: 'Putt. BoB %' },
                 { data: 'threePuttAvd', title: '3-Putt Avd.' },
                 { data: 'bonusPutt', title: 'Bonus Putt' },
+                // Add columns for recent history based on tournamentAbbreviations
+                ...Object.keys(tournamentAbbreviations).map(abbreviation => ({
+                    data: abbreviation,
+                    title: tournamentAbbreviations[abbreviation]
+                })),
                 // Columns from courseHistory
                 { data: 'minus1', title: '-1' },
                 { data: 'minus2', title: '-2' },
@@ -232,22 +312,46 @@ function loadCheatSheet() {
                 { data: 'minus5', title: '-5' },
                 // Add other columns as needed
             ];
-        
-            // Initialize DataTable with the combined data and columns
-            $('#cheatSheet').DataTable({
-                data: dataTableData,
-                columns: columns,
-                order: [[1, 'desc']],
-                dom: 'Bfrtip', // Add 'B' to enable the ColVis button
-                buttons: [
-                    'pageLength',
-                    'colvis', // Include the ColVis button
-                ],
-                columnDefs: [
-                    { targets: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
-                         visible: false }, // Columns 3 to 8 initially hidden
-                ],
+
+            let columnGroups = [
+                { title: 'SG', columns: [3, 4, 5, 6, 7, 8] }, // Group SG columns
+                { title: 'SG PGA', columns: [9, 10, 11, 12, 13, 14] }, // Group SG PGA columns
+                { title: 'Recent History', columns: [37, 38, 39, 40, 41, 42, 43, 44, 45, 46] }, // Group Recent History columns
+                { title: 'Course History', columns: [47, 48, 49, 50, 51] }, // Group Recent History columns
+            ]
+
+            // Merge column groups into a single array
+            let allColumns = [...columns];
+            columnGroups.forEach(group => {
+                allColumns.splice(group.columns[0], 0, { title: group.title, colspan: group.columns.length });
             });
+
+            if (!isCheatSheetInitialized){
+                // Initialize DataTable with the combined data and columns
+                $('#cheatSheet').DataTable({
+                    data: dataTableData,
+                    columns: columns,
+                    order: [[1, 'desc']],
+                    dom: 'Bfrtip', // Add 'B' to enable the ColVis button
+                    buttons: [
+                        'pageLength',
+                        'colvis', // Include the ColVis button
+                    ],
+                    columnDefs: [
+                        { targets: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+                        42, 43, 44, 45, 46],
+                            visible: false }, // Columns 3 to 8 initially hidden
+                    ],
+                    pageLength: 140,
+                });
+
+                isCheatSheetInitialized = true;
+            } else {
+                var table = $('#cheatSheet').DataTable();
+                table.clear().rows.add(dataTableData).draw();
+            }
+        
+            
         });
     })
     .catch((error) => {
