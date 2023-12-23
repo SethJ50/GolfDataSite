@@ -1,3 +1,4 @@
+
 function home() {
     window.location.href = './index.html';
 }
@@ -39,8 +40,10 @@ let isCheatSheetInitialized = false;
 
 let tournamentAbbreviations;
 let recentTournaments;
+let gridApi;
 
 function loadCheatSheet() {
+    console.log('script running');
     let lastNRounds = document.getElementById('lastNRounds');
 
     let url = '/get/cheatSheet/';
@@ -256,107 +259,259 @@ function loadCheatSheet() {
             }
         }).filter(Boolean); // Remove null entries
 
-        console.log(dataTableData);
+        // Sample column definitions
+        let columnDefs = [
+            // Player Info grouping
+            {
+                headerName: 'Player Info',
+                children: [
+                    { headerName: 'Player', field: 'player' },
+                    { headerName: 'FD Salary', field: 'fdSalary' },
+                    { headerName: 'DK Salary', field: 'dkSalary' },
+                ],
+            },
+            // SG LastNRounds grouping
+            {
+                headerName: 'SG LastNRounds',
+                children: [
+                    { headerName: 'SG: Ott', field: 'sgOtt' },
+                    { headerName: 'SG: App', field: 'sgApp' },
+                    { headerName: 'SG: Arg', field: 'sgArg' },
+                    { headerName: 'SG: Putt', field: 'sgPutt' },
+                    { headerName: 'SG: T2G', field: 'sgT2G' },
+                    { headerName: 'SG: Tot', field: 'sgTot' },
+                ],
+            },
+            // SG PGATOUR.COM grouping
+            {
+                headerName: 'SG PGATOUR.COM',
+                children: [
+                    { headerName: 'SG: Putt PGA', field: 'sgPuttPGA', hide: true },
+                    { headerName: 'SG: Arg PGA', field: 'sgArgPGA', hide: true },
+                    { headerName: 'SG: App PGA', field: 'sgAppPGA', hide: true },
+                    { headerName: 'SG: Ott PGA', field: 'sgOttPGA', hide: true},
+                    { headerName: 'SG: T2G PGA', field: 'sgT2GPGA', hide: true },
+                    { headerName: 'SG: Tot PGA', field: 'sgTotPGA', hide: true },
+                ],
+            },
+            // Other Stats grouping
+            {
+                headerName: 'Other Stats',
+                children: [
+                    { headerName: 'Dr. Dist.', field: 'drDist', hide: true },
+                    { headerName: 'Dr. Acc.', field: 'drAcc', hide: true },
+                    { headerName: 'GIR %', field: 'gir', hide: true },
+                    { headerName: 'Sand Save %', field: 'sandSave', hide: true },
+                    { headerName: 'Scrambling %', field: 'scrambling', hide: true },
+                    { headerName: 'App. 50-75', field: 'app50_75', hide: true },
+                    { headerName: 'App. 75-100', field: 'app75_100', hide: true },
+                    { headerName: 'App. 100-125', field: 'app100_125', hide: true },
+                    { headerName: 'App. 125-150', field: 'app125_150', hide: true },
+                    { headerName: 'App. 150-175', field: 'app150_175', hide: true },
+                    { headerName: 'App. 175-200', field: 'app175_200', hide: true },
+                    { headerName: 'App. 200+', field: 'app200_up', hide: true },
+                    { headerName: 'BoB %', field: 'bob', hide: true },
+                    { headerName: 'Bogey Avg.', field: 'bogAvd', hide: true },
+                    { headerName: 'Par 3s Avg', field: 'par3Scoring', hide: true },
+                    { headerName: 'Par 4s Avg', field: 'par4Scoring', hide: true },
+                    { headerName: 'Par 5s Avg', field: 'par5Scoring', hide: true },
+                    { headerName: 'Prox.', field: 'prox', hide: true },
+                    { headerName: 'Rough Prox.', field: 'roughProx', hide: true },
+                    { headerName: 'Putt. BoB %', field: 'puttingBob', hide: true },
+                    { headerName: '3-Putt Avd.', field: 'threePuttAvd', hide: true },
+                    { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
+                ],
+            },
+            // Recent History grouping
+            {
+                headerName: 'Recent History',
+                children: [
+                    // Add columns for recent history based on tournamentAbbreviations
+                    ...Object.keys(tournamentAbbreviations).map(abbreviation => ({
+                        headerName: tournamentAbbreviations[abbreviation],
+                        field: abbreviation
+                    })),
+                ],
+            },
+            // Course History grouping
+            {
+                headerName: 'Course History',
+                children: [
+                    { headerName: '-1', field: 'minus1' },
+                    { headerName: '-2', field: 'minus2' },
+                    { headerName: '-3', field: 'minus3' },
+                    { headerName: '-4', field: 'minus4' },
+                    { headerName: '-5', field: 'minus5' },
+                    // Add other columns as needed
+                ],
+            },
+        ]
 
-        $(document).ready(function() {
-            // Define DataTable columns
-            let columns = [
-                {data: 'player', title:'Player'},
-                { data: 'fdSalary', title: 'FD Salary' },
-                { data: 'dkSalary', title: 'DK Salary' },
-                // Columns from tournamentRow
-                { data: 'sgOtt', title: 'SG: Ott' },
-                { data: 'sgApp', title: 'SG: App' },
-                { data: 'sgArg', title: 'SG: Arg' },
-                { data: 'sgPutt', title: 'SG: Putt' },
-                { data: 'sgT2G', title: 'SG: T2G' },
-                { data: 'sgTot', title: 'SG: Tot' },
-                { data: 'sgPuttPGA', title: 'SG: Putt PGA' },
-                { data: 'sgArgPGA', title: 'SG: Arg PGA' },
-                { data: 'sgAppPGA', title: 'SG: App PGA' },
-                { data: 'sgOttPGA', title: 'SG: Ott PGA' },
-                { data: 'sgT2GPGA', title: 'SG: T2G PGA' },
-                { data: 'sgTotPGA', title: 'SG: Tot PGA' },
-                { data: 'drDist', title: 'Dr. Dist.' },
-                { data: 'drAcc', title: 'Dr. Acc.' },
-                { data: 'gir', title: 'GIR %' },
-                { data: 'sandSave', title: 'Sand Save %' },
-                { data: 'scrambling', title: 'Scrambling %' },
-                { data: 'app50_75', title: 'App. 50-75' },
-                { data: 'app75_100', title: 'App. 75-100' },
-                { data: 'app100_125', title: 'App. 100-125' },
-                { data: 'app125_150', title: 'App. 125-150' },
-                { data: 'app150_175', title: 'App. 150-175' },
-                { data: 'app175_200', title: 'App. 175-200' },
-                { data: 'app200_up', title: 'App. 200+' },
-                { data: 'bob', title: 'BoB %' },
-                { data: 'bogAvd', title: 'Bogey Avg.' },
-                { data: 'par3Scoring', title: 'Par 3s Avg' },
-                { data: 'par4Scoring', title: 'Par 4s Avg' },
-                { data: 'par5Scoring', title: 'Par 5s Avg' },
-                { data: 'prox', title: 'Prox.' },
-                { data: 'roughProx', title: 'Rough Prox.' },
-                { data: 'puttingBob', title: 'Putt. BoB %' },
-                { data: 'threePuttAvd', title: '3-Putt Avd.' },
-                { data: 'bonusPutt', title: 'Bonus Putt' },
-                // Add columns for recent history based on tournamentAbbreviations
-                ...Object.keys(tournamentAbbreviations).map(abbreviation => ({
-                    data: abbreviation,
-                    title: tournamentAbbreviations[abbreviation]
-                })),
-                // Columns from courseHistory
-                { data: 'minus1', title: '-1' },
-                { data: 'minus2', title: '-2' },
-                { data: 'minus3', title: '-3' },
-                { data: 'minus4', title: '-4' },
-                { data: 'minus5', title: '-5' },
-                // Add other columns as needed
-            ];
+        function clearCheatSheetContent() {
+            const cheatSheet = document.getElementById('cheatSheet');
+            if (cheatSheet) {
+                cheatSheet.innerHTML = ''; // Clear content
+            }
+        }
 
-            let columnGroups = [
-                { title: 'SG', columns: [3, 4, 5, 6, 7, 8] }, // Group SG columns
-                { title: 'SG PGA', columns: [9, 10, 11, 12, 13, 14] }, // Group SG PGA columns
-                { title: 'Recent History', columns: [37, 38, 39, 40, 41, 42, 43, 44, 45, 46] }, // Group Recent History columns
-                { title: 'Course History', columns: [47, 48, 49, 50, 51] }, // Group Recent History columns
-            ]
+        function initializeCheatSheet() {
+            if (isCheatSheetInitialized) {
+                clearCheatSheetContent();
+            }
+    
+            // Sample grid options
+            const gridOptions = {
+                columnDefs: columnDefs,
+                rowData: dataTableData,
+                suppressColumnVirtualisation: true,
+                onFirstDataRendered: function (params) {
+                    console.log('grid is ready');
+                    params.api.autoSizeAllColumns();
+                    setupColumnVisibilityDropdown(columnDefs);
+                },
+            };
+    
+            // Create the grid using createGrid
+            gridApi = agGrid.createGrid(document.querySelector('#cheatSheet'), gridOptions);
+            isCheatSheetInitialized = true;
+        }
 
-            // Merge column groups into a single array
-            let allColumns = [...columns];
-            columnGroups.forEach(group => {
-                allColumns.splice(group.columns[0], 0, { title: group.title, colspan: group.columns.length });
+        function setupColumnVisibilityDropdown(columnDefs) {
+            const checkboxContainer = document.getElementById('checkboxContainer');
+
+            if (!checkboxContainer) {
+                console.error('Checkbox container not found');
+                return;
+            }
+
+            // Check if columnDefs is an array and not empty
+            if (Array.isArray(columnDefs) && columnDefs.length > 0) {
+                columnDefs.forEach(group => {
+                    if (group.children) {
+                        // Group checkbox
+                        const groupCheckbox = document.createElement('input');
+                        groupCheckbox.type = 'checkbox';
+                        groupCheckbox.id = group.headerName + '_group';
+                        groupCheckbox.checked = !group.children.every(col => col.hide); // Reflects if any column is visible
+                        groupCheckbox.classList.add('group-checkbox'); // Add class for easier targeting
+
+                        const groupLabel = document.createElement('label');
+                        groupLabel.htmlFor = group.headerName + '_group';
+                        groupLabel.appendChild(document.createTextNode(group.headerName));
+                        groupLabel.classList.add('group-label'); // Add class to make the font bold
+
+                        checkboxContainer.appendChild(groupCheckbox);
+                        checkboxContainer.appendChild(groupLabel);
+                        checkboxContainer.appendChild(document.createElement('br'));
+
+                        // Columns within the group
+                        group.children.forEach(column => {
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.id = column.field;
+                            checkbox.checked = !column.hide; // Initial state, adjusted based on column visibility
+
+                            const label = document.createElement('label');
+                            label.htmlFor = column.field;
+                            label.appendChild(document.createTextNode(column.headerName));
+
+                            checkboxContainer.appendChild(checkbox);
+                            checkboxContainer.appendChild(label);
+                            checkboxContainer.appendChild(document.createElement('br'));
+
+                            // Add event listener to column checkbox to update group checkbox and column visibility
+                            checkbox.addEventListener('change', function () {
+                                const allColumnsHidden = group.children.every(col => col.hide);
+                                groupCheckbox.checked = !allColumnsHidden;
+
+                                const column = gridApi.getColumn(checkbox.id);
+                                if (column) {
+                                    column.hide = !checkbox.checked;
+                                    gridApi.setColumnDefs(gridApi.getColumnDefs());
+                                }
+                            });
+                        });
+
+                        // Add event listener to group checkbox to toggle visibility of group columns
+                        groupCheckbox.addEventListener('change', function () {
+                            group.children.forEach(col => {
+                                col.hide = !groupCheckbox.checked;
+                                const colCheckbox = document.getElementById(col.field);
+                                colCheckbox.checked = groupCheckbox.checked;
+                            });
+                            gridApi.setColumnDefs(gridApi.getColumnDefs());
+                        });
+                    }
+                });
+            } else {
+                console.error('Invalid or empty columnDefs array');
+            }
+        }
+
+        window.applyColumnVisibility = function () {
+            const checkboxes = document.querySelectorAll('#checkboxContainer input');
+            const applyButton = document.getElementById('applyColVisCS');
+
+            const columnsToUpdate = [];
+
+            checkboxes.forEach(checkbox => {
+                const column = gridApi.getColumn(checkbox.id);
+                if (column) {
+                    // If checkbox is checked, show the column; if unchecked, hide the column
+                    columnsToUpdate.push({ column, visible: checkbox.checked });
+                } else {
+                    console.warn(`Column with field '${checkbox.id}' not found`);
+                }
             });
 
-            if (!isCheatSheetInitialized){
-                // Initialize DataTable with the combined data and columns
-                $('#cheatSheet').DataTable({
-                    data: dataTableData,
-                    columns: columns,
-                    order: [[1, 'desc']],
-                    dom: 'Bfrtip', // Add 'B' to enable the ColVis button
-                    buttons: [
-                        'pageLength',
-                        'colvis', // Include the ColVis button
-                    ],
-                    columnDefs: [
-                        { targets: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
-                        42, 43, 44, 45, 46],
-                            visible: false }, // Columns 3 to 8 initially hidden
-                    ],
-                    pageLength: 140,
-                });
+            // Set visibility and hide properties for each column
+            columnsToUpdate.forEach(({ column, visible }) => {
+                column.setVisible(visible);
+                column.getColDef().hide = !visible;
+            });
 
-                isCheatSheetInitialized = true;
-            } else {
-                var table = $('#cheatSheet').DataTable();
-                table.clear().rows.add(dataTableData).draw();
+            // Update all columns at once
+            gridApi.setColumnDefs(gridApi.getColumnDefs());
+
+            // Auto-size all columns
+            gridApi.autoSizeAllColumns();
+
+            // Hide the "Apply" button after applying column visibility changes
+            if (applyButton) {
+                applyButton.style.display = 'none';
             }
+
+            // Collapse the checkboxContainer after applying column visibility changes
+            const checkboxContainer = document.getElementById('checkboxContainer');
+            if (checkboxContainer) {
+                checkboxContainer.style.display = 'none';
+            }
+        };
         
-            
-        });
+
+        window.toggleColumnVisibility = function () {
+            const checkboxContainer = document.getElementById('checkboxContainer');
+            const applyButton = document.getElementById('applyColVisCS');
+
+            if (checkboxContainer && applyButton) {
+                checkboxContainer.style.display = checkboxContainer.style.display === 'none' ? 'inline-block' : 'none';
+                applyButton.style.display = checkboxContainer.style.display;
+            }
+        };
+
+        initializeCheatSheet();
+
     })
     .catch((error) => {
         console.error('Error:', error.message);
     });
+}
+
+function onFilterTextBoxChanged() {
+    gridApi.setGridOption(
+      'quickFilterText',
+      document.getElementById('filter-text-box').value
+    );
 }
 
 

@@ -4,41 +4,47 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://fonts.googleapis.com/css2?family=Lato:wght@900&display=swap" rel="stylesheet">
-        <title>Golf Data</title>
+        <title>DataCaddy</title>
 
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-        <!-- DataTables ColVis -->
-        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.1.1/css/buttons.dataTables.min.css">
+
+        <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+
         <link rel="stylesheet" type="text/css" href="css/style.css"> <!-- Your custom stylesheet -->
-  </head>
     </head>
     <body onload="loadCheatSheet();">
         <div id="headerBar">
-            <a href="#" class="navText" id="navTitle" onclick="home();">Golf Data Title</a>
+            <a href="#" class="navText" id="navTitle" onclick="home();">DataCaddy</a>
             <a href="#" class="navText" onclick="home();">Home</a>
             <a href="#" class="navText" onclick="cheatSheet();">Cheat Sheet</a>
             <a href="#" class="navText" onclick="golferProfiles();">Golfer Profiles</a>
             <a href="#" class="navText">Flag Sheet</a>
         </div>
         <div id="mainBody">
-            <p id="mainParagraph">Welcome to the greatest fantasy cheat sheet known to man.
-            </p>
             <div id="cheatSheetDiv">
-                <div id="numRoundsDiv">
-                    <label for="lastNRounds" id="numRoundsLabel">SG Round Sample:</label>
-                    <input type="text" id="lastNRounds" value="4" onchange="loadCheatSheet();">
+                <div id="columnVisibilityDropdown">
+                    <button onclick="toggleColumnVisibility()">Column Visibility:</button>
+                    <div id="checkboxContainer" style="display: none;"></div>
+                    <button onclick="applyColumnVisibility()" id="applyColVisCS" style="display: none;">Apply</button>
                 </div>
-                <table id="cheatSheet" class="display">
+                <div id="searchAreaCS">
+                    <div id="searchInnerAreaCS">
+                        <div>Search:</div>
+				        <input type="text" id="filter-text-box" placeholder="Filter..." oninput="onFilterTextBoxChanged();">
+                    </div>
 
-                </table>
+                    <div id="innerRoundNumCS">
+                        <div>SG Round Sample:</div>
+                        <input type="text" id="lastNRounds" value="4" oninput="loadCheatSheet();" onchange="onFilterTextBoxChanged();">
+                    </div>
+                </div>
+                <div id="cheatSheet" class="ag-theme-quartz">
+
+                </div>
             </div>
         </div>
 
         <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-        <!-- DataTables ColVis -->
-        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.1.1/js/dataTables.buttons.min.js"></script>
-        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/buttons/2.1.1/js/buttons.colVis.min.js"></script>
 
         <script src="functions.js"></script>
     </body>
