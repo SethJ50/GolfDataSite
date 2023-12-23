@@ -330,6 +330,14 @@ tr.profBodyRow:hover {
     width: fit-content;
 }
 
+.ag-theme-quartz .ag-header-cell,
+.ag-theme-quartz .ag-header-group-cell {
+  border-right: 1px solid #ccc; /* Adjust color and thickness as needed */
+}
+
+.ag-theme-quartz .ag-cell {
+  border-right: 1px solid #ccc; /* Adjust color and thickness as needed */
+}
 /* Custom styles for DataTables Buttons */
 div.dt-button-collection {
     overflow-y: auto;
@@ -356,6 +364,10 @@ div.dt-button-collection {
 
 #cheatSheet {
     margin-top: 10px;
+}
+
+#cheatSheet .ag-row:hover {
+    filter: brightness(0.7);
 }
 
 #columnVisibilityDropdown {

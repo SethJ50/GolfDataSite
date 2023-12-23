@@ -43,7 +43,6 @@ let recentTournaments;
 let gridApi;
 
 function loadCheatSheet() {
-    console.log('script running');
     let lastNRounds = document.getElementById('lastNRounds');
 
     let url = '/get/cheatSheet/';
@@ -55,51 +54,64 @@ function loadCheatSheet() {
     .then((jsonData) => {
         console.log(jsonData);
 
-        // Check if there are no results or missing properties
+        // Ensure that all parts of the jsonData are there.
         if (!jsonData.salaries || !jsonData.pgatour || !jsonData.courseHistory || !jsonData.tournamentRow) {
             console.log('Invalid data format. Expected "salaries", "pgatour", "courseHistory", and "tournamentRow" properties.');
             return;
         }
 
-        // Extract data for DataTable
+        /*
+            EXTRACT DATA FOR DATATABLE:
+
+            - jsonData.salaries.map iterates over each element in salaries array.
+
+            - for each element, provided function inside map is executed
+
+            - (salary) is the individual salary object
+        */
         let dataTableData = jsonData.salaries.map((salary) => {
             let player = salary.player;
             let fdSalary = salary.fdSalary;
             let dkSalary = salary.dkSalary;
 
-            // Find matching player in pgatour
+            // SG: PGATOUR.COM
+            // Find a matching player in pgatour
             let pgatourData = jsonData.pgatour.find((pgatour) => pgatour.player === player);
 
+            // COURSE HISTORY
             // Find matching player in courseHistory
             let courseHistoryData = jsonData.courseHistory.find((courseHistory) => courseHistory.player === player);
 
-            // Default all components of courseHistory to null if player is not found
+            // If no player is found in course history, default all course history.
             if (!courseHistoryData) {
-                const courseHistoryKeys = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5']; // Add other keys as needed
+                const courseHistoryKeys = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];
                 courseHistoryData = Object.fromEntries(courseHistoryKeys.map(key => [key, null]));
             }
 
-            // Find all rounds for the player in tournamentRow, order by 'dates' and 'Round' in descending order
+            // SG: LAST N ROUNDS
+            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
             let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
                 .slice(0, lastNRounds.value); // Grab at most the specified number of rounds
 
             // Calculate the average of specific columns for the player's rounds
             let avgRoundData = {};
-            if (playerRounds.length > 0) {
+            avgRoundData['numRounds'] = playerRounds.length;
+
+            if (playerRounds.length > 0 ) { // can change to ensure # rounds for calc
                 let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
                 columnsToAverage.forEach((col) => {
                     let averageValue = playerRounds.reduce((sum, round) => sum + round[col], 0) / playerRounds.length;
                     avgRoundData[col] = Number(averageValue.toFixed(2));
                 });
-            } else {
-                // Set default values to null if no rounds
+            } else { // Set values to null if no rounds are found
                 let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
                 columnsToAverage.forEach((col) => {
                     avgRoundData[col] = null;
                 });
             }
 
+            // RECENT HISTORY
             // Step 1: Sort tournamentRow Data in descending order by 'dates'
             let sortedTournamentRow = jsonData.tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
 
@@ -134,17 +146,38 @@ function loadCheatSheet() {
             }
 
             // Step 4: Compile Recent History Data for Each Player
+            /*
+                For each recent tournament, search thru sortedTournamentRow, find all entries where the entry has the
+                current player and the tournament is the current tournament.
+
+                If entry was found, return the finish from the entry, otherwise return null.
+            */
             let recentHistory = recentTournaments.map(tournament => {
                 let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
                 return entry ? entry.finish : null;
             });
 
-            // Ensure recentHistory has 10 entries
+            // If recentHistory does not have 10 entries, fill it with null.
             while (recentHistory.length < 10) {
                 recentHistory.push(null);
             }
 
-            // Step 5: Generate Finish Data for Recent Tournaments with Abbreviations
+            /*
+                Step 5: Generate Finish Data for Recent Tournaments with Abbreviations
+
+                reduce iterates over each 'tournament' in recent tournaments
+
+                'finishData' is what 'accumulates' or gains data over iteration
+
+                'tournament' is the current element in the array
+
+                'index' is the current index in the array
+
+                Finds a tournament in sorted tournament matching current tournament and player
+                Gets the abbreviation for this tournament
+                adds to 'finishData' the finish if an entry is found, otherwise null
+                returns this 'finishData'
+            */
             let recentFinishData = recentTournaments.reduce((finishData, tournament, index) => {
                 let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
                 let abbreviation = tournamentAbbreviations[`recent${index + 1}`]; // Get the abbreviation for the current tournament
@@ -160,7 +193,7 @@ function loadCheatSheet() {
 
             // Check if player exists in pgatour
             if (pgatourData) {
-                // Hard code the fields for pgatourData (excluding those with 'Rank' and 'player')
+                // If player in pgatour data, add pga tour data
                 let filteredPgatourData = {
                     sgPuttPGA: Number(pgatourData.sgPutt.toFixed(2)),
                     sgArgPGA: Number(pgatourData.sgArg.toFixed(2)),
@@ -193,7 +226,7 @@ function loadCheatSheet() {
                     // Add other fields as needed
                 };
 
-                // Combine data
+                // Returns all of this data in cumulation as a list of dicts in dataTableData
                 return {
                     player,
                     fdSalary,
@@ -209,6 +242,7 @@ function loadCheatSheet() {
                     tournamentAbbreviations, // Include tournament abbreviations
                 };
             } else {
+                // Set pgatour data for the player as null because player doesn't have data.
                 let filteredPgatourData = {
                     sgPuttPGA: null,
                     sgArgPGA: null,
@@ -241,7 +275,7 @@ function loadCheatSheet() {
                     // Add other fields as needed
                 };
 
-                // Combine data
+                // Returns all of this data in cumulation as a list of dicts in dataTableData
                 return {
                     player,
                     fdSalary,
@@ -259,7 +293,32 @@ function loadCheatSheet() {
             }
         }).filter(Boolean); // Remove null entries
 
-        // Sample column definitions
+        // Begin building up the ag-grid table
+
+        function customComparator(valueA, valueB) {
+            if (valueA === null && valueB === null) {
+              return 0; // If both values are null, consider them equal
+            }
+          
+            if (valueA === null) {
+              return 1; // If valueA is null, consider it greater
+            }
+          
+            if (valueB === null) {
+              return -1; // If valueB is null, consider it greater
+            }
+          
+            // Compare non-null values as usual
+            if (valueA > valueB) {
+              return 1;
+            } else if (valueA < valueB) {
+              return -1;
+            }
+          
+            return 0; // If values are equal
+          }
+
+        // Create column definitions
         let columnDefs = [
             // Player Info grouping
             {
@@ -274,12 +333,13 @@ function loadCheatSheet() {
             {
                 headerName: 'SG LastNRounds',
                 children: [
-                    { headerName: 'SG: Ott', field: 'sgOtt' },
-                    { headerName: 'SG: App', field: 'sgApp' },
-                    { headerName: 'SG: Arg', field: 'sgArg' },
                     { headerName: 'SG: Putt', field: 'sgPutt' },
+                    { headerName: 'SG: Arg', field: 'sgArg' },
+                    { headerName: 'SG: App', field: 'sgApp' },
+                    { headerName: 'SG: Ott', field: 'sgOtt'},
                     { headerName: 'SG: T2G', field: 'sgT2G' },
                     { headerName: 'SG: Tot', field: 'sgTot' },
+                    { headerName: '# Rds', field: 'numRounds'}
                 ],
             },
             // SG PGATOUR.COM grouping
@@ -303,22 +363,22 @@ function loadCheatSheet() {
                     { headerName: 'GIR %', field: 'gir', hide: true },
                     { headerName: 'Sand Save %', field: 'sandSave', hide: true },
                     { headerName: 'Scrambling %', field: 'scrambling', hide: true },
-                    { headerName: 'App. 50-75', field: 'app50_75', hide: true },
-                    { headerName: 'App. 75-100', field: 'app75_100', hide: true },
-                    { headerName: 'App. 100-125', field: 'app100_125', hide: true },
-                    { headerName: 'App. 125-150', field: 'app125_150', hide: true },
-                    { headerName: 'App. 150-175', field: 'app150_175', hide: true },
-                    { headerName: 'App. 175-200', field: 'app175_200', hide: true },
-                    { headerName: 'App. 200+', field: 'app200_up', hide: true },
+                    { headerName: 'App. 50-75', field: 'app50_75', hide: true, comparator: customComparator },
+                    { headerName: 'App. 75-100', field: 'app75_100', hide: true, comparator: customComparator },
+                    { headerName: 'App. 100-125', field: 'app100_125', hide: true, comparator: customComparator },
+                    { headerName: 'App. 125-150', field: 'app125_150', hide: true, comparator: customComparator },
+                    { headerName: 'App. 150-175', field: 'app150_175', hide: true, comparator: customComparator },
+                    { headerName: 'App. 175-200', field: 'app175_200', hide: true, comparator: customComparator },
+                    { headerName: 'App. 200+', field: 'app200_up', hide: true, comparator: customComparator },
                     { headerName: 'BoB %', field: 'bob', hide: true },
-                    { headerName: 'Bogey Avg.', field: 'bogAvd', hide: true },
-                    { headerName: 'Par 3s Avg', field: 'par3Scoring', hide: true },
-                    { headerName: 'Par 4s Avg', field: 'par4Scoring', hide: true },
-                    { headerName: 'Par 5s Avg', field: 'par5Scoring', hide: true },
-                    { headerName: 'Prox.', field: 'prox', hide: true },
-                    { headerName: 'Rough Prox.', field: 'roughProx', hide: true },
+                    { headerName: 'Bogey Avg.', field: 'bogAvd', hide: true, comparator: customComparator },
+                    { headerName: 'Par 3s Avg', field: 'par3Scoring', hide: true, comparator: customComparator },
+                    { headerName: 'Par 4s Avg', field: 'par4Scoring', hide: true, comparator: customComparator },
+                    { headerName: 'Par 5s Avg', field: 'par5Scoring', hide: true, comparator: customComparator },
+                    { headerName: 'Prox.', field: 'prox', hide: true, comparator: customComparator },
+                    { headerName: 'Rough Prox.', field: 'roughProx', hide: true, comparator: customComparator },
                     { headerName: 'Putt. BoB %', field: 'puttingBob', hide: true },
-                    { headerName: '3-Putt Avd.', field: 'threePuttAvd', hide: true },
+                    { headerName: '3-Putt Avd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
                     { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
                 ],
             },
@@ -345,9 +405,128 @@ function loadCheatSheet() {
                     // Add other columns as needed
                 ],
             },
-        ]
+        ];
+
+        // Calculate min, mid, and max values for each column
+        const columnMinMaxValues = columnDefs.reduce((acc, column) => {
+            if (column.children) {
+                // If it's a column group, iterate over its children
+                column.children.forEach(childColumn => {
+                    const fieldName = childColumn.field;
+                    const values = dataTableData.map(row => row[fieldName]);
+                    const sortedValues = [...values].sort((a, b) => a - b);
+                    const filteredValues = values.filter(value => value !== null && value !== 0);
+
+                    const minValue = filteredValues.length > 0 ? Math.min(...filteredValues) : 0;
+                    const maxValue = Math.max(...values);
+
+                    const midIndex = Math.floor(sortedValues.length / 2);
+                    const midValue = sortedValues.length % 2 === 0
+                        ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
+                        : sortedValues[midIndex];
+
+                    acc[fieldName] = { minValue, midValue, maxValue };
+                });
+            } else {
+                // If it's an individual column
+                const fieldName = column.field;
+                const values = dataTableData.map(row => row[fieldName]);
+                const sortedValues = [...values].sort((a, b) => a - b);
+                const filteredValues = values.filter(value => value !== null && value !== 0);
+
+                const minValue = filteredValues.length > 0 ? Math.min(...filteredValues) : 0;
+                const maxValue = Math.max(...values);
+
+
+                const midIndex = Math.floor(sortedValues.length / 2);
+                const midValue = sortedValues.length % 2 === 0
+                    ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
+                    : sortedValues[midIndex];
+
+                acc[fieldName] = { minValue, midValue, maxValue };
+            }
+
+            return acc;
+        }, {});
+
+        // List of columns where you want to reverse the color scale
+        const columnsWithReversedColorScale = ['app50_75','app75_100',
+        'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
+        'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd'];
+
+        // Define the color scale for each column based on the calculated values
+        const colorScales = columnDefs.reduce((acc, column) => {
+            if (column.children) {
+                // If it's a column group, iterate over its children
+                column.children.forEach(childColumn => {
+                    const fieldName = childColumn.field;
+                    const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
+        
+                    const colorScale = d3.scaleLinear()
+                        .domain([minValue, midValue, maxValue]);
+        
+                    if (columnsWithReversedColorScale.includes(fieldName)) {
+                        console.log('Reversed ', fieldName);
+                        colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
+                    } else {
+                        colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
+                    }
+        
+                    acc[fieldName] = colorScale;
+                });
+            } else {
+                // If it's an individual column
+                const fieldName = column.field;
+                const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
+        
+                const colorScale = d3.scaleLinear()
+                    .domain([minValue, midValue, maxValue]);
+        
+                if (columnsWithReversedColorScale.includes(fieldName)) {
+                    console.log('Reversed ', fieldName);
+                    colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
+                } else {
+                    colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
+                }
+        
+                acc[fieldName] = colorScale;
+            }
+        
+            return acc;
+        }, {});
+        
+
+        // List of columns for which to apply the color scale
+        const columnsWithColorScale = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot',
+                                        'sgPuttPGA', 'sgArgPGA', 'sgAppPGA', 'sgOttPGA', 'sgT2GPGA', 'sgTotPGA',
+                                        'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75', 'app75_100',
+                                        'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bob',
+                                        'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
+                                        'puttingBob', 'threePuttAvd', 'bonusPutt'];
+        
+        function globalCellStyle(params) {
+            const fieldName = params.colDef.field;
+            const numericValue = params.value;
+
+            // Set background color to white for null values
+            if (numericValue === null) {
+                return { backgroundColor: '#FFFFFF' };
+            }
+        
+            // Check if the column is in the list and the value is numeric before applying the color scale
+            if (columnsWithColorScale.includes(fieldName) && !isNaN(numericValue) && isFinite(numericValue)) {
+                const cellColor = colorScales[fieldName](numericValue);
+                return { backgroundColor: cellColor };
+            }
+        
+            // Return default style if the column is not in the list or the value is not numeric
+            return {};
+        }
 
         function clearCheatSheetContent() {
+            /*
+                Clears the content of the cheatSheet.
+            */
             const cheatSheet = document.getElementById('cheatSheet');
             if (cheatSheet) {
                 cheatSheet.innerHTML = ''; // Clear content
@@ -355,21 +534,57 @@ function loadCheatSheet() {
         }
 
         function initializeCheatSheet() {
+            /*
+                clears cheat sheet if already initialized
+
+                builds up grid options - specifies column defs, row data,...
+                
+                creates the grid and puts it in #cheatSheet
+            */
+            console.log('init');
             if (isCheatSheetInitialized) {
                 clearCheatSheetContent();
             }
+
+            function customComparator(valueA, valueB, nodeA, nodeB, isInverted) {
+                if (valueA === null) {
+                  return 1; // Nulls always go to the bottom
+                } else if (valueB === null) {
+                  return -1; // Nulls always go to the bottom
+                } else if (valueA > valueB) {
+                  return isInverted ? -1 : 1;
+                } else if (valueA < valueB) {
+                  return isInverted ? 1 : -1;
+                } else {
+                  return 0;
+                }
+              }
     
-            // Sample grid options
+            // setup grid options
             const gridOptions = {
-                columnDefs: columnDefs,
+                columnDefs: columnDefs.map(column => ({
+                    ...column,
+                    cellStyle: globalCellStyle,
+                    children: column.children ? column.children.map(child => ({
+                        ...child,
+                        cellStyle: globalCellStyle,
+                    })) : undefined,
+                })),
                 rowData: dataTableData,
-                suppressColumnVirtualisation: true,
+                suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
                     params.api.autoSizeAllColumns();
                     setupColumnVisibilityDropdown(columnDefs);
                 },
+                getRowHeight: function(params) {
+                    // return the desired row height in pixels
+                    return 25; // adjust this value based on your preference
+                },
+                headerHeight: 30,
             };
+
+            console.log('Column Definitions:', gridOptions.columnDefs);
     
             // Create the grid using createGrid
             gridApi = agGrid.createGrid(document.querySelector('#cheatSheet'), gridOptions);
@@ -377,7 +592,8 @@ function loadCheatSheet() {
         }
 
         function setupColumnVisibilityDropdown(columnDefs) {
-            const checkboxContainer = document.getElementById('checkboxContainer');
+            // Handles the setup of the column visibility dropdown
+            const checkboxContainer = document.getElementById('checkboxContainer'); // container of the checkboxes
 
             if (!checkboxContainer) {
                 console.error('Checkbox container not found');
@@ -386,13 +602,14 @@ function loadCheatSheet() {
 
             // Check if columnDefs is an array and not empty
             if (Array.isArray(columnDefs) && columnDefs.length > 0) {
-                columnDefs.forEach(group => {
+                columnDefs.forEach(group => { // for each group in column defs
                     if (group.children) {
-                        // Group checkbox
+                        
+                        // Create group checkbox, label, add it to container
                         const groupCheckbox = document.createElement('input');
                         groupCheckbox.type = 'checkbox';
                         groupCheckbox.id = group.headerName + '_group';
-                        groupCheckbox.checked = !group.children.every(col => col.hide); // Reflects if any column is visible
+                        groupCheckbox.checked = !group.children.every(col => col.hide); // If any child col visible, check this
                         groupCheckbox.classList.add('group-checkbox'); // Add class for easier targeting
 
                         const groupLabel = document.createElement('label');
@@ -404,12 +621,13 @@ function loadCheatSheet() {
                         checkboxContainer.appendChild(groupLabel);
                         checkboxContainer.appendChild(document.createElement('br'));
 
-                        // Columns within the group
+                        // For each child within the group
                         group.children.forEach(column => {
+                            // Create checkbox, label, add it to checkbox container.
                             const checkbox = document.createElement('input');
                             checkbox.type = 'checkbox';
                             checkbox.id = column.field;
-                            checkbox.checked = !column.hide; // Initial state, adjusted based on column visibility
+                            checkbox.checked = !column.hide; // Checked if column is not hidden
 
                             const label = document.createElement('label');
                             label.htmlFor = column.field;
@@ -427,7 +645,8 @@ function loadCheatSheet() {
                                 const column = gridApi.getColumn(checkbox.id);
                                 if (column) {
                                     column.hide = !checkbox.checked;
-                                    gridApi.setColumnDefs(gridApi.getColumnDefs());
+                                    //gridApi.setColumnDefs(gridApi.getColumnDefs());
+                                    gridApi.updateGridOptions({ columnDefs: gridApi.getColumnDefs() });
                                 }
                             });
                         });
@@ -439,7 +658,7 @@ function loadCheatSheet() {
                                 const colCheckbox = document.getElementById(col.field);
                                 colCheckbox.checked = groupCheckbox.checked;
                             });
-                            gridApi.setColumnDefs(gridApi.getColumnDefs());
+                            gridApi.updateGridOptions({ columnDefs: gridApi.getColumnDefs() });
                         });
                     }
                 });
@@ -449,6 +668,7 @@ function loadCheatSheet() {
         }
 
         window.applyColumnVisibility = function () {
+            //
             const checkboxes = document.querySelectorAll('#checkboxContainer input');
             const applyButton = document.getElementById('applyColVisCS');
 
@@ -471,7 +691,7 @@ function loadCheatSheet() {
             });
 
             // Update all columns at once
-            gridApi.setColumnDefs(gridApi.getColumnDefs());
+            gridApi.updateGridOptions({ columnDefs: gridApi.getColumnDefs() });
 
             // Auto-size all columns
             gridApi.autoSizeAllColumns();
@@ -490,6 +710,7 @@ function loadCheatSheet() {
         
 
         window.toggleColumnVisibility = function () {
+            // toggles visibility of the checkbox container
             const checkboxContainer = document.getElementById('checkboxContainer');
             const applyButton = document.getElementById('applyColVisCS');
 
@@ -508,6 +729,8 @@ function loadCheatSheet() {
 }
 
 function onFilterTextBoxChanged() {
+    // the function for the search box which filters the table 
+    //based on 'filter-text-box' for gridApi grid
     gridApi.setGridOption(
       'quickFilterText',
       document.getElementById('filter-text-box').value
