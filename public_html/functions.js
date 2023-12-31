@@ -324,9 +324,9 @@ function loadCheatSheet() {
             {
                 headerName: 'Player Info',
                 children: [
-                    { headerName: 'Player', field: 'player' },
-                    { headerName: 'FD Salary', field: 'fdSalary' },
-                    { headerName: 'DK Salary', field: 'dkSalary' },
+                    { headerName: 'Player', field: 'player', pinned: 'left'},
+                    { headerName: 'FD Salary', field: 'fdSalary', pinned: 'left' },
+                    { headerName: 'DK Salary', field: 'dkSalary', pinned: 'left' },
                 ],
             },
             // SG LastNRounds grouping
@@ -704,7 +704,8 @@ function loadCheatSheet() {
             // Collapse the checkboxContainer after applying column visibility changes
             const checkboxContainer = document.getElementById('checkboxContainer');
             if (checkboxContainer) {
-                checkboxContainer.style.display = 'none';
+                checkboxContainer.style.height = '0';
+                checkboxContainer.style.overflowY = 'hidden';
             }
         };
         
@@ -715,10 +716,35 @@ function loadCheatSheet() {
             const applyButton = document.getElementById('applyColVisCS');
 
             if (checkboxContainer && applyButton) {
-                checkboxContainer.style.display = checkboxContainer.style.display === 'none' ? 'inline-block' : 'none';
-                applyButton.style.display = checkboxContainer.style.display;
+                console.log('in if');
+                const isExpanded = checkboxContainer.style.height === 'auto' || checkboxContainer.style.height === '150px';
+                console.log('is expanded', isExpanded);
+                checkboxContainer.style.height = isExpanded ? '0' : '150px';
+                checkboxContainer.style.overflowY = isExpanded ? 'hidden' : 'auto';
+                applyButton.style.display = isExpanded ? 'none' : 'inline-block';
             }
         };
+
+        /*
+            For hovering the entire row considering pinned rows...
+        */
+        document.addEventListener('DOMContentLoaded', function () {
+            const cheatSheet = document.getElementById('cheatSheet');
+          
+            cheatSheet.addEventListener('mouseover', function (event) {
+              const targetRow = event.target.closest('.ag-row');
+              if (targetRow) {
+                targetRow.classList.add('ag-row-hover');
+              }
+            });
+          
+            cheatSheet.addEventListener('mouseout', function (event) {
+              const targetRow = event.target.closest('.ag-row');
+              if (targetRow) {
+                targetRow.classList.remove('ag-row-hover');
+              }
+            });
+          });
 
         initializeCheatSheet();
 

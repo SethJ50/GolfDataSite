@@ -23,20 +23,22 @@
         </div>
         <div id="mainBody">
             <div id="cheatSheetDiv">
-                <div id="columnVisibilityDropdown">
-                    <button onclick="toggleColumnVisibility()">Column Visibility:</button>
-                    <div id="checkboxContainer" style="display: none;"></div>
-                    <button onclick="applyColumnVisibility()" id="applyColVisCS" style="display: none;">Apply</button>
-                </div>
-                <div id="searchAreaCS">
-                    <div id="searchInnerAreaCS">
-                        <div>Search:</div>
-				        <input type="text" id="filter-text-box" placeholder="Filter..." oninput="onFilterTextBoxChanged();">
+                <div id="filterContainer">
+                    <div id="columnVisibilityDropdown">
+                        <button id="colVisButCS" onclick="toggleColumnVisibility()">Column Visibility:</button>
+                        <div id="checkboxContainer" style="height: 0; overflow: hidden;"></div>
+                        <button onclick="applyColumnVisibility()" id="applyColVisCS" style="display: none;">Apply</button>
                     </div>
-
-                    <div id="innerRoundNumCS">
-                        <div>SG Round Sample:</div>
-                        <input type="text" id="lastNRounds" value="4" oninput="loadCheatSheet();" onchange="onFilterTextBoxChanged();">
+                    <div id="searchAreaCS">
+                        <div id="searchInnerAreaCS">
+                            <div>Search:</div>
+                            <input type="text" id="filter-text-box" placeholder="Filter..." oninput="onFilterTextBoxChanged();">
+                        </div>
+    
+                        <div id="innerRoundNumCS">
+                            <div>SG Round Sample:</div>
+                            <input type="text" id="lastNRounds" value="4" oninput="loadCheatSheet();" onchange="onFilterTextBoxChanged();">
+                        </div>
                     </div>
                 </div>
                 <div id="cheatSheet" class="ag-theme-quartz">

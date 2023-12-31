@@ -362,22 +362,37 @@ div.dt-button-collection {
     margin-bottom: 20px;
 }
 
-#cheatSheet {
-    margin-top: 10px;
-}
-
 #cheatSheet .ag-row:hover {
     filter: brightness(0.7);
+  }
+  
+  #cheatSheet .ag-row-hover {
+    filter: brightness(0.7);
+  }
+
+#filterContainer {
+    display: flex;
+    position: relative;
 }
 
 #columnVisibilityDropdown {
     width: fit-content;
     display: inline;
-    margin-right: 10px;
+    margin-right: 5px;
 }
 
+#colVisButCS {
+    margin-left: 5px;
+    margin-top: 18.5px;
+    width: 175px;
+}
+
+#applyColVisCS {
+    margin-top: 5px;
+}
 
 #checkboxContainer {
+    margin-top: 10px;
     height: 150px;
     overflow-y: auto;
     width: fit-content;
@@ -392,7 +407,8 @@ div.dt-button-collection {
 }
 
 #searchAreaCS {
-    display: inline-block;
+    display: inline;
+    width: fit-content;
 }
 
 #searchInnerAreaCS {
