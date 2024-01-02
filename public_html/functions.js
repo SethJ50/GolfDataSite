@@ -911,7 +911,7 @@ function loadProfOverview(){
     })
     .then((jsonData) => {
 
-        let lastN = 8;
+        let lastN = 50; // IMPORTANT - can change this!!!
 
         let playerRounds = jsonData.tournaments.sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round).slice(0, lastN);
 
@@ -1052,6 +1052,24 @@ function loadProfOverview(){
             return scale(value);
         }
 
+        function getColorFromScale2(value, stat){
+            let dom;
+            if(stat == 'sgPutt' | stat == 'sgArg' | stat == 'sgApp' | stat == 'sgOtt'){
+                console.log('main');
+                dom = [-1.5,0,1.5];
+            } else if (stat == 'sgT2G'){
+                dom = [-2, 0, 2];
+            } else {
+                dom = [-2.5,0,2.5];
+            }
+
+            const scale = d3.scaleLinear()
+                .domain(dom)
+                .range(['#F83E3E', '#FFFFFF','#4579F1'])
+
+            return scale(value);
+        }
+
         if (pgatourData == null){
             for( let statInd in noPgaStats){
                 let stat = noPgaStats[statInd];
@@ -1060,7 +1078,7 @@ function loadProfOverview(){
                 // Add the stat name to the first column
                 tableHTML += `<td id="profOvrElem" class="profOvrStat">${statMappings[stat]}</td>`;
                 // Add the stat value to the second column
-                tableHTML += `<td id="profOvrElem">${avgRoundData[stat]}</td>`;
+                tableHTML += `<td id="profOvrElem" style="background-color: ${getColorFromScale2(avgRoundData[stat], stat)};">${avgRoundData[stat]}</td>`;
                 tableHTML += `<td id="profOvrElem">-</td>`;
 
                 tableHTML += '</tr>';
