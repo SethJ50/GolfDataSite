@@ -594,33 +594,38 @@ function loadCheatSheet() {
         function setupColumnVisibilityDropdown(columnDefs) {
             // Handles the setup of the column visibility dropdown
             const checkboxContainer = document.getElementById('checkboxContainer'); // container of the checkboxes
-
+        
             if (!checkboxContainer) {
                 console.error('Checkbox container not found');
                 return;
             }
-
+        
+            // Clear the checkbox container if it is not initially empty
+            if (checkboxContainer.hasChildNodes()) {
+                checkboxContainer.innerHTML = '';
+            }
+        
             // Check if columnDefs is an array and not empty
             if (Array.isArray(columnDefs) && columnDefs.length > 0) {
                 columnDefs.forEach(group => { // for each group in column defs
                     if (group.children) {
-                        
+        
                         // Create group checkbox, label, add it to container
                         const groupCheckbox = document.createElement('input');
                         groupCheckbox.type = 'checkbox';
                         groupCheckbox.id = group.headerName + '_group';
                         groupCheckbox.checked = !group.children.every(col => col.hide); // If any child col visible, check this
                         groupCheckbox.classList.add('group-checkbox'); // Add class for easier targeting
-
+        
                         const groupLabel = document.createElement('label');
                         groupLabel.htmlFor = group.headerName + '_group';
                         groupLabel.appendChild(document.createTextNode(group.headerName));
                         groupLabel.classList.add('group-label'); // Add class to make the font bold
-
+        
                         checkboxContainer.appendChild(groupCheckbox);
                         checkboxContainer.appendChild(groupLabel);
                         checkboxContainer.appendChild(document.createElement('br'));
-
+        
                         // For each child within the group
                         group.children.forEach(column => {
                             // Create checkbox, label, add it to checkbox container.
@@ -628,20 +633,20 @@ function loadCheatSheet() {
                             checkbox.type = 'checkbox';
                             checkbox.id = column.field;
                             checkbox.checked = !column.hide; // Checked if column is not hidden
-
+        
                             const label = document.createElement('label');
                             label.htmlFor = column.field;
                             label.appendChild(document.createTextNode(column.headerName));
-
+        
                             checkboxContainer.appendChild(checkbox);
                             checkboxContainer.appendChild(label);
                             checkboxContainer.appendChild(document.createElement('br'));
-
+        
                             // Add event listener to column checkbox to update group checkbox and column visibility
                             checkbox.addEventListener('change', function () {
                                 const allColumnsHidden = group.children.every(col => col.hide);
                                 groupCheckbox.checked = !allColumnsHidden;
-
+        
                                 const column = gridApi.getColumn(checkbox.id);
                                 if (column) {
                                     column.hide = !checkbox.checked;
@@ -650,7 +655,7 @@ function loadCheatSheet() {
                                 }
                             });
                         });
-
+        
                         // Add event listener to group checkbox to toggle visibility of group columns
                         groupCheckbox.addEventListener('change', function () {
                             group.children.forEach(col => {
@@ -666,41 +671,50 @@ function loadCheatSheet() {
                 console.error('Invalid or empty columnDefs array');
             }
         }
+        
 
         window.applyColumnVisibility = function () {
-            //
+            console.log('Entered: applyColumnVisibility();');
+        
             const checkboxes = document.querySelectorAll('#checkboxContainer input');
             const applyButton = document.getElementById('applyColVisCS');
-
+        
             const columnsToUpdate = [];
-
+        
             checkboxes.forEach(checkbox => {
                 const column = gridApi.getColumn(checkbox.id);
                 if (column) {
                     // If checkbox is checked, show the column; if unchecked, hide the column
                     columnsToUpdate.push({ column, visible: checkbox.checked });
+                    console.log('pushed column: ', column.colId, ' vis: ',checkbox.checked );
                 } else {
                     console.warn(`Column with field '${checkbox.id}' not found`);
                 }
             });
 
+            columnsToUpdate.forEach(({ column, visible }) => {
+                if(visible){
+                    console.log('id: ', column.colId, ' vis: ', visible);
+                }
+            });
+        
             // Set visibility and hide properties for each column
             columnsToUpdate.forEach(({ column, visible }) => {
                 column.setVisible(visible);
                 column.getColDef().hide = !visible;
             });
-
-            // Update all columns at once
-            gridApi.updateGridOptions({ columnDefs: gridApi.getColumnDefs() });
-
+        
+            // Set the new columnDefs using setGridOption
+            gridApi.setGridOption('columnDefs', gridApi.getColumnDefs());
+        
             // Auto-size all columns
             gridApi.autoSizeAllColumns();
-
+        
             // Hide the "Apply" button after applying column visibility changes
             if (applyButton) {
                 applyButton.style.display = 'none';
             }
-
+        
             // Collapse the checkboxContainer after applying column visibility changes
             const checkboxContainer = document.getElementById('checkboxContainer');
             if (checkboxContainer) {
@@ -708,6 +722,8 @@ function loadCheatSheet() {
                 checkboxContainer.style.overflowY = 'hidden';
             }
         };
+        
+        
         
 
         window.toggleColumnVisibility = function () {
@@ -756,7 +772,8 @@ function loadCheatSheet() {
 
 function onFilterTextBoxChanged() {
     // the function for the search box which filters the table 
-    //based on 'filter-text-box' for gridApi grid
+    // based on 'filter-text-box' for gridApi grid
+    console.log('onfiltertextbox');
     gridApi.setGridOption(
       'quickFilterText',
       document.getElementById('filter-text-box').value
@@ -768,6 +785,7 @@ function onFilterTextBoxChanged() {
 let isDataTableInitialized = false;
 
 function loadProfile(){
+    console.log('funct load profile');
     let profileTbl = document.getElementById('profileTable');
     let currGolfer = document.getElementById('playerNameProf');
     let roundView = document.getElementById('selectRoundDrop');
