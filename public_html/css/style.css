@@ -112,18 +112,17 @@ tr.tableBodyRow:hover {
     position: fixed;
     top:50px;
     left: 0px;
-    background-color: white;
+    background-color: lightgray;
     z-index: 6;
 }
 
 #profileStats {
     display: inline;
-    height: 100%;
     position: absolute;
     width: calc(100% - 250px);
     left: 250px;
     top: 50px;
-    background-color: lightgrey;
+    background-color: white;
     z-index: 5;
     overflow-x: auto;
 }
@@ -208,30 +207,18 @@ tr.profBodyRow:hover {
     font-size: 15px;
 }
 
-#myDataTable thead {
-    background-color: rgb(0,0,70);
-    color: white;
-    font-family: Verdana;
-    font-size: 12px;
+#golferProfTable{
+    height: 600px;
+    width: 900px;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+    overflow-x: auto;
+    overflow-y: auto;
 }
 
-#myDataTable tbody tr {
-    background-color: white;
-    font-family: Verdana;
-    font-size: 12px;
-}
-
-#myDataTable tbody tr td {
-    border: 1px solid grey;
-}
-
-#myDataTable tbody tr:hover {
+#golferProfTable .ag-row:hover {
     filter: brightness(0.7);
-}
-
-#myDataTable tbody td {
-    padding-top: 3px;
-    padding-bottom: 3px;
 }
 
 .dataTables_filter {
@@ -290,9 +277,16 @@ tr.profBodyRow:hover {
 }
 
 #selectRoundView {
-    margin-top: 10px;
     width: fit-content;
-    margin-left: 20px;
+    margin-right: 10px;
+    margin-left: 10px;
+    margin-bottom: 5px;
+}
+
+#selectRoundDrop {
+    height: 20px;
+    width: 150px;
+    margin-top: 1px;
 }
 
 #viewRoundLabel{
@@ -375,6 +369,20 @@ div.dt-button-collection {
     position: relative;
 }
 
+#filterContainerGP {
+    display: flex;
+    position: relative;
+    width: 900px;
+    margin-left:auto;
+    margin-right: auto;
+    margin-top: 10px;
+
+}
+
+#filter-text-box-GP {
+    height: 15px;
+}
+
 #columnVisibilityDropdown {
     width: fit-content;
     display: inline;
@@ -411,7 +419,16 @@ div.dt-button-collection {
     width: fit-content;
 }
 
+#searchAreaGP {
+    display: inline;
+    width: fit-content;
+}
+
 #searchInnerAreaCS {
+    display: inline-block;
+}
+
+#searchInnerAreaGP {
     display: inline-block;
 }
 

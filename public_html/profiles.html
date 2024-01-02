@@ -1,82 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-        <link rel="stylesheet" type="text/css" href="css/style.css">
-        <title>Golf Data</title>
-    </head>
-    <body onload="loadProfile(); loadProfOverview();">
-        <div id="headerBar">
-            <a href="#" class="navText" id="navTitle" onclick="home();">Golf Data Title</a>
-            <a href="#" class="navText" onclick="home();">Home</a>
-            <a href="#" class="navText" onclick="cheatSheet();">Cheat Sheet</a>
-            <a href="#" class="navText" onclick="golferProfiles();">Golfer Profiles</a>
-            <a href="#" class="navText">Flag Sheet</a>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@900&display=swap" rel="stylesheet">
+    <title>DataCaddy</title>
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!-- Ag-Grid and D3.js scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Your custom stylesheet -->
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+<body onload="loadPlayerListGp();">
+    <div id="headerBar">
+        <a href="#" class="navText" id="navTitle" onclick="home();">Golf Data Title</a>
+        <a href="#" class="navText" onclick="home();">Home</a>
+        <a href="#" class="navText" onclick="cheatSheet();">Cheat Sheet</a>
+        <a href="#" class="navText" onclick="golferProfiles();">Golfer Profiles</a>
+        <a href="#" class="navText">Flag Sheet</a>
+    </div>
+    <div id="mainBodyGolferProfiles">
+        <img src="img/golferDefault.png" alt="Viktor Hovland" class="profilePic">
+        <div id="selectPlayer">
+            <select id="playerNameProf" name="cars" onchange="loadProfile();">
+                <!-- Each option element represents an option in the dropdown -->
+                <option value="Viktor Hovland" default>Viktor Hovland</option>
+                <option value="Rory McIlroy">Rory McIlroy</option>
+                <option value="Tiger Woods">Tiger Woods</option>
+                <option value="Scottie Scheffler">Scottie Scheffler</option>
+            </select>
         </div>
-        <div id="mainBodyGolferProfiles">
-            <img src="img/golferDefault.png" alt="Viktor Hovland" class="profilePic">
-            <div id="selectPlayer">
-                <select id="playerNameProf" name="cars" onchange="loadProfile();">
-                    <!-- Each option element represents an option in the dropdown -->
-                    <option value="Viktor Hovland" default>Viktor Hovland</option>
-                    <option value="Rory McIlroy">Rory McIlroy</option>
-                    <option value="Tiger Woods">Tiger Woods</option>
-                    <option value="Scottie Scheffler">Scottie Scheffler</option>
-                </select>
-            </div>
-            
-            <table id="overallStatsProfile">
-                <tr>
-                    <th class="profStatHead">Stat</th>
-                    <th class="profStatHead">Value</th>
-                    <th class="profStatHead">Rank</th>
-                </tr>
-                <tr class="tableBodyRow">
-                    <td class="profStatElem">SG: OTT</td>
-                    <td class="profStatElem">1.223</td>
-                    <td class="profStatElem">3</td>
-                </tr>
-                <tr class="tableBodyRow">
-                    <td class="profStatElem">SG: App</td>
-                    <td class="profStatElem">1.4</td>
-                    <td class="profStatElem">1</td>
-                </tr>
-                <tr class="tableBodyRow">
-                    <td class="profStatElem">SG: ARG</td>
-                    <td class="profStatElem">0.022</td>
-                    <td class="profStatElem">56</td>
-                </tr>
-                <tr class="tableBodyRow">
-                    <td class="profStatElem">SG: PUTT</td>
-                    <td class="profStatElem">-0.123</td>
-                    <td class="profStatElem">103</td>
-                </tr>
-            </table>
-        </div>
-        <div id="profileStats">
+
+        <table id="overallStatsProfile">
+            <tr>
+                <th class="profStatHead">Stat</th>
+                <th class="profStatHead">Value</th>
+                <th class="profStatHead">Rank</th>
+            </tr>
+            <tr class="tableBodyRow">
+                <td class="profStatElem">SG: OTT</td>
+                <td class="profStatElem">1.223</td>
+                <td class="profStatElem">3</td>
+            </tr>
+            <tr class="tableBodyRow">
+                <td class="profStatElem">SG: App</td>
+                <td class="profStatElem">1.4</td>
+                <td class="profStatElem">1</td>
+            </tr>
+            <tr class="tableBodyRow">
+                <td class="profStatElem">SG: ARG</td>
+                <td class="profStatElem">0.022</td>
+                <td class="profStatElem">56</td>
+            </tr>
+            <tr class="tableBodyRow">
+                <td class="profStatElem">SG: PUTT</td>
+                <td class="profStatElem">-0.123</td>
+                <td class="profStatElem">103</td>
+            </tr>
+        </table>
+    </div>
+    <div id="profileStats">
+        <div id="filterContainerGP">
             <div id="selectRoundView">
-                <label for="selectRoundDrop" id="viewRoundLabel">View:</label>
+                <div>View:</div>
                 <select id="selectRoundDrop" name="roundView" onchange="loadProfile();">
                     <!-- Each option element represents an option in the dropdown -->
                     <option value="roundByRound" default>Round By Round</option>
                     <option value="event">Full Event</option>
-                    <option value="all">All</option>
+                    <!-- <option value="all">All</option> -->
                 </select>
             </div>
-            <div id="profTableDiv">
-                <table id="myDataTable" class="display">
-                    <thead>
-
-                    </thead>
-                    <tbody>
-
-                    </tbody>
-                </table> 
+            <div id="searchAreaGP">
+                <div id="searchInnerAreaGP">
+                    <div>Search:</div>
+                    <input type="text" id="filter-text-box-GP" placeholder="Filter..." oninput="onFilterTextBoxChangedGp();">
+                </div>
             </div>
         </div>
-        <script src="functions.js"></script>
-        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-        <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    </body>
+        <div id="golferProfTable" class="ag-theme-quartz">
+
+        </div>
+    </div>
+
+    <!-- Select2 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#playerNameProf').select2();
+        });
+    </script>
+
+    <script src="functions.js"></script>
+</body>
 </html>

@@ -372,6 +372,17 @@ app.get('/get/profOverview/', (req, res) => {
     })
 });
 
+app.get('/get/playerListGp/', (req, res) => {
+  let p = salaries.find({}).exec();
+
+  p.then((document) => {
+    res.json(document);
+  })
+  .catch((error) => {
+      res.send('There was an error');
+  })
+});
+
 app.get('/get/cheatSheet/', async (req, res) => {
     try {
       // Perform salariesResults query first

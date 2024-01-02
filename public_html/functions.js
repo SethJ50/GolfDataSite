@@ -67,7 +67,7 @@ function loadCheatSheet() {
 
             - for each element, provided function inside map is executed
 
-            - (salary) is the individual salary object
+            - (salary) is the individual row from salaries
         */
         let dataTableData = jsonData.salaries.map((salary) => {
             let player = salary.player;
@@ -98,7 +98,7 @@ function loadCheatSheet() {
             let avgRoundData = {};
             avgRoundData['numRounds'] = playerRounds.length;
 
-            if (playerRounds.length > 0 ) { // can change to ensure # rounds for calc
+            if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
                 let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
                 columnsToAverage.forEach((col) => {
                     let averageValue = playerRounds.reduce((sum, round) => sum + round[col], 0) / playerRounds.length;
@@ -145,7 +145,7 @@ function loadCheatSheet() {
                 }
             }
 
-            // Step 4: Compile Recent History Data for Each Player
+            // Step 4: Compile Recent History Data for Player
             /*
                 For each recent tournament, search thru sortedTournamentRow, find all entries where the entry has the
                 current player and the tournament is the current tournament.
@@ -293,7 +293,7 @@ function loadCheatSheet() {
             }
         }).filter(Boolean); // Remove null entries
 
-        // Begin building up the ag-grid table
+        // -- Begin building up the ag-grid table
 
         function customComparator(valueA, valueB) {
             if (valueA === null && valueB === null) {
@@ -545,20 +545,6 @@ function loadCheatSheet() {
             if (isCheatSheetInitialized) {
                 clearCheatSheetContent();
             }
-
-            function customComparator(valueA, valueB, nodeA, nodeB, isInverted) {
-                if (valueA === null) {
-                  return 1; // Nulls always go to the bottom
-                } else if (valueB === null) {
-                  return -1; // Nulls always go to the bottom
-                } else if (valueA > valueB) {
-                  return isInverted ? -1 : 1;
-                } else if (valueA < valueB) {
-                  return isInverted ? 1 : -1;
-                } else {
-                  return 0;
-                }
-              }
     
             // setup grid options
             const gridOptions = {
@@ -674,7 +660,7 @@ function loadCheatSheet() {
         
 
         window.applyColumnVisibility = function () {
-            console.log('Entered: applyColumnVisibility();');
+            // called on click of apply col vis, sets checked cols to visible!
         
             const checkboxes = document.querySelectorAll('#checkboxContainer input');
             const applyButton = document.getElementById('applyColVisCS');
@@ -686,15 +672,8 @@ function loadCheatSheet() {
                 if (column) {
                     // If checkbox is checked, show the column; if unchecked, hide the column
                     columnsToUpdate.push({ column, visible: checkbox.checked });
-                    console.log('pushed column: ', column.colId, ' vis: ',checkbox.checked );
                 } else {
                     console.warn(`Column with field '${checkbox.id}' not found`);
-                }
-            });
-
-            columnsToUpdate.forEach(({ column, visible }) => {
-                if(visible){
-                    console.log('id: ', column.colId, ' vis: ', visible);
                 }
             });
         
@@ -742,7 +721,7 @@ function loadCheatSheet() {
         };
 
         /*
-            For hovering the entire row considering pinned rows...
+            For hovering the entire row - considering we have pinned rows...
         */
         document.addEventListener('DOMContentLoaded', function () {
             const cheatSheet = document.getElementById('cheatSheet');
@@ -773,7 +752,6 @@ function loadCheatSheet() {
 function onFilterTextBoxChanged() {
     // the function for the search box which filters the table 
     // based on 'filter-text-box' for gridApi grid
-    console.log('onfiltertextbox');
     gridApi.setGridOption(
       'quickFilterText',
       document.getElementById('filter-text-box').value
@@ -783,71 +761,132 @@ function onFilterTextBoxChanged() {
 
 
 let isDataTableInitialized = false;
+let profGridApi;
 
 function loadProfile(){
-    console.log('funct load profile');
-    let profileTbl = document.getElementById('profileTable');
+    let profileTbl = document.getElementById('golferProfTable');
     let currGolfer = document.getElementById('playerNameProf');
     let roundView = document.getElementById('selectRoundDrop');
 
-    let url = '/get/golferProf/' + currGolfer.value + '/' + roundView.value; // Eventually change this to pass which golfer to get.
+    let url = '/get/golferProf/' + currGolfer.value + '/' + roundView.value;
 
     let p = fetch(url);
     p.then((response) => {
         return response.json();
     })
     .then((jsonData) => {
-        if (!isDataTableInitialized) {
-            // DataTable not initialized, initialize it
-            const columnsAndHeaders = [
-                // Specify custom column keys and headers
-                { data: 'dates', title: 'Date' },
-                { data: 'finish', title: 'Finish' },
-                { data: 'tournament', title: 'Tournament' },
-                { data: 'Round', title: 'Round' },
-                { data: 'sgPutt', title: 'SG: Putt', className: 'numeric-cell putt-cell' },
-                { data: 'sgArg', title: 'SG: Arg', className: 'numeric-cell arg-cell' },
-                { data: 'sgApp', title: 'SG: App', className: 'numeric-cell app-cell' },
-                { data: 'sgOtt', title: 'SG: Ott', className: 'numeric-cell ott-cell' },
-                { data: 'sgT2G', title: 'SG: T2G', className: 'numeric-cell t2g-cell' },
-                { data: 'sgTot', title: 'SG: TOT', className: 'numeric-cell tot-cell' }
-                // Add more columns as needed
-            ];
 
-            // Dynamically generate table header
-            $('#myDataTable').DataTable({
-                data: jsonData,
-                columns: columnsAndHeaders,
-                order: [[0, 'desc'], [3, 'desc']],
-                pageLength: 30,
-                createdRow: function (row, data, dataIndex) {
-                    // Loop through specific numeric cells in the row
-                    $(row).find('.putt-cell, .arg-cell, .app-cell, .ott-cell, .t2g-cell, .tot-cell').each(function (index) {
-                        // Get the numeric value
-                        var numericValue = parseFloat($(this).text());
-
-                        applyClassesBasedOnValue($(this), numericValue, -3, -1.5, -0.5, 0.5, 1.5, 3);
-                    });
-
-                    $(row).find('.t2g-cell, .tot-cell').each(function (index) {
-                        // Get the numeric value
-                        var numericValue = parseFloat($(this).text());
-
-                        applyClassesBasedOnValue($(this), numericValue, -7, -3, -1, 1, 3, 7);
-                    });
-                }
-            });
-
-            isDataTableInitialized = true; // Set the flag to indicate DataTable is now initialized
-        } else {
-            // DataTable already initialized, update the rows
-            var table = $('#myDataTable').DataTable();
-            table.clear().rows.add(jsonData).draw();
+        if(isDataTableInitialized){
+            profileTbl.innerHTML = '';
         }
+
+        const columnDefs = [
+            { headerName: 'Date', field: 'dates' },
+            { headerName: 'Finish', field: 'finish' },
+            { headerName: 'Tournament', field: 'tournament' },
+            { headerName: 'Round', field: 'Round' },
+            { headerName: 'SG: Putt', field: 'sgPutt'},
+            { headerName: 'SG: Arg', field: 'sgArg'},
+            { headerName: 'SG: App', field: 'sgApp'},
+            { headerName: 'SG: Ott', field: 'sgOtt'},
+            { headerName: 'SG: T2G', field: 'sgT2G'},
+            { headerName: 'SG: TOT', field: 'sgTot'},
+            ];
+        
+        let indMinMax;
+        let t2gMinMax;
+        let totMinMax;
+        if(roundView.value == 'roundByRound'){
+            indMinMax = {minValue: -4.5, midValue: 0, maxValue: 4.5};
+            t2gMinMax = {minValue: -7, midValue: 0, maxValue: 7};
+            totMinMax = {minValue: -9, midValue: 0, maxValue: 9};
+        }else{
+            indMinMax = {minValue: -6, midValue: 0, maxValue: 6};
+            t2gMinMax = {minValue: -11, midValue: 0, maxValue: 11};
+            totMinMax = {minValue: -12, midValue: 0, maxValue: 15};
+        }
+        
+        const colMinMax = {
+            'sgPutt' : indMinMax,
+            'sgArg' : indMinMax,
+            'sgApp' : indMinMax,
+            'sgOtt' : indMinMax,
+            'sgT2G' : t2gMinMax,
+            'sgTot' : totMinMax,
+        }
+
+        const colorScales = {};
+
+        Object.keys(colMinMax).forEach(fieldName => {
+            const { minValue, midValue, maxValue } = colMinMax[fieldName];
+        
+            const colorScale = d3.scaleLinear()
+                .domain([minValue, midValue, maxValue]);
+        
+            colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
+        
+            colorScales[fieldName] = colorScale;
+        });
+
+        const columnsWithColorScale = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt',
+                                        'sgT2G', 'sgTot'];
+
+        function globalCellStyle(params){
+            const fieldName = params.colDef.field;
+            const numericValue = params.value;
+
+            // Set background color to white for null values
+            if (numericValue === null) {
+                return { backgroundColor: '#FFFFFF' };
+            }
+        
+            // Check if the column is in the list and the value is numeric before applying the color scale
+            if (columnsWithColorScale.includes(fieldName) && !isNaN(numericValue) && isFinite(numericValue)) {
+                const cellColor = colorScales[fieldName](numericValue);
+                return { backgroundColor: cellColor };
+            }
+        
+            // Return default style if the column is not in the list or the value is not numeric
+            return {};
+        }
+
+        const gridOptions = {
+            columnDefs: columnDefs.map(column => ({
+                ...column,
+                cellStyle: globalCellStyle,
+            })),
+            rowData: jsonData,
+            suppressColumnVirtualisation: true,
+            onFirstDataRendered: function (params) {
+                console.log('grid is ready');
+                params.api.autoSizeAllColumns();
+                //setupColumnVisibilityDropdown(columnDefs);
+            },
+            getRowHeight: function(params) {
+                // return the desired row height in pixels
+                return 25; // adjust this value based on your preference
+            },
+            headerHeight: 30,
+            getRowStyle: function (params) {
+                return { borderBottom: '1px solid #ccc' };
+            },
+        }
+
+        profGridApi = agGrid.createGrid(document.querySelector('#golferProfTable'), gridOptions);
+        isDataTableInitialized = true; // Set the flag to indicate DataTable is now initialized
     })
     .catch((error) => {
         console.error('Error:', error.message);
     });
+}
+
+function onFilterTextBoxChangedGp() {
+    // the function for the search box which filters the table 
+    // based on 'filter-text-box-Gp' for gridApi grid
+    profGridApi.setGridOption(
+      'quickFilterText',
+      document.getElementById('filter-text-box-GP').value
+    );
 }
 
 
@@ -1025,4 +1064,39 @@ function loadProfOverview(){
 
         profOvrTbl.innerHTML = tableString;
     })
+}
+
+function loadPlayerListGp(){
+    let playerDropdown = document.getElementById('playerNameProf');
+
+    let url = '/get/playerListGp/';
+
+    let p = fetch(url);
+    p.then((response) => {
+        return response.json();
+    })
+    .then((jsonData) => {
+        playerDropdown.innerHTML = '';
+
+        let htmlString = '';
+
+        //console.log('playerList: ', jsonData);
+
+        for (let i=0; i<jsonData.length; i++){
+            let object = jsonData[i];
+            if(i == 0){
+                htmlString += '<option value="' + object.player + '" default>' + object.player + '</option>';
+            } else {
+                htmlString += '<option value="' + object.player + '">' + object.player + '</option>';
+            }
+        }
+
+        playerDropdown.innerHTML = htmlString;
+
+        loadProfile();
+        loadProfOverview();
+    })
+    .catch((error) => {
+        console.error('Error:', error.message);
+    });
 }
