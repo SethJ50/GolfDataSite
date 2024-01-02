@@ -776,7 +776,13 @@ function loadProfile(){
     })
     .then((jsonData) => {
 
-        jsonData.sort((a, b) => new Date(b.dates) - new Date(a.dates));
+        jsonData.sort((a, b) => {
+            // First, compare by date in descending order
+            const dateComparison = new Date(b.dates) - new Date(a.dates);
+            
+            // If dates are equal, compare by round in descending order
+            return dateComparison !== 0 ? dateComparison : b.Round - a.Round;
+        });
 
         if(isDataTableInitialized){
             profileTbl.innerHTML = '';
