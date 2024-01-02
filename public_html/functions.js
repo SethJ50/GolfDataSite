@@ -776,6 +776,8 @@ function loadProfile(){
     })
     .then((jsonData) => {
 
+        jsonData.sort((a, b) => new Date(b.dates) - new Date(a.dates));
+
         if(isDataTableInitialized){
             profileTbl.innerHTML = '';
         }
