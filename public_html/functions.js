@@ -1,3 +1,4 @@
+//const { isNull } = require("lodash");
 
 function home() {
     window.location.href = './index.html';
@@ -901,9 +902,8 @@ function onFilterTextBoxChangedGp() {
 function loadProfOverview(){
     let profOvrTbl = document.getElementById("overallStatsProfile");
     let currGolfer = document.getElementById('playerNameProf');
-    let lastNumRounds = 4;
 
-    let url = "/get/profOverview/";
+    let url = "/get/profOverview/" + currGolfer.value;
 
     let p = fetch(url);
     p.then((response) => {
@@ -911,166 +911,186 @@ function loadProfOverview(){
     })
     .then((jsonData) => {
 
-        jsonData.sort((a, b) => {
-            const dateA = new Date(a.dates);
-            const dateB = new Date(b.dates);
+        let lastN = 8;
 
-            if (dateA - dateB === 0) {
-                return b.Round - a.Round;
-            }
+        let playerRounds = jsonData.tournaments.sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round).slice(0, lastN);
 
-            return dateB - dateA;
-        });
+        let avgRoundData = {};
 
-        // Step 1: Group by player and calculate averages for each stat
-        const playerStats = {};
-        jsonData.forEach((data) => {
-            const player = data.player;
+        if (playerRounds.length > 0) { // Check if there are rounds for calculation
+            let columnsToAverage = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'sgTot'];
 
-            if (!playerStats[player]) {
-                playerStats[player] = {
-                count: 1,
-                sgPutt: data.sgPutt,
-                sgArg: data.sgArg,
-                sgApp: data.sgApp,
-                sgOtt: data.sgOtt,
-                sgT2G: data.sgT2G,
-                drDist: data.drDist,
-                drAcc: data.drAcc,
-                gir: data.gir,
-                sandSaves: data.sandSaves,
-                scrambling: data.scrambling,
-                // add more stats here
-                };
-            } else {
-                playerStats[player].count += 1;
-                playerStats[player].sgPutt += data.sgPutt;
-                playerStats[player].sgArg += data.sgArg;
-                playerStats[player].sgApp += data.sgApp;
-                playerStats[player].sgOtt += data.sgOtt;
-                playerStats[player].sgT2G += data.sgT2G;
-                playerStats[player].drDist += data.drDist;
-                playerStats[player].drAcc += data.drAcc;
-                playerStats[player].gir += data.gir;
-                playerStats[player].sandSaves += data.sandSaves;
-                playerStats[player].scrambling += data.scrambling;
-                // update more stats here
-            }
-        });
+            columnsToAverage.forEach((col) => {
+                // Calculate the average value for each column
+                let sum = playerRounds.reduce((sum, round) => sum + round[col], 0);
+                let averageValue = sum / playerRounds.length;
 
-        for (const player in playerStats) {
-            if (playerStats[player].count < lastNumRounds){
-                delete playerStats[player];
-            } else {
-                const count = playerStats[player].count;
-                playerStats[player].sgPutt /= count;
-                playerStats[player].sgArg /= count;
-                playerStats[player].sgApp /= count;
-                playerStats[player].sgOtt /= count;
-                playerStats[player].sgT2G /= count;
-                playerStats[player].drDist /= count;
-                playerStats[player].drAcc /= count;
-                playerStats[player].gir /= count;
-                playerStats[player].sandSaves /= count;
-                playerStats[player].scrambling /= count;
-                // update more stats here
-            }
+                avgRoundData[col] = Number(averageValue.toFixed(2));
+            });
+        } else { // Set values to null if no rounds are found
+            let columnsToAverage = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'sgTot'];
+
+            columnsToAverage.forEach((col) => {
+                avgRoundData[col] = null;
+            });
         }
 
-        // Step 2: Calculate ranks for each stat
-        const stats = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'drDist', 'drAcc', 'gir', 'sandSaves', 'scrambling']; // add more stats here
-        const averagesObject = {};
 
-        // Helper function to calculate ranks for a specific stat
-        function calculateStatRank(stat, averagesObject) {
-            const statAverages = [];
+        let pgatour = jsonData.pgatour[0];
 
-            // Collect averages for the specified stat from all players
-            for (const currentPlayer in averagesObject) {
-                if (averagesObject.hasOwnProperty(currentPlayer)) {
-                statAverages.push({ player: currentPlayer, value: averagesObject[currentPlayer][stat] });
+        let pgatourData = null;
+
+        if (pgatour){
+            pgatourData = {
+                sgPutt: Number(pgatour.sgPutt.toFixed(2)),
+                sgPuttR: Number(pgatour.sgPuttRank.toFixed(0)),
+                sgArg: Number(pgatour.sgArg.toFixed(2)),
+                sgArgR: Number(pgatour.sgArgRank.toFixed(0)),
+                sgApp: Number(pgatour.sgApp.toFixed(2)),
+                sgAppR: Number(pgatour.sgAppRank.toFixed(0)),
+                sgOtt: Number(pgatour.sgOtt.toFixed(2)),
+                sgOttR: Number(pgatour.sgOttRank.toFixed(0)),
+                sgT2G: Number(pgatour.sgT2G.toFixed(2)),
+                sgT2GR: Number(pgatour.sgT2GRank.toFixed(0)),
+                sgTot: Number(pgatour.sgTot.toFixed(2)),
+                sgTotR: Number(pgatour.sgTotRank.toFixed(0)),
+                drDist: Number(pgatour.drDist.toFixed(1)),
+                drDistR: Number(pgatour.drDistRank.toFixed(0)),
+                drAcc: Number(pgatour.drAcc.toFixed(2)),
+                drAccR: Number(pgatour.drAccRank.toFixed(0)),
+                gir: Number(pgatour.gir.toFixed(2)),
+                girR: Number(pgatour.girRank.toFixed(0)),
+                sandSave: Number(pgatour.sandSave.toFixed(2)),
+                sandSaveR: Number(pgatour.sandSaveRank.toFixed(0)),
+                scrambling: Number(pgatour.scrambling.toFixed(2)),
+                scramblingR: Number(pgatour.scramblingRank.toFixed(0)),
+                app50_75: Number(pgatour.app50_75.toFixed(0)),
+                app50_75R: Number(pgatour.app50_75Rank.toFixed(0)),
+                app75_100: Number(pgatour.app75_100.toFixed(0)),
+                app75_100R: Number(pgatour.app75_100Rank.toFixed(0)),
+                app100_125: Number(pgatour.app100_125.toFixed(0)),
+                app100_125R: Number(pgatour.app100_125Rank.toFixed(0)),
+                app125_150: Number(pgatour.app125_150.toFixed(0)),
+                app125_150R: Number(pgatour.app125_150Rank.toFixed(0)),
+                app150_175: Number(pgatour.app150_175.toFixed(0)),
+                app150_175R: Number(pgatour.app150_175Rank.toFixed(0)),
+                app175_200: Number(pgatour.app175_200.toFixed(0)),
+                app175_200R: Number(pgatour.app175_200Rank.toFixed(0)),
+                app200_up: Number(pgatour.app200_up.toFixed(0)),
+                app200_upR: Number(pgatour.app200_upRank.toFixed(0)),
+                bob: Number(pgatour.bob.toFixed(2)),
+                bobR: Number(pgatour.bobRank.toFixed(0)),
+                bogAvd: Number(pgatour.bogAvd.toFixed(2)),
+                bogAvdR: Number(pgatour.bogAvdRank.toFixed(0)),
+                par3Scoring: Number(pgatour.par3Scoring.toFixed(2)),
+                par3ScoringR: Number(pgatour.par3ScoringRank.toFixed(0)),
+                par4Scoring: Number(pgatour.par4Scoring.toFixed(2)),
+                par4ScoringR: Number(pgatour.par4ScoringRank.toFixed(0)),
+                par5Scoring: Number(pgatour.par5Scoring.toFixed(2)),
+                par5ScoringR: Number(pgatour.par5ScoringRank.toFixed(0)),
+                prox: Number(pgatour.prox.toFixed(0)),
+                proxR: Number(pgatour.proxRank.toFixed(0)),
+                roughProx: Number(pgatour.roughProx.toFixed(0)),
+                roughProxR: Number(pgatour.roughProxRank.toFixed(0)),
+                puttingBob: Number(pgatour.puttingBob.toFixed(1)),
+                puttingBobR: Number(pgatour.puttingBobRank.toFixed(0)),
+                threePuttAvd: Number(pgatour.threePuttAvd.toFixed(1)),
+                threePuttAvdR: Number(pgatour.threePuttAvdRank.toFixed(0)),
+                bonusPutt: Number(pgatour.bonusPutt.toFixed(2)),
+                bonusPuttR: Number(pgatour.bonusPuttRank.toFixed(0)),
+            };
+        }
+
+        profOvrTbl.innerHTML = '';
+
+        // Start building the HTML string for the table
+        let tableHTML = '';
+
+        const statMappings = {
+            sgPutt: 'SG: Putt',
+            sgArg: 'SG: Arg',
+            sgApp: 'SG: App',
+            sgOtt: 'SG: Ott',
+            sgT2G: 'SG: T2G',
+            sgTot: 'SG: Tot.',
+            drDist: 'Dr. Dist.',
+            drAcc: 'Dr. Acc.',
+            gir: 'GIR%',
+            sandSave: 'Sand Save%',
+            scrambling: 'Scrambling',
+            app50_75: 'App. 50-75',
+            app75_100: 'App. 75-100',
+            app100_125: 'App. 100-125',
+            app125_150: 'App. 125-150',
+            app150_175: 'App. 150-175',
+            app175_200: 'App. 175-200',
+            app200_up: 'App. 200+',
+            bob: 'BOB%',
+            bogAvd: 'Bog. Avd.',
+            par3Scoring: 'Par 3s',
+            par4Scoring: 'Par 4s',
+            par5Scoring: 'Par 5s',
+            prox: 'Prox.',
+            roughProx: 'Rough Prox.',
+            puttingBob: 'PuttBOB%',
+            threePuttAvd: '3-Putt Avd.',
+            bonusPutt: 'BonusPutt',
+            // Add more mappings as needed
+        };
+        
+
+        // Table header row
+        tableHTML += '<thead><tr id="profOvrRow"><th id="profOvrHead">Stat</th><th id="profOvrHead">Value</th><th id="profOvrHead">Rank</th></tr></thead><tbody>';
+
+        let noPgaStats = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'sgTot'];
+
+        function getColorFromScale(value) {
+            const scale = d3.scaleLinear()
+                .domain([0, 75, 150])
+                .range(['#4579F1', '#FFFFFF','#F83E3E']);
+        
+            return scale(value);
+        }
+
+        if (pgatourData == null){
+            for( let statInd in noPgaStats){
+                let stat = noPgaStats[statInd];
+                // Add a new row for each stat
+                tableHTML += '<tr id="profOvrRow">';
+                // Add the stat name to the first column
+                tableHTML += `<td id="profOvrElem" class="profOvrStat">${statMappings[stat]}</td>`;
+                // Add the stat value to the second column
+                tableHTML += `<td id="profOvrElem">${avgRoundData[stat]}</td>`;
+                tableHTML += `<td id="profOvrElem">-</td>`;
+
+                tableHTML += '</tr>';
+            }
+        } else {
+            for (let stat in pgatourData) {
+                // Check if the property is a valid stat (not a method, etc.) and does not end with 'R'
+                if (pgatourData.hasOwnProperty(stat) && !stat.endsWith('R')) {
+                    // Add a new row for each stat
+                    tableHTML += '<tr id="profOvrRow">';
+                    // Add the stat name to the first column
+                    tableHTML += `<td id="profOvrElem" class="profOvrStat">${statMappings[stat]}</td>`;
+        
+                    // Add the stat value to the second column
+                    let valueColumn = `<td id="profOvrElem" style="background-color: ${getColorFromScale(pgatourData[stat + 'R'])};">${pgatourData[stat]}</td>`;
+        
+                    // Add the corresponding rank to the third column
+                    let rankColumn = `<td id="profOvrElem">${pgatourData[stat + 'R']}</td>`;
+        
+                    tableHTML += valueColumn;
+                    tableHTML += rankColumn;
+        
+                    tableHTML += '</tr>';
                 }
             }
-
-            // Sort averages in descending order
-            statAverages.sort((a, b) => b.value - a.value);
-
-            // Assign ranks based on the sorted order
-            const ranks = {};
-            statAverages.forEach((entry, index) => {
-                ranks[entry.player] = index + 1;
-            });
-
-            return ranks;
         }
+        
 
-        // Calculate ranks for each stat
-        for (const stat of stats) {
-            const ranks = calculateStatRank(stat, playerStats);
-            for (const player in ranks) {
-                playerStats[player][`${stat}Rank`] = ranks[player];
-            }
-        }
+        profOvrTbl.innerHTML = tableHTML + '</tbody>';
 
-        console.log(playerStats);
-
-        // Get Current Golfer Data
-        let currData = playerStats[currGolfer.value];
-        console.log(currData);
-        let sgPutt = parseFloat(currData['sgPutt']).toFixed(2);
-        let sgPuttRank = parseInt(currData['sgPuttRank']);
-
-        let sgArg = parseFloat(currData['sgArg']).toFixed(2);
-        let sgArgRank = parseInt(currData['sgArgRank']);
-
-        let sgApp = parseFloat(currData['sgApp']).toFixed(2);
-        let sgAppRank = parseInt(currData['sgAppRank']);
-
-        let sgOtt = parseFloat(currData['sgOtt']).toFixed(2);
-        let sgOttRank = parseInt(currData['sgOttRank']);
-
-        let sgT2G = parseFloat(currData['sgT2G']).toFixed(2);
-        let sgT2GRank = parseInt(currData['sgT2GRank']);
-
-        let drDist = parseFloat(currData['drDist']).toFixed(2);
-        let drDistRank = parseInt(currData['drDistRank']);
-
-        let drAcc = parseFloat(currData['drAcc']).toFixed(2);
-        let drAccRank = parseInt(currData['drAccRank']);
-
-        let gir = parseFloat(currData['gir']).toFixed(2);
-        let girRank = parseInt(currData['girRank']);
-
-        let sandSaves = parseFloat(currData['sandSaves']).toFixed(2);
-        let sandSavesRank = parseInt(currData['sandSavesRank']);
-
-        let scrambling = parseFloat(currData['scrambling']).toFixed(2);
-        let scramblingRank = parseInt(currData['scramblingRank']);
-
-        //let tableString = '<table>';
-        let tableString = '<tr><th>Stat</th><th>Value</th><th>Rank</th></tr>';
-
-        // Add rows for each stat
-        let statsDict = [
-            { name: 'SG: Putt', value: sgPutt, rank: sgPuttRank },
-            { name: 'SG: Arg', value: sgArg, rank: sgArgRank },
-            { name: 'SG: App', value: sgApp, rank: sgAppRank },
-            { name: 'SG: Ott', value: sgOtt, rank: sgOttRank },
-            { name: 'SG: T2G', value: sgT2G, rank: sgT2GRank },
-            { name: 'Dr. Dist', value: drDist, rank: drDistRank },
-            { name: 'Dr. Acc', value: drAcc, rank: drAccRank },
-            { name: 'GIR%', value: gir, rank: girRank },
-            { name: 'Sand Save %', value: sandSaves, rank: sandSavesRank },
-            { name: 'Scrambling %', value: scrambling, rank: scramblingRank }
-        ];
-
-        for (let stat of statsDict) {
-            tableString += `<tr><td>${stat.name}</td><td>${stat.value}</td><td>${stat.rank}</td></tr>`;
-        }
-
-        //tableString += '</table>';
-
-        profOvrTbl.innerHTML = tableString;
     })
 }
 

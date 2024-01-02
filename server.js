@@ -383,6 +383,20 @@ app.get('/get/playerListGp/', (req, res) => {
   })
 });
 
+app.get('/get/profOverview/:PLAYER', async (req, res) => {
+  let currPlayer = req.params.PLAYER;
+
+  const tournamentRowResults = await TournamentRow.find({'player': currPlayer, 'Round': { $ne: 'Event' }});
+  const pgatourResults = await pgatour.find({player: currPlayer});
+
+  const combinedResults = {
+    tournaments: tournamentRowResults,
+    pgatour: pgatourResults
+  }
+
+  res.json(combinedResults);
+});
+
 app.get('/get/cheatSheet/', async (req, res) => {
     try {
       // Perform salariesResults query first

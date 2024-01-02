@@ -114,6 +114,7 @@ tr.tableBodyRow:hover {
     left: 0px;
     background-color: lightgray;
     z-index: 6;
+    overflow-y: auto;
 }
 
 #profileStats {
@@ -127,30 +128,55 @@ tr.tableBodyRow:hover {
     overflow-x: auto;
 }
 
+#profOvrDiv {
+    width: fit-content;
+    height: 670px;
+    box-sizing: border-box;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
 #overallStatsProfile {
     display: block;
     border: 2px solid black;
     margin-left: auto;
     margin-right: auto;
     width: fit-content;
+    height: auto;
     text-align: center;
     border-collapse: collapse;
+    font-family: Verdana;
+    font-size: 12px;
+    background-color: white;
 }
 
-.profStatElem {
+.profOvrStat {
+    font-weight:700;
+    padding-left: 2px;
+}
+
+#profOvrRow {
+    background-color: white;
+}
+
+#profOvrElem {
     border: 2px solid black;
-    padding: 4px;
+    padding: 2px;
 }
 
-.profStatHead {
+#profOvrHead {
     background-color: lightgray;
     color: black;
-    padding: 4px;
+    padding: 2px;
     border: 2px solid black;
     font-size: 15px;
     font-family: Verdana;
 }
 
+#overallStatsProfile tbody tr:hover {
+    filter: brightness(80%);
+}
 
 
 /* Below is for Golfer Profiles i.e. profiles.html */

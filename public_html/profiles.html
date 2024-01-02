@@ -32,7 +32,7 @@
     <div id="mainBodyGolferProfiles">
         <img src="img/golferDefault.png" alt="Viktor Hovland" class="profilePic">
         <div id="selectPlayer">
-            <select id="playerNameProf" name="cars" onchange="loadProfile();">
+            <select id="playerNameProf" name="cars" onchange="loadProfile(); loadProfOverview();">
                 <!-- Each option element represents an option in the dropdown -->
                 <option value="Viktor Hovland" default>Viktor Hovland</option>
                 <option value="Rory McIlroy">Rory McIlroy</option>
@@ -40,34 +40,35 @@
                 <option value="Scottie Scheffler">Scottie Scheffler</option>
             </select>
         </div>
-
-        <table id="overallStatsProfile">
-            <tr>
-                <th class="profStatHead">Stat</th>
-                <th class="profStatHead">Value</th>
-                <th class="profStatHead">Rank</th>
-            </tr>
-            <tr class="tableBodyRow">
-                <td class="profStatElem">SG: OTT</td>
-                <td class="profStatElem">1.223</td>
-                <td class="profStatElem">3</td>
-            </tr>
-            <tr class="tableBodyRow">
-                <td class="profStatElem">SG: App</td>
-                <td class="profStatElem">1.4</td>
-                <td class="profStatElem">1</td>
-            </tr>
-            <tr class="tableBodyRow">
-                <td class="profStatElem">SG: ARG</td>
-                <td class="profStatElem">0.022</td>
-                <td class="profStatElem">56</td>
-            </tr>
-            <tr class="tableBodyRow">
-                <td class="profStatElem">SG: PUTT</td>
-                <td class="profStatElem">-0.123</td>
-                <td class="profStatElem">103</td>
-            </tr>
-        </table>
+        <div id="profOvrDiv">
+            <table id="overallStatsProfile">
+                <tr>
+                    <th class="profStatHead">Stat</th>
+                    <th class="profStatHead">Value</th>
+                    <th class="profStatHead">Rank</th>
+                </tr>
+                <tr class="tableBodyRow">
+                    <td class="profStatElem">SG: OTT</td>
+                    <td class="profStatElem">1.223</td>
+                    <td class="profStatElem">3</td>
+                </tr>
+                <tr class="tableBodyRow">
+                    <td class="profStatElem">SG: App</td>
+                    <td class="profStatElem">1.4</td>
+                    <td class="profStatElem">1</td>
+                </tr>
+                <tr class="tableBodyRow">
+                    <td class="profStatElem">SG: ARG</td>
+                    <td class="profStatElem">0.022</td>
+                    <td class="profStatElem">56</td>
+                </tr>
+                <tr class="tableBodyRow">
+                    <td class="profStatElem">SG: PUTT</td>
+                    <td class="profStatElem">-0.123</td>
+                    <td class="profStatElem">103</td>
+                </tr>
+            </table>
+        </div>
     </div>
     <div id="profileStats">
         <div id="filterContainerGP">
