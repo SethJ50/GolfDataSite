@@ -13,7 +13,7 @@
 
         <link rel="stylesheet" type="text/css" href="css/style.css"> <!-- Your custom stylesheet -->
     </head>
-    <body onload="loadCheatSheet();">
+    <body onload="loadTrendsSheet();">
         <div id="headerBar">
             <a href="#" class="navText" id="navTitle" onclick="home();">DataCaddie</a>
             <a href="#" class="navText" onclick="home();">Home</a>
@@ -24,26 +24,26 @@
             <a href="#" class="navText" onclick="uploadPage();">Upload Data</a>
         </div>
         <div id="mainBody">
-            <div id="cheatSheetDiv">
-                <div id="filterContainer">
-                    <div id="columnVisibilityDropdown">
-                        <button id="colVisButCS" onclick="toggleColumnVisibility()">Column Visibility:</button>
-                        <div id="checkboxContainer" style="height: 0; overflow: hidden;"></div>
-                        <button onclick="applyColumnVisibility();" id="applyColVisCS" style="display: none;">Apply</button>
-                    </div>
-                    <div id="searchAreaCS">
-                        <div id="searchInnerAreaCS">
+            <div id="trendsDiv">
+                <div id="filterContainerTR">
+                    <div id="searchAreaTR">
+                        <div id="searchInnerAreaTR">
                             <div>Search:</div>
-                            <input type="text" id="filter-text-box" placeholder="Filter..." oninput="onFilterTextBoxChanged();">
+                            <input type="text" id="filter-text-box-trend" placeholder="Filter..." oninput="onFilterTextBoxChangedTrend();">
                         </div>
     
-                        <div id="innerRoundNumCS">
-                            <div>SG Round Sample:</div>
-                            <input type="text" id="lastNRounds" value="4" onchange="onFilterTextBoxChanged(); loadCheatSheet();">
+                        <div id="recRdsDiv">
+                            <div># Recent Rounds:</div>
+                            <input type="text" id="recRdsInp" value="4" onchange="onFilterTextBoxChangedTrend(); loadTrendsSheet();">
+                        </div>
+
+                        <div id="baseRdsDiv">
+                            <div>Base Round Size:</div>
+                            <input type="text" id="baseRdsInp" value="8" onchange="onFilterTextBoxChangedTrend(); loadTrendsSheet();">
                         </div>
                     </div>
                 </div>
-                <div id="cheatSheet" class="ag-theme-quartz">
+                <div id="trendSheet" class="ag-theme-quartz">
 
                 </div>
             </div>

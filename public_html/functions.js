@@ -16,6 +16,10 @@ function uploadPage() {
     window.location.href = './upload.html';
 }
 
+function trends() {
+    window.location.href = './trends.html';
+}
+
 
 function applyClassesBasedOnValue(element, numericValue, lowestCutoff, lowCutoff, mediumCutoff, highCutoff, higherCutoff, highestCutoff) {
     if (!isNaN(numericValue)) {
@@ -1145,4 +1149,231 @@ function loadPlayerListGp(){
     .catch((error) => {
         console.error('Error:', error.message);
     });
+}
+
+let isTrendSheetInitialized = false;
+let gridApiTrends;
+
+function loadTrendsSheet() {
+    let recentRounds = document.getElementById('recRdsInp');
+    let baseRounds = document.getElementById('baseRdsInp');
+    let trendSheet = document.getElementById('trendSheet');
+
+    let url = '/get/trendsSheet/';
+    
+    let p = fetch(url);
+    p.then((response) =>{
+        return response.json()
+    })
+    .then((jsonData) =>{
+        console.log(jsonData);
+
+        if (!jsonData.salaries || !jsonData.tournamentRow){
+            console.log('Invalid data format, expected "salaries" and "tournamentRow".');
+            return;
+        }
+
+        let dataTableData = jsonData.salaries.map((salary) => {
+            let player = salary.player;
+            let fdSalary = salary.fdSalary;
+            let dkSalary = salary.dkSalary;
+
+            // SG: Recent Rounds Avg
+            let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
+                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+                .slice(0, recentRounds.value); // Grab at most the specified number of rounds
+
+            // Calculate the average of specific columns for the player's rounds
+            let avgRoundData = {};
+
+            if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    let averageValue = playerRounds.reduce((sum, round) => sum + round[col], 0) / playerRounds.length;
+                    avgRoundData[col] = Number(averageValue.toFixed(2));
+                });
+            } else { // Set values to null if no rounds are found
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    avgRoundData[col] = null;
+                });
+            }
+
+            // SG: Base Rounds Avg
+            let playerBaseRounds = jsonData.tournamentRow.filter((round) => round.player === player)
+                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+                .slice(0, baseRounds.value); // Grab at most the specified number of rounds
+
+            // Calculate the average of specific columns for the player's rounds
+            let avgRoundBaseData = {};
+            avgRoundBaseData['baseRds'] = playerBaseRounds.length;
+
+            if (playerBaseRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    let averageValue = playerBaseRounds.reduce((sum, round) => sum + round[col], 0) / playerBaseRounds.length;
+                    avgRoundBaseData[col] = Number(averageValue.toFixed(2));
+                });
+            } else { // Set values to null if no rounds are found
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    avgRoundBaseData[col] = null;
+                });
+            }
+
+            let trendsData;
+
+            if(playerRounds.length != 0){
+                console.log('here');
+                trendsData = {
+                    player,
+                    fdSalary,
+                    dkSalary,
+                    'sgPutt': Number((avgRoundData.sgPutt - avgRoundBaseData.sgPutt).toFixed(2)),
+                    'sgArg': Number((avgRoundData.sgArg - avgRoundBaseData.sgArg).toFixed(2)),
+                    'sgApp': Number((avgRoundData.sgApp - avgRoundBaseData.sgApp).toFixed(2)),
+                    'sgOtt': Number((avgRoundData.sgOtt - avgRoundBaseData.sgOtt).toFixed(2)),
+                    'sgT2G': Number((avgRoundData.sgT2G - avgRoundBaseData.sgT2G).toFixed(2)),
+                    'sgTot': Number((avgRoundData.sgTot - avgRoundBaseData.sgTot).toFixed(2)),
+                    'baseRds':avgRoundBaseData.baseRds
+                    };
+            }else {
+                trendsData = {
+                    player,
+                    fdSalary,
+                    dkSalary,  
+                    'sgPutt': null,
+                    'sgArg':null,
+                    'sgApp': null,
+                    'sgOtt': null,
+                    'sgT2G': null,
+                    'sgTot': null,
+                    'baseRds': 0
+                    };
+            }
+
+            return trendsData;
+        }).filter(Boolean);
+
+        console.log(dataTableData);
+
+        let columnDefs = [
+            {headerName: 'Player', field: 'player'},
+            {headerName: 'FD Salary', field: 'fdSalary'},
+            {headerName: 'DK Salary', field: 'dkSalary'},
+            {headerName: 'SG: Putt', field: 'sgPutt'},
+            {headerName: 'SG: Arg', field: 'sgArg'},
+            {headerName: 'SG: App', field: 'sgApp'},
+            {headerName: 'SG: Ott', field: 'sgOtt'},
+            {headerName: 'SG: T2G', field: 'sgT2G'},
+            {headerName: 'SG: Tot', field: 'sgTot', sortable: true, sort: 'desc'},
+            {headerName: 'Base Rds', field: 'baseRds'},
+        ];
+
+        let minMax = {minValue: -2, midValue: 0, maxValue: 2};
+
+        const colMinMax = {
+            'sgPutt': minMax,
+            'sgArg': minMax,
+            'sgApp': minMax,
+            'sgOtt': minMax,
+            'sgT2G': minMax,
+            'sgTot': minMax
+        };
+
+        const colorScales = {};
+
+        Object.keys(colMinMax).forEach(fieldName => {
+            const { minValue, midValue, maxValue } = colMinMax[fieldName];
+        
+            const colorScale = d3.scaleLinear()
+                .domain([minValue, midValue, maxValue]);
+        
+            colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
+        
+            colorScales[fieldName] = colorScale;
+        });
+
+        const columnsWithColorScale = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt',
+                                        'sgT2G', 'sgTot'];
+
+        function globalCellStyle(params){
+            const fieldName = params.colDef.field;
+            const numericValue = params.value;
+
+            // Set background color to white for null values
+            if (numericValue === null) {
+                return { backgroundColor: '#FFFFFF' };
+            }
+        
+            // Check if the column is in the list and the value is numeric before applying the color scale
+            if (columnsWithColorScale.includes(fieldName) && !isNaN(numericValue) && isFinite(numericValue)) {
+                const cellColor = colorScales[fieldName](numericValue);
+                return { backgroundColor: cellColor };
+            }
+        
+            // Return default style if the column is not in the list or the value is not numeric
+            return {};
+        }
+
+        function clearCheatSheetContent() {
+            /*
+                Clears the content of the cheatSheet.
+            */
+                const trendSheet = document.getElementById('trendSheet');
+                if (trendSheet) {
+                    trendSheet.innerHTML = ''; // Clear content
+                }
+        };
+
+        function initializeCheatSheet() {
+            /*
+                clears trend sheet if already initialized
+
+                builds up grid options - specifies column defs, row data,...
+                
+                creates the grid and puts it in #cheatSheet
+            */
+            if (isTrendSheetInitialized) {
+                clearCheatSheetContent();
+            }
+    
+            // setup grid options
+            const gridOptions = {
+                columnDefs: columnDefs.map(column => ({
+                    ...column,
+                    cellStyle: globalCellStyle,
+                })),
+                rowData: dataTableData,
+                suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
+                onFirstDataRendered: function (params) {
+                    console.log('grid is ready');
+                    params.api.autoSizeAllColumns();
+                },
+                getRowHeight: function(params) {
+                    // return the desired row height in pixels
+                    return 25; // adjust this value based on your preference
+                },
+                headerHeight: 30,
+            };
+    
+            // Create the grid using createGrid
+            gridApiTrends = agGrid.createGrid(document.querySelector('#trendSheet'), gridOptions);
+            isTrendSheetInitialized = true;
+        };
+
+        initializeCheatSheet();
+    })
+    .catch((error) => {
+        console.error('Error:', error.message);
+    });
+}
+
+function onFilterTextBoxChangedTrend() {
+    // the function for the search box which filters the table 
+    // based on 'filter-text-box' for gridApi grid
+    gridApiTrends.setGridOption(
+      'quickFilterText',
+      document.getElementById('filter-text-box-trend').value
+    );
 }

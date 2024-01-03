@@ -461,3 +461,58 @@ div.dt-button-collection {
 #innerRoundNumCS {
     display: inline-block;
 }
+
+#trendsDiv {
+    width: 95%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 10px;
+    padding-right: 15px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    overflow-x: auto;
+    height: fit-content;
+    margin-bottom: 20px;
+}
+
+#searchAreaTR {
+    display: inline;
+    width: fit-content;
+}
+
+#searchInnerAreaTR {
+    display: inline-block;
+}
+
+#recRdsDiv {
+    display: inline-block;
+}
+
+#baseRdsDiv {
+    display: inline-block;
+}
+
+#trendSheet {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 900px;
+    height: 700px;
+}
+
+#filterContainerTR {
+    display: flex;
+    position: relative;
+    width: 900px;
+    height: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 10px;
+    margin-bottom: 10px;
+}
+
+#trendSheet .ag-row:hover {
+    filter: brightness(0.7);
+}
+
