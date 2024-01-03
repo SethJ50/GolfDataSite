@@ -516,3 +516,71 @@ div.dt-button-collection {
     filter: brightness(0.7);
 }
 
+
+#flagSheet{
+    width: 95%;
+    height: 700px;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+#columnVisibilityDropdownFL {
+    width: fit-content;
+    display: inline;
+    margin-right: 5px;
+}
+
+#filterContainerFL {
+    display: flex;
+    position: relative;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 10px;
+    margin-top: 5px;
+}
+
+#colVisButFL {
+    margin-left: 5px;
+    margin-top: 18.5px;
+    width: 175px;
+}
+
+#checkboxContainerFL {
+    margin-top: 10px;
+    height: 150px;
+    overflow-y: auto;
+    width: fit-content;
+}
+
+#checkboxContainerFL label {
+    font-weight: normal;
+}
+
+#checkboxContainerFL .group-label {
+    font-weight: bold;
+}
+
+#applyColVisFL {
+    margin-top: 5px;
+}
+
+#searchAreaFL {
+    display: inline;
+    width: fit-content;
+}
+
+#searchInnerAreaFL {
+    display: inline-block;
+}
+
+#flagSheet .ag-row:hover {
+    filter: brightness(0.7);
+  }
+  
+  #flagSheet .ag-row-hover {
+    filter: brightness(0.7);
+  }
+
+

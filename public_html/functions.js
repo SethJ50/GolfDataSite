@@ -20,6 +20,10 @@ function trends() {
     window.location.href = './trends.html';
 }
 
+function flagPage() {
+    window.location.href = './redflag.html';
+}
+
 
 function applyClassesBasedOnValue(element, numericValue, lowestCutoff, lowCutoff, mediumCutoff, highCutoff, higherCutoff, highestCutoff) {
     if (!isNaN(numericValue)) {
@@ -376,7 +380,7 @@ function loadCheatSheet() {
                     { headerName: 'App. 175-200', field: 'app175_200', hide: true, comparator: customComparator },
                     { headerName: 'App. 200+', field: 'app200_up', hide: true, comparator: customComparator },
                     { headerName: 'BoB %', field: 'bob', hide: true },
-                    { headerName: 'Bogey Avg.', field: 'bogAvd', hide: true, comparator: customComparator },
+                    { headerName: 'Bogey Avd.', field: 'bogAvd', hide: true, comparator: customComparator },
                     { headerName: 'Par 3s Avg', field: 'par3Scoring', hide: true, comparator: customComparator },
                     { headerName: 'Par 4s Avg', field: 'par4Scoring', hide: true, comparator: customComparator },
                     { headerName: 'Par 5s Avg', field: 'par5Scoring', hide: true, comparator: customComparator },
@@ -1378,5 +1382,506 @@ function onFilterTextBoxChangedTrend() {
     gridApiTrends.setGridOption(
       'quickFilterText',
       document.getElementById('filter-text-box-trend').value
+    );
+}
+
+let isFlagSheetInitialized = false;
+let gridApiFlag;
+
+function loadFlagSheet(){
+
+    let url = '/get/flagSheet/';
+    let p = fetch(url);
+    p.then((response) =>{
+        return response.json();
+    })
+    .then((jsonData) =>{
+        console.log(jsonData);
+
+        if(!jsonData.salaries || !jsonData.pgatour){
+            console.log('Invalid data format. Expected "salaries", "pgatour"');
+            return;
+        }
+
+        let dataTableData = jsonData.salaries.map((salary) => {
+            let player = salary.player;
+            let fdSalary = salary.fdSalary;
+            let dkSalary = salary.dkSalary;
+
+            // SG: PGATOUR.COM
+            // Find a matching player in pgatour
+            let pgatourData = jsonData.pgatour.find((pgatour) => pgatour.player === player);
+
+            if (pgatourData) {
+                // If player in pgatour data, add pga tour data
+                let filteredPgatourData = {
+                    sgPuttPGA: Number(pgatourData.sgPutt.toFixed(2)),
+                    sgArgPGA: Number(pgatourData.sgArg.toFixed(2)),
+                    sgAppPGA: Number(pgatourData.sgApp.toFixed(2)),
+                    sgOttPGA: Number(pgatourData.sgOtt.toFixed(2)),
+                    sgT2GPGA: Number(pgatourData.sgT2G.toFixed(2)),
+                    sgTotPGA: Number(pgatourData.sgTot.toFixed(2)),
+                    drDist: Number(pgatourData.drDist.toFixed(2)),
+                    drAcc: Number(pgatourData.drAcc.toFixed(2)),
+                    gir: Number(pgatourData.gir.toFixed(2)),
+                    sandSave: Number(pgatourData.sandSave.toFixed(2)),
+                    scrambling: Number(pgatourData.scrambling.toFixed(2)),
+                    app50_75: Number(pgatourData.app50_75.toFixed(2)),
+                    app75_100: Number(pgatourData.app75_100.toFixed(2)),
+                    app100_125: Number(pgatourData.app100_125.toFixed(2)),
+                    app125_150: Number(pgatourData.app125_150.toFixed(2)),
+                    app150_175: Number(pgatourData.app150_175.toFixed(2)),
+                    app175_200: Number(pgatourData.app175_200.toFixed(2)),
+                    app200_up: Number(pgatourData.app200_up.toFixed(2)),
+                    bob: Number(pgatourData.bob.toFixed(2)),
+                    bogAvd: Number(pgatourData.bogAvd.toFixed(2)),
+                    par3Scoring: Number(pgatourData.par3Scoring.toFixed(2)),
+                    par4Scoring: Number(pgatourData.par4Scoring.toFixed(2)),
+                    par5Scoring: Number(pgatourData.par5Scoring.toFixed(2)),
+                    prox: Number(pgatourData.prox.toFixed(2)),
+                    roughProx: Number(pgatourData.roughProx.toFixed(2)),
+                    puttingBob: Number(pgatourData.puttingBob.toFixed(2)),
+                    threePuttAvd: Number(pgatourData.threePuttAvd.toFixed(2)),
+                    bonusPutt: Number(pgatourData.bonusPutt.toFixed(2)),
+                    // Add other fields as needed
+                };
+
+                // Returns all of this data in cumulation as a list of dicts in dataTableData
+                return {
+                    player,
+                    fdSalary,
+                    dkSalary,
+                    ...filteredPgatourData
+                };
+            } else {
+                // Set pgatour data for the player as null because player doesn't have data.
+                let filteredPgatourData = {
+                    sgPuttPGA: null,
+                    sgArgPGA: null,
+                    sgAppPGA: null,
+                    sgOttPGA: null,
+                    sgT2GPGA: null,
+                    sgTotPGA: null,
+                    drDist: null,
+                    drAcc: null,
+                    gir: null,
+                    sandSave: null,
+                    scrambling: null,
+                    app50_75: null,
+                    app75_100: null,
+                    app100_125: null,
+                    app125_150: null,
+                    app150_175: null,
+                    app175_200: null,
+                    app200_up: null,
+                    bob: null,
+                    bogAvd: null,
+                    par3Scoring: null,
+                    par4Scoring: null,
+                    par5Scoring: null,
+                    prox: null,
+                    roughProx: null,
+                    puttingBob: null,
+                    threePuttAvd: null,
+                    bonusPutt: null,
+                    // Add other fields as needed
+                };
+
+                // Returns all of this data in cumulation as a list of dicts in dataTableData
+                return {
+                    player,
+                    fdSalary,
+                    dkSalary,
+                    ...filteredPgatourData
+                };
+            }
+        }).filter(Boolean);
+
+        function customComparator(valueA, valueB) {
+            if (valueA === null && valueB === null) {
+              return 0; // If both values are null, consider them equal
+            }
+          
+            if (valueA === null) {
+              return 1; // If valueA is null, consider it greater
+            }
+          
+            if (valueB === null) {
+              return -1; // If valueB is null, consider it greater
+            }
+          
+            // Compare non-null values as usual
+            if (valueA > valueB) {
+              return 1;
+            } else if (valueA < valueB) {
+              return -1;
+            }
+          
+            return 0; // If values are equal
+          }
+
+        let columnDefs = [
+            // Player Info grouping
+            {
+                headerName: 'Player Info',
+                children: [
+                    { headerName: 'Player', field: 'player', pinned: 'left'},
+                    { headerName: 'FD Salary', field: 'fdSalary', pinned: 'left' },
+                    { headerName: 'DK Salary', field: 'dkSalary', pinned: 'left' },
+                ],
+            },
+            // SG PGATOUR.COM grouping
+            {
+                headerName: 'SG PGATOUR.COM',
+                children: [
+                    { headerName: 'SG: Putt', field: 'sgPuttPGA', hide: false },
+                    { headerName: 'SG: Arg', field: 'sgArgPGA', hide: false },
+                    { headerName: 'SG: App', field: 'sgAppPGA', hide: false },
+                    { headerName: 'SG: Ott', field: 'sgOttPGA', hide: false},
+                    { headerName: 'SG: T2G', field: 'sgT2GPGA', hide: false },
+                    { headerName: 'SG: Tot', field: 'sgTotPGA', hide: false },
+                ],
+            },
+            // Other Stats grouping
+            {
+                headerName: 'Other Stats',
+                children: [
+                    { headerName: 'Dr. Dist.', field: 'drDist', hide: false },
+                    { headerName: 'Dr. Acc.', field: 'drAcc', hide: false },
+                    { headerName: 'GIR %', field: 'gir', hide: true },
+                    { headerName: 'Sand Save %', field: 'sandSave', hide: true },
+                    { headerName: 'Scrambling %', field: 'scrambling', hide: true },
+                    { headerName: 'App. 50-75', field: 'app50_75', hide: true, comparator: customComparator },
+                    { headerName: 'App. 75-100', field: 'app75_100', hide: true, comparator: customComparator },
+                    { headerName: 'App. 100-125', field: 'app100_125', hide: true, comparator: customComparator },
+                    { headerName: 'App. 125-150', field: 'app125_150', hide: true, comparator: customComparator },
+                    { headerName: 'App. 150-175', field: 'app150_175', hide: true, comparator: customComparator },
+                    { headerName: 'App. 175-200', field: 'app175_200', hide: true, comparator: customComparator },
+                    { headerName: 'App. 200+', field: 'app200_up', hide: true, comparator: customComparator },
+                    { headerName: 'BoB %', field: 'bob', hide: false },
+                    { headerName: 'Bogey Avd.', field: 'bogAvd', hide: true, comparator: customComparator },
+                    { headerName: 'Par 3s Avg', field: 'par3Scoring', hide: true, comparator: customComparator },
+                    { headerName: 'Par 4s Avg', field: 'par4Scoring', hide: true, comparator: customComparator },
+                    { headerName: 'Par 5s Avg', field: 'par5Scoring', hide: true, comparator: customComparator },
+                    { headerName: 'Prox.', field: 'prox', hide: true, comparator: customComparator },
+                    { headerName: 'Rough Prox.', field: 'roughProx', hide: true, comparator: customComparator },
+                    { headerName: 'Putt. BoB %', field: 'puttingBob', hide: true },
+                    { headerName: '3-Putt Avd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
+                    { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
+                ],
+            }
+        ];
+
+        // Function to calculate quantiles for a given array of values, ignoring nulls
+        function calculateQuantiles(values) {
+            // Filter out null values
+            const filteredValues = values.filter(value => value !== null);
+        
+            // If there are no non-null values, return an empty result
+            if (filteredValues.length === 0) {
+            return {};
+            }
+        
+            // Sort the non-null values
+            filteredValues.sort((a, b) => a - b);
+        
+            // Define quantiles
+            const quantiles = [0.25, 0.5, 0.75, 1];
+        
+            // Calculate quantile values
+            const result = {};
+            quantiles.forEach((q) => {
+            const index = Math.floor(q * (filteredValues.length - 1));
+            result[q] = filteredValues[index];
+            });
+        
+            return result;
+        }
+
+        // List of columns where you want to reverse the color scale
+        const columnsWithReversedOrder  = ['app50_75','app75_100',
+        'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
+        'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd'];
+
+        // Function to render emoji in cells
+        function emojiCellRenderer(params, quantiles, columnsWithReversedOrder) {
+            const value = params.value;
+
+            // Check if the value is null
+            if (value === null) {
+                return ''; // Return an empty string for null values
+            }
+
+            // Assign emoji based on quantile
+            let emoji;
+            
+            // Check if the column is in the list and whether to reverse the order
+            const reverseOrder = columnsWithReversedOrder.includes(params.colDef.field);
+            if (reverseOrder) {
+                if (value < quantiles[0.25]) {
+                    emoji = '🟢'; // Green flag emoji
+                } else if (value < quantiles[0.5]) {
+                    emoji = '🟡';
+                } else if (value < quantiles[0.75]) {
+                    emoji = '🟠';
+                } else {
+                    emoji = '🚩'; // Red flag emoji
+                }
+            } else {
+                if (value < quantiles[0.25]) {
+                    emoji = '🚩'; // Red flag emoji
+                } else if (value < quantiles[0.5]) {
+                    emoji = '🟠';
+                } else if (value < quantiles[0.75]) {
+                    emoji = '🟡';
+                } else {
+                    emoji = '🟢'; // Green flag emoji
+                }
+            }
+
+            // Return the emoji along with the original value
+            return `<span title="${value}">${emoji} ${value}</span>`;
+        }
+
+
+        columnDefs.forEach((group) => {
+            if (group.children) {
+                group.children.forEach((column) => {
+                    const columnName = column.field;
+                    
+                    // Check if the column is not one of the specified exceptions
+                    if (columnName !== 'player' && columnName !== 'fdSalary' && columnName !== 'dkSalary') {
+                        // Calculate quantiles for the current column
+                        const columnQuantiles = calculateQuantiles(dataTableData.map(row => row[columnName]));
+        
+                        // Apply emojiCellRenderer to the current column
+                        column.cellRenderer = (params) => emojiCellRenderer(params, columnQuantiles, columnsWithReversedOrder);
+                    }
+                });
+            }
+        });
+        
+          
+
+        function clearCheatSheetContent() {
+            /*
+                Clears the content of the cheatSheet.
+            */
+            const cheatSheet = document.getElementById('flagSheet');
+            if (cheatSheet) {
+                cheatSheet.innerHTML = ''; // Clear content
+            }
+        };
+
+        function initializeCheatSheet() {
+            /*
+                clears cheat sheet if already initialized
+
+                builds up grid options - specifies column defs, row data,...
+                
+                creates the grid and puts it in #cheatSheet
+            */
+            if (isFlagSheetInitialized) {
+                clearCheatSheetContent();
+            }
+    
+            // setup grid options
+            const gridOptions = {
+                columnDefs: columnDefs,
+                rowData: dataTableData,
+                suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
+                onFirstDataRendered: function (params) {
+                    console.log('grid is ready');
+                    params.api.autoSizeAllColumns();
+                    setupColumnVisibilityDropdown(columnDefs); // TODO
+                },
+                getRowHeight: function(params) {
+                    // return the desired row height in pixels
+                    return 25; // adjust this value based on your preference
+                },
+                headerHeight: 30,
+            };
+
+            console.log('Column Definitions:', gridOptions.columnDefs);
+    
+            // Create the grid using createGrid
+            gridApiFlag = agGrid.createGrid(document.querySelector('#flagSheet'), gridOptions);
+            isFlagSheetInitialized = true;
+        }
+
+        function setupColumnVisibilityDropdown(columnDefs) {
+            // Handles the setup of the column visibility dropdown
+            const checkboxContainer = document.getElementById('checkboxContainerFL'); // container of the checkboxes
+        
+            if (!checkboxContainer) {
+                console.error('Checkbox container not found');
+                return;
+            }
+        
+            // Clear the checkbox container if it is not initially empty
+            if (checkboxContainer.hasChildNodes()) {
+                checkboxContainer.innerHTML = '';
+            }
+        
+            // Check if columnDefs is an array and not empty
+            if (Array.isArray(columnDefs) && columnDefs.length > 0) {
+                columnDefs.forEach(group => { // for each group in column defs
+                    if (group.children) {
+        
+                        // Create group checkbox, label, add it to container
+                        const groupCheckbox = document.createElement('input');
+                        groupCheckbox.type = 'checkbox';
+                        groupCheckbox.id = group.headerName + '_group';
+                        groupCheckbox.checked = !group.children.every(col => col.hide); // If any child col visible, check this
+                        groupCheckbox.classList.add('group-checkbox'); // Add class for easier targeting
+        
+                        const groupLabel = document.createElement('label');
+                        groupLabel.htmlFor = group.headerName + '_group';
+                        groupLabel.appendChild(document.createTextNode(group.headerName));
+                        groupLabel.classList.add('group-label'); // Add class to make the font bold
+        
+                        checkboxContainer.appendChild(groupCheckbox);
+                        checkboxContainer.appendChild(groupLabel);
+                        checkboxContainer.appendChild(document.createElement('br'));
+        
+                        // For each child within the group
+                        group.children.forEach(column => {
+                            // Create checkbox, label, add it to checkbox container.
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.id = column.field;
+                            checkbox.checked = !column.hide; // Checked if column is not hidden
+        
+                            const label = document.createElement('label');
+                            label.htmlFor = column.field;
+                            label.appendChild(document.createTextNode(column.headerName));
+        
+                            checkboxContainer.appendChild(checkbox);
+                            checkboxContainer.appendChild(label);
+                            checkboxContainer.appendChild(document.createElement('br'));
+        
+                            // Add event listener to column checkbox to update group checkbox and column visibility
+                            checkbox.addEventListener('change', function () {
+                                const allColumnsHidden = group.children.every(col => col.hide);
+                                groupCheckbox.checked = !allColumnsHidden;
+        
+                                const column = gridApiFlag.getColumn(checkbox.id);
+                                if (column) {
+                                    column.hide = !checkbox.checked;
+                                    //gridApi.setColumnDefs(gridApi.getColumnDefs());
+                                    gridApiFlag.updateGridOptions({ columnDefs: gridApiFlag.getColumnDefs() });
+                                }
+                            });
+                        });
+        
+                        // Add event listener to group checkbox to toggle visibility of group columns
+                        groupCheckbox.addEventListener('change', function () {
+                            group.children.forEach(col => {
+                                col.hide = !groupCheckbox.checked;
+                                const colCheckbox = document.getElementById(col.field);
+                                colCheckbox.checked = groupCheckbox.checked;
+                            });
+                            gridApiFlag.updateGridOptions({ columnDefs: gridApiFlag.getColumnDefs() });
+                        });
+                    }
+                });
+            } else {
+                console.error('Invalid or empty columnDefs array');
+            }
+        }
+
+        window.applyColumnVisibility = function () {
+            // called on click of apply col vis, sets checked cols to visible!
+            console.log('applying col vis');
+        
+            const checkboxes = document.querySelectorAll('#checkboxContainerFL input');
+            const applyButton = document.getElementById('applyColVisFL');
+        
+            const columnsToUpdate = [];
+        
+            checkboxes.forEach(checkbox => {
+                const column = gridApiFlag.getColumn(checkbox.id);
+                if (column) {
+                    // If checkbox is checked, show the column; if unchecked, hide the column
+                    columnsToUpdate.push({ column, visible: checkbox.checked });
+                } else {
+                    console.warn(`Column with field '${checkbox.id}' not found`);
+                }
+            });
+        
+            // Set visibility and hide properties for each column
+            columnsToUpdate.forEach(({ column, visible }) => {
+                column.setVisible(visible);
+                column.getColDef().hide = !visible;
+            });
+        
+            // Set the new columnDefs using setGridOption
+            gridApiFlag.setGridOption('columnDefs', gridApiFlag.getColumnDefs());
+        
+            // Auto-size all columns
+            gridApiFlag.autoSizeAllColumns();
+        
+            // Hide the "Apply" button after applying column visibility changes
+            if (applyButton) {
+                applyButton.style.display = 'none';
+            }
+        
+            // Collapse the checkboxContainer after applying column visibility changes
+            const checkboxContainer = document.getElementById('checkboxContainerFL');
+            if (checkboxContainer) {
+                checkboxContainer.style.height = '0';
+                checkboxContainer.style.overflowY = 'hidden';
+            }
+        };
+
+        window.toggleColumnVisibility = function () {
+            // toggles visibility of the checkbox container
+            const checkboxContainer = document.getElementById('checkboxContainerFL');
+            const applyButton = document.getElementById('applyColVisFL');
+
+            if (checkboxContainer && applyButton) {
+                console.log('in if');
+                const isExpanded = checkboxContainer.style.height === 'auto' || checkboxContainer.style.height === '150px';
+                console.log('is expanded', isExpanded);
+                checkboxContainer.style.height = isExpanded ? '0' : '150px';
+                checkboxContainer.style.overflowY = isExpanded ? 'hidden' : 'auto';
+                applyButton.style.display = isExpanded ? 'none' : 'inline-block';
+            }
+        };
+
+        /*
+            For hovering the entire row - considering we have pinned rows...
+        */
+        document.addEventListener('DOMContentLoaded', function () {
+            const cheatSheet = document.getElementById('cheatSheet');
+            
+            cheatSheet.addEventListener('mouseover', function (event) {
+                const targetRow = event.target.closest('.ag-row');
+                if (targetRow) {
+                targetRow.classList.add('ag-row-hover');
+                }
+            });
+            
+            cheatSheet.addEventListener('mouseout', function (event) {
+                const targetRow = event.target.closest('.ag-row');
+                if (targetRow) {
+                targetRow.classList.remove('ag-row-hover');
+                }
+            });
+            });
+
+        initializeCheatSheet();
+    })
+    .catch((error) => {
+        console.log('Error: ', error.message);
+    })
+}
+
+function onFilterTextBoxChangedFlag() {
+    // the function for the search box which filters the table 
+    // based on 'filter-text-box' for gridApi grid
+    gridApiFlag.setGridOption(
+      'quickFilterText',
+      document.getElementById('filter-text-box-flag').value
     );
 }
