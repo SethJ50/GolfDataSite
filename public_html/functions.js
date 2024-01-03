@@ -1187,13 +1187,13 @@ function loadTrendsSheet() {
             let avgRoundData = {};
 
             if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
                 columnsToAverage.forEach((col) => {
                     let averageValue = playerRounds.reduce((sum, round) => sum + round[col], 0) / playerRounds.length;
                     avgRoundData[col] = Number(averageValue.toFixed(2));
                 });
             } else { // Set values to null if no rounds are found
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
                 columnsToAverage.forEach((col) => {
                     avgRoundData[col] = null;
                 });
@@ -1209,13 +1209,13 @@ function loadTrendsSheet() {
             avgRoundBaseData['baseRds'] = playerBaseRounds.length;
 
             if (playerBaseRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
                 columnsToAverage.forEach((col) => {
                     let averageValue = playerBaseRounds.reduce((sum, round) => sum + round[col], 0) / playerBaseRounds.length;
                     avgRoundBaseData[col] = Number(averageValue.toFixed(2));
                 });
             } else { // Set values to null if no rounds are found
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
                 columnsToAverage.forEach((col) => {
                     avgRoundBaseData[col] = null;
                 });
@@ -1233,8 +1233,12 @@ function loadTrendsSheet() {
                     'sgArg': Number((avgRoundData.sgArg - avgRoundBaseData.sgArg).toFixed(2)),
                     'sgApp': Number((avgRoundData.sgApp - avgRoundBaseData.sgApp).toFixed(2)),
                     'sgOtt': Number((avgRoundData.sgOtt - avgRoundBaseData.sgOtt).toFixed(2)),
-                    'sgT2G': Number((avgRoundData.sgT2G - avgRoundBaseData.sgT2G).toFixed(2)),
-                    'sgTot': Number((avgRoundData.sgTot - avgRoundBaseData.sgTot).toFixed(2)),
+                    'sgHeat': Number((
+                        (avgRoundData.sgPutt - avgRoundBaseData.sgPutt) +
+                        (avgRoundData.sgArg - avgRoundBaseData.sgArg) +
+                        (avgRoundData.sgApp - avgRoundBaseData.sgApp) +
+                        (avgRoundData.sgOtt - avgRoundBaseData.sgOtt)
+                    ).toFixed(2)),
                     'baseRds':avgRoundBaseData.baseRds
                     };
             }else {
@@ -1246,8 +1250,7 @@ function loadTrendsSheet() {
                     'sgArg':null,
                     'sgApp': null,
                     'sgOtt': null,
-                    'sgT2G': null,
-                    'sgTot': null,
+                    'sgHeat': null,
                     'baseRds': 0
                     };
             }
@@ -1265,20 +1268,19 @@ function loadTrendsSheet() {
             {headerName: 'SG: Arg', field: 'sgArg'},
             {headerName: 'SG: App', field: 'sgApp'},
             {headerName: 'SG: Ott', field: 'sgOtt'},
-            {headerName: 'SG: T2G', field: 'sgT2G'},
-            {headerName: 'SG: Tot', field: 'sgTot', sortable: true, sort: 'desc'},
+            {headerName: 'SG HEAT', field: 'sgHeat', sortable: true, sort: 'desc'},
             {headerName: 'Base Rds', field: 'baseRds'},
         ];
 
         let minMax = {minValue: -2, midValue: 0, maxValue: 2};
+        let minMaxHeat = {minValue: -3.5, midValue: 0, maxValue: 3.5};
 
         const colMinMax = {
             'sgPutt': minMax,
             'sgArg': minMax,
             'sgApp': minMax,
             'sgOtt': minMax,
-            'sgT2G': minMax,
-            'sgTot': minMax
+            'sgHeat': minMaxHeat,
         };
 
         const colorScales = {};
@@ -1295,7 +1297,7 @@ function loadTrendsSheet() {
         });
 
         const columnsWithColorScale = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt',
-                                        'sgT2G', 'sgTot'];
+                                        'sgHeat'];
 
         function globalCellStyle(params){
             const fieldName = params.colDef.field;
@@ -1349,6 +1351,7 @@ function loadTrendsSheet() {
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
                     params.api.autoSizeAllColumns();
+                    params.api.setColumnWidth('sgHeat', 100);
                 },
                 getRowHeight: function(params) {
                     // return the desired row height in pixels
