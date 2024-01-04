@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css2?family=Lato:wght@900&display=swap" rel="stylesheet">
+        <title>DataCaddie</title>
+
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+
+        <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="css/style.css"> <!-- Your custom stylesheet -->
+    </head>
+    <body id="customModelBody" onload="loadModelResults();">
+        <div id="headerBar">
+            <a href="#" class="navText" id="navTitle" onclick="home();">DataCaddie</a>
+            <a href="#" class="navText" onclick="home();">Home</a>
+            <a href="#" class="navText" onclick="cheatSheet();">Cheat Sheet</a>
+            <a href="#" class="navText" onclick="golferProfiles();">Golfer Profiles</a>
+            <a href="#" class="navText" onclick="trends();">Trends</a>
+            <a href="#" class="navText" onclick="flagPage();">Flag Sheet</a>
+            <a href="#" class="navText" onclick="modelPage();">Custom Model</a>
+            <a href="#" class="navText" onclick="uploadPage();">Upload Data</a>
+        </div>
+        <div id="mainBodyModel">
+            <div id="modelInputDiv">
+                <div id="mainInputLabel">Model Inputs</div>
+                <div id="sgPgaInput">
+                    <div class="sectLabel">PGA Tour SG Stats:</div>
+                    <div class="outerSect">
+                        <div class="innerSectLeft">
+                            <div class="indInputDiv">
+                                <label for="sgPuttPGAinput" class="modelInputLabel">SG: Putt PGA</label>
+                                <input type="text" id="sgPuttPGAinput" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="sgAppPGAinput" class="modelInputLabel">SG: App PGA</label>
+                                <input type="text" id="sgAppPGAinput" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="sgT2GPGAinput" class="modelInputLabel">SG: T2G PGA</label>
+                                <input type="text" id="sgT2GPGAinput" class="modelInput">
+                            </div>
+                        </div>
+                        <div class="innerSectRight">
+                            <div class="indInputDiv">
+                                <label for="sgArgPGAinput" class="modelInputLabel">SG: Arg PGA</label>
+                                <input type="text" id="sgArgPGAinput" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="sgOttPGAinput" class="modelInputLabel">SG: Ott PGA</label>
+                                <input type="text" id="sgOttPGAinput" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="sgTotPGAinput" class="modelInputLabel">SG: Tot PGA</label>
+                                <input type="text" id="sgTotPGAinput" class="modelInput" value="70">
+                            </div>
+                        </div>  
+                    </div>    
+                </div>
+                
+                <div id="sgRoundInput">
+                    <div id="last12SG">
+                        <div class="sectLabel">SG Last 12 Rds:</div>
+                        <div class="outerSect">
+                            <div class="innerSectLeft">
+                                <div class="indInputDiv">
+                                    <label for="sgPutt12input" class="modelInputLabel">SG: Putt L12</label>
+                                    <input type="text" id="sgPutt12input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgApp12input" class="modelInputLabel">SG: App L12</label>
+                                    <input type="text" id="sgApp12input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgT2G12input" class="modelInputLabel">SG: T2G L12</label>
+                                    <input type="text" id="sgT2G12input" class="modelInput">
+                                </div>
+                            </div>
+                            <div class="innerSectRight">
+                                <div class="indInputDiv">
+                                    <label for="sgArg12input" class="modelInputLabel">SG: Arg L12</label>
+                                    <input type="text" id="sgArg12input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgOtt12input" class="modelInputLabel">SG: Ott L12</label>
+                                    <input type="text" id="sgOtt12input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgTot12input" class="modelInputLabel">SG: Tot L12</label>
+                                    <input type="text" id="sgTot12input" class="modelInput">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="last24SG">
+                        <div class="sectLabel">SG Last 24 Rds:</div>
+                        <div class="outerSect">
+                            <div class="innerSectLeft">
+                                <div class="indInputDiv">
+                                    <label for="sgPutt24input" class="modelInputLabel">SG: Putt L24</label>
+                                    <input type="text" id="sgPutt24input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgApp24input" class="modelInputLabel">SG: App L24</label>
+                                    <input type="text" id="sgApp24input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgT2G24input" class="modelInputLabel">SG: T2G L24</label>
+                                    <input type="text" id="sgT2G24input" class="modelInput">
+                                </div>
+                            </div>
+                            <div class="innerSectRight">
+                                <div class="indInputDiv">
+                                    <label for="sgArg24input" class="modelInputLabel">SG: Arg L24</label>
+                                    <input type="text" id="sgArg24input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgOtt24input" class="modelInputLabel">SG: Ott L24</label>
+                                    <input type="text" id="sgOtt24input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgTot24input" class="modelInputLabel">SG: Tot L24</label>
+                                    <input type="text" id="sgTot24input" class="modelInput">
+                                </div>
+                            </div>
+                        </div>
+                    </div>                    
+                    
+                    <div id="last36SG">
+                        <div class="sectLabel">SG Last 36 Rds:</div>
+                        <div class="outerSect">
+                            <div class="innerSectLeft">
+                                <div class="indInputDiv">
+                                    <label for="sgPutt36input" class="modelInputLabel">SG: Putt L36</label>
+                                    <input type="text" id="sgPutt36input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgApp36input" class="modelInputLabel">SG: App L36</label>
+                                    <input type="text" id="sgApp36input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgT2G36input" class="modelInputLabel">SG: T2G L36</label>
+                                    <input type="text" id="sgT2G36input" class="modelInput">
+                                </div>
+                            </div>
+                            <div class="innerSectRight">
+                                <div class="indInputDiv">
+                                    <label for="sgArg36input" class="modelInputLabel">SG: Arg L36</label>
+                                    <input type="text" id="sgArg36input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgOtt36input" class="modelInputLabel">SG: Ott L36</label>
+                                    <input type="text" id="sgOtt36input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgTot36input" class="modelInputLabel">SG: Tot L36</label>
+                                    <input type="text" id="sgTot36input" class="modelInput">
+                                </div>
+                            </div>
+                        </div>
+                    </div>                    
+                    
+                    <div id="last50SG">
+                        <div class="sectLabel">SG Last 50 Rds:</div>
+                        <div class="outerSect">
+                            <div class="innerSectLeft">
+                                <div class="indInputDiv">
+                                    <label for="sgPutt50input" class="modelInputLabel">SG: Putt L50</label>
+                                    <input type="text" id="sgPutt50input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgApp50input" class="modelInputLabel">SG: App L50</label>
+                                    <input type="text" id="sgApp50input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgT2G50input" class="modelInputLabel">SG: T2G L50</label>
+                                    <input type="text" id="sgT2G50input" class="modelInput">
+                                </div>
+                            </div>
+                            <div class="innerSectRight">
+                                <div class="indInputDiv">
+                                    <label for="sgArg50input" class="modelInputLabel">SG: Arg L50</label>
+                                    <input type="text" id="sgArg50input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgOtt50input" class="modelInputLabel">SG: Ott L50</label>
+                                    <input type="text" id="sgOtt50input" class="modelInput">
+                                </div>
+                                <div class="indInputDiv">
+                                    <label for="sgTot50input" class="modelInputLabel">SG: Tot L50</label>
+                                    <input type="text" id="sgTot50input" class="modelInput">
+                                </div>
+                            </div>
+                        </div>
+                    </div>                                 
+                </div>
+                <div id="otherStats">
+                    <div class="sectLabel">Other Stats:</div>
+                    <div class="outerSect">
+                        <div class="innerSectLeft">
+                            <div class="indInputDiv">
+                                <label for="drDist" class="modelInputLabel">Dr. Dist.</label>
+                                <input type="text" id="drDist" class="modelInput" value="30">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="bob" class="modelInputLabel">BOB%</label>
+                                <input type="text" id="bob" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="sandSave" class="modelInputLabel">SandSave%</label>
+                                <input type="text" id="sandSave" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="par3scoring" class="modelInputLabel">Par 3s Avg</label>
+                                <input type="text" id="par3scoring" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="par5scoring" class="modelInputLabel">Par 5s Avg</label>
+                                <input type="text" id="par5scoring" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="prox" class="modelInputLabel">Prox.</label>
+                                <input type="text" id="prox" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="app50_75" class="modelInputLabel">App. 50-75</label>
+                                <input type="text" id="app50_75" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="app100_125" class="modelInputLabel">App. 100-125</label>
+                                <input type="text" id="app100_125" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="app150_175" class="modelInputLabel">App. 150-175</label>
+                                <input type="text" id="app150_175" class="modelInput">
+                            </div>                        
+                            <div class="indInputDiv">
+                                <label for="app200_up" class="modelInputLabel">App. 200+</label>
+                                <input type="text" id="app200_up" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="bonusPutt" class="modelInputLabel">Bonus Putt</label>
+                                <input type="text" id="bonusPutt" class="modelInput">
+                            </div>
+                        </div>       
+                        <div class="innerSectRight">
+                            <div class="indInputDiv">
+                                <label for="drAcc" class="modelInputLabel">Dr. Acc.</label>
+                                <input type="text" id="drAcc" class="modelInput">
+                            </div>
+                            <div class="indInputDiv">
+                                <label for="bogAvd" class="modelInputLabel">Bogey Avd.</label>
+                                <input type="text" id="bogAvd" class="modelInput">
+                            </div>                        
+                            <div class="indInputDiv">
+                                <label for="scrambling" class="modelInputLabel">Scrambling</label>
+                                <input type="text" id="scrambling" class="modelInput">
+                            </div>                        
+                            <div class="indInputDiv">
+                                <label for="par4scoring" class="modelInputLabel">Par 4s Avg</label>
+                                <input type="text" id="par4scoring" class="modelInput">
+                            </div>                        
+                            <div class="indInputDiv">
+                                <label for="gir" class="modelInputLabel">GIR%</label>
+                                <input type="text" id="gir" class="modelInput">
+                            </div>                        
+                            <div class="indInputDiv">
+                                <label for="roughProx" class="modelInputLabel">Rough Prox.</label>
+                                <input type="text" id="roughProx" class="modelInput">
+                            </div>                        
+                            <div class="indInputDiv">
+                                <label for="app75_100" class="modelInputLabel">App. 75-100</label>
+                                <input type="text" id="app75_100" class="modelInput">
+                            </div>                       
+                            <div class="indInputDiv">
+                                <label for="app125_150" class="modelInputLabel">App. 125-150</label>
+                                <input type="text" id="app125_150" class="modelInput">
+                            </div>                        
+                            <div class="indInputDiv">
+                                <label for="app175_200" class="modelInputLabel">App. 175-200</label>
+                                <input type="text" id="app175_200" class="modelInput">
+                            </div>                        
+                            <div class="indInputDiv">
+                                <label for="puttingBob" class="modelInputLabel">Putt. BoB %</label>
+                                <input type="text" id="puttingBob" class="modelInput">
+                            </div>                        
+                            <div class="indInputDiv">
+                                <label for="threePuttAvd" class="modelInputLabel">3-Putt Avd.</label>
+                                <input type="text" id="threePuttAvd" class="modelInput">
+                            </div>
+                        </div>
+                    </div>
+                </div>             
+                <div id="otherInputs">
+                    <div class="sectLabel">Other:</div>
+                    <div class="outerSect">
+                        <div class="innerSectLeft">
+                            <div class="indInputDiv">
+                                <label for="courseHistory" class="modelInputLabel">Course History</label>
+                                <input type="text" id="courseHistory" class="modelInput">
+                            </div>
+                        </div>
+                        <div class="innerSectRight">
+
+                        </div>
+                    </div>
+                </div>
+                <div id="currSumModel">Current Sum: 100</div>
+                <div id="sumNote">Must equal 100!</div>
+                <div id="modelInputButtons">
+                    <button id="viewModelBtn" onclick="loadModelResults();">View Results</button>
+                </div>
+            </div>
+            <div id="modelOutputDiv">
+                <div id="filterContainerCM">
+                    <div id="searchAreaCM">
+                        <div id="searchInnerAreaCM">
+                            <div>Search:</div>
+                            <input type="text" id="filter-text-box-model" placeholder="Filter..." oninput="onFilterTextBoxChangedModel();">
+                        </div>
+                    </div>
+                </div>
+                <div id="modelSheet" class="ag-theme-quartz">
+
+                </div>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+        <script src="functions.js"></script>
+    </body>
+</html>

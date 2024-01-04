@@ -458,6 +458,41 @@ app.get('/get/flagSheet/', async (req, res) => {
   }
 });
 
+app.get('/get/modelSheet/', async (req, res) => {
+  try {
+    // Perform salariesResults query first
+    const salariesResults = await salaries.find({});
+
+    if (salariesResults.length === 0) {
+      // No player found in salariesResults, return empty result
+      res.json([]);
+      return;
+    }
+
+    // Extract player names from salariesResults
+    const playerNames = salariesResults.map(result => result.player);
+
+    // Perform subsequent queries using the filtered player names
+    const tournamentRowResults = await TournamentRow.find({ player: { $in: playerNames }, 'Round': { $ne: 'Event' } });
+    const pgatourResults = await pgatour.find({ player: { $in: playerNames } });
+    const courseHistoryResults = await courseHistory.find({ player: { $in: playerNames } });
+
+    // Combine the results into a single JSON object
+    const combinedResults = {
+      salaries: salariesResults,
+      tournamentRow: tournamentRowResults,
+      pgatour: pgatourResults,
+      courseHistory: courseHistoryResults,
+    };
+
+    // Send the combined results as JSON
+    res.json(combinedResults);
+  } catch (error) {
+    console.error('Error retrieving data:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/get/cheatSheet/', async (req, res) => {
     try {
       // Perform salariesResults query first

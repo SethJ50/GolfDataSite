@@ -24,6 +24,10 @@ function flagPage() {
     window.location.href = './redflag.html';
 }
 
+function modelPage() {
+    window.location.href = './customModel.html';
+}
+
 
 function applyClassesBasedOnValue(element, numericValue, lowestCutoff, lowCutoff, mediumCutoff, highCutoff, higherCutoff, highestCutoff) {
     if (!isNaN(numericValue)) {
@@ -1355,7 +1359,7 @@ function loadTrendsSheet() {
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
                     params.api.autoSizeAllColumns();
-                    params.api.setColumnWidth('sgHeat', 100);
+                    params.api.setColumnWidth('sgHeat', 80);
                 },
                 getRowHeight: function(params) {
                     // return the desired row height in pixels
@@ -1883,5 +1887,917 @@ function onFilterTextBoxChangedFlag() {
     gridApiFlag.setGridOption(
       'quickFilterText',
       document.getElementById('filter-text-box-flag').value
+    );
+}
+
+let isModelSheetInitialized = false;
+let gridApiModel;
+
+function loadModelResults() {
+    // PGA Tour SG Stats
+    let sgPuttPGAinput = document.getElementById('sgPuttPGAinput').value;
+    let sgAppPGAinput = document.getElementById('sgAppPGAinput').value;
+    let sgT2GPGAinput = document.getElementById('sgT2GPGAinput').value;
+    let sgArgPGAinput = document.getElementById('sgArgPGAinput').value;
+    let sgOttPGAinput = document.getElementById('sgOttPGAinput').value;
+    let sgTotPGAinput = document.getElementById('sgTotPGAinput').value;
+
+    // SG Last 12 Rds
+    let sgPutt12input = document.getElementById('sgPutt12input').value;
+    let sgApp12input = document.getElementById('sgApp12input').value;
+    let sgT2G12input = document.getElementById('sgT2G12input').value;
+    let sgArg12input = document.getElementById('sgArg12input').value;
+    let sgOtt12input = document.getElementById('sgOtt12input').value;
+    let sgTot12input = document.getElementById('sgTot12input').value;
+
+    // SG Last 24 Rds
+    let sgPutt24input = document.getElementById('sgPutt24input').value;
+    let sgApp24input = document.getElementById('sgApp24input').value;
+    let sgT2G24input = document.getElementById('sgT2G24input').value;
+    let sgArg24input = document.getElementById('sgArg24input').value;
+    let sgOtt24input = document.getElementById('sgOtt24input').value;
+    let sgTot24input = document.getElementById('sgTot24input').value;
+
+    // SG Last 36 Rds
+    let sgPutt36input = document.getElementById('sgPutt36input').value;
+    let sgApp36input = document.getElementById('sgApp36input').value;
+    let sgT2G36input = document.getElementById('sgT2G36input').value;
+    let sgArg36input = document.getElementById('sgArg36input').value;
+    let sgOtt36input = document.getElementById('sgOtt36input').value;
+    let sgTot36input = document.getElementById('sgTot36input').value;
+
+    // SG Last 50 Rds
+    let sgPutt50input = document.getElementById('sgPutt50input').value;
+    let sgApp50input = document.getElementById('sgApp50input').value;
+    let sgT2G50input = document.getElementById('sgT2G50input').value;
+    let sgArg50input = document.getElementById('sgArg50input').value;
+    let sgOtt50input = document.getElementById('sgOtt50input').value;
+    let sgTot50input = document.getElementById('sgTot50input').value;
+
+    // Other Stats
+    let drDist = document.getElementById('drDist').value;
+    let bob = document.getElementById('bob').value;
+    let sandSave = document.getElementById('sandSave').value;
+    let par3scoring = document.getElementById('par3scoring').value;
+    let par5scoring = document.getElementById('par5scoring').value;
+    let prox = document.getElementById('prox').value;
+    let app50_75 = document.getElementById('app50_75').value;
+    let app100_125 = document.getElementById('app100_125').value;
+    let app150_175 = document.getElementById('app150_175').value;
+    let app200_up = document.getElementById('app200_up').value;
+    let bonusPutt = document.getElementById('bonusPutt').value;
+    let drAcc = document.getElementById('drAcc').value;
+    let bogAvd = document.getElementById('bogAvd').value;
+    let scrambling = document.getElementById('scrambling').value;
+    let par4scoring = document.getElementById('par4scoring').value;
+    let gir = document.getElementById('gir').value;
+    let roughProx = document.getElementById('roughProx').value;
+    let app75_100 = document.getElementById('app75_100').value;
+    let app125_150 = document.getElementById('app125_150').value;
+    let app175_200 = document.getElementById('app175_200').value;
+    let puttingBob = document.getElementById('puttingBob').value;
+    let threePuttAvd = document.getElementById('threePuttAvd').value;
+
+
+    let url = '/get/modelSheet/';
+
+    let p = fetch(url);
+    p.then((response) => {
+        return response.json();
+    })
+    .then((jsonData) =>{
+        console.log('jsonData: ', jsonData);
+
+        // Ensure that all parts of the jsonData are there.
+        if (!jsonData.salaries || !jsonData.pgatour || !jsonData.courseHistory || !jsonData.tournamentRow) {
+            console.log('Invalid data format. Expected "salaries", "pgatour", "courseHistory", and "tournamentRow" properties.');
+            return;
+        }
+
+        /*
+            EXTRACT DATA FOR DATATABLE:
+
+            - jsonData.salaries.map iterates over each element in salaries array.
+
+            - for each element, provided function inside map is executed
+
+            - (salary) is the individual row from salaries
+        */
+        let dataTableData = jsonData.salaries.map((salary) => {
+            let player = salary.player;
+            let fdSalary = salary.fdSalary;
+            let dkSalary = salary.dkSalary;
+
+            // SG: PGATOUR.COM
+            // Find a matching player in pgatour
+            let pgatourData = jsonData.pgatour.find((pgatour) => pgatour.player === player);
+
+            // COURSE HISTORY
+            // Find matching player in courseHistory
+            let courseHistoryData = jsonData.courseHistory.find((courseHistory) => courseHistory.player === player);
+
+            // If no player is found in course history, default all course history.
+            if (!courseHistoryData) {
+                const courseHistoryKeys = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];
+                courseHistoryData = Object.fromEntries(courseHistoryKeys.map(key => [key, null]));
+            }
+
+            //12, 24, 36, 50
+
+            // SG: LAST 12 ROUNDS
+            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
+            let playerRounds12 = jsonData.tournamentRow.filter((round) => round.player === player)
+                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+                .slice(0, 12); // Grab at most the specified number of rounds
+
+            // Calculate the average of specific columns for the player's rounds
+            let avgRoundData12 = {};
+
+            if (playerRounds12.length > 0 ) { // can change to ensure minimum # rounds for calc
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    let averageValue = playerRounds12.reduce((sum, round) => sum + round[col], 0) / playerRounds12.length;
+                    avgRoundData12[`${col}12`] = Number(averageValue.toFixed(2));
+                });
+            } else { // Set values to null if no rounds are found
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    avgRoundData12[`${col}12`] = null;
+                });
+            }
+
+            // SG: LAST 24 ROUNDS
+            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
+            let playerRounds24 = jsonData.tournamentRow.filter((round) => round.player === player)
+                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+                .slice(0, 12); // Grab at most the specified number of rounds
+
+            // Calculate the average of specific columns for the player's rounds
+            let avgRoundData24 = {};
+
+            if (playerRounds24.length > 0 ) { // can change to ensure minimum # rounds for calc
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    let averageValue = playerRounds24.reduce((sum, round) => sum + round[col], 0) / playerRounds24.length;
+                    avgRoundData24[`${col}24`] = Number(averageValue.toFixed(2));
+                });
+            } else { // Set values to null if no rounds are found
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    avgRoundData24[`${col}24`] = null;
+                });
+            }
+
+            // SG: LAST 36 ROUNDS
+            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
+            let playerRounds36 = jsonData.tournamentRow.filter((round) => round.player === player)
+                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+                .slice(0, 12); // Grab at most the specified number of rounds
+
+            // Calculate the average of specific columns for the player's rounds
+            let avgRoundData36 = {};
+
+            if (playerRounds36.length > 0 ) { // can change to ensure minimum # rounds for calc
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    let averageValue = playerRounds36.reduce((sum, round) => sum + round[col], 0) / playerRounds36.length;
+                    avgRoundData36[`${col}36`] = Number(averageValue.toFixed(2));
+                });
+            } else { // Set values to null if no rounds are found
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    avgRoundData36[`${col}36`] = null;
+                });
+            }
+
+            // SG: LAST 50 ROUNDS
+            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
+            let playerRounds50 = jsonData.tournamentRow.filter((round) => round.player === player)
+                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+                .slice(0, 12); // Grab at most the specified number of rounds
+
+            // Calculate the average of specific columns for the player's rounds
+            let avgRoundData50 = {};
+
+            if (playerRounds50.length > 0 ) { // can change to ensure minimum # rounds for calc
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    let averageValue = playerRounds50.reduce((sum, round) => sum + round[col], 0) / playerRounds50.length;
+                    avgRoundData50[`${col}50`] = Number(averageValue.toFixed(2));
+                });
+            } else { // Set values to null if no rounds are found
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                columnsToAverage.forEach((col) => {
+                    avgRoundData50[`${col}50`] = null;
+                });
+            }
+
+            // RECENT HISTORY
+            // Step 1: Sort tournamentRow Data in descending order by 'dates'
+            let sortedTournamentRow = jsonData.tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
+
+            // Step 2: Identify the 10 most recent tournaments
+            recentTournaments = Array.from(new Set(sortedTournamentRow.map(entry => entry.tournament))).slice(0, 10);
+
+            // Step 3: Create Abbreviations for Tournament Names
+            tournamentAbbreviations = recentTournaments.reduce((abbreviations, tournament, index) => {
+                // Split the tournament name into words
+                const words = tournament.split(' ');
+            
+                // Take the first 3 letters of the first word
+                let abbreviation = words[0].substring(0, 3);
+            
+                // Add the first letter of the remaining words, up to a total of 5 letters
+                abbreviation += words.slice(1).map(word => word[0]).join('').substring(0, 2);
+            
+                abbreviations[`recent${index + 1}`] = abbreviation.toUpperCase(); // Adjust the abbreviation logic as needed
+            
+                return abbreviations;
+            }, {});
+
+            // Ensure tournamentAbbreviations is of length 10
+            for (let index = 1; Object.keys(tournamentAbbreviations).length < 10; index++) {
+                let defaultAbbreviation = `Default${index}`;
+                let currentKey = `recent${index}`;
+
+                // Add default names only if the key doesn't already exist
+                if (!tournamentAbbreviations[currentKey]) {
+                    tournamentAbbreviations[currentKey] = defaultAbbreviation;
+                }
+            }
+
+            // Step 4: Compile Recent History Data for Player
+            /*
+                For each recent tournament, search thru sortedTournamentRow, find all entries where the entry has the
+                current player and the tournament is the current tournament.
+
+                If entry was found, return the finish from the entry, otherwise return null.
+            */
+            let recentHistory = recentTournaments.map(tournament => {
+                let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
+                return entry ? entry.finish : null;
+            });
+
+            // If recentHistory does not have 10 entries, fill it with null.
+            while (recentHistory.length < 10) {
+                recentHistory.push(null);
+            }
+
+            /*
+                Step 5: Generate Finish Data for Recent Tournaments with Abbreviations
+
+                reduce iterates over each 'tournament' in recent tournaments
+
+                'finishData' is what 'accumulates' or gains data over iteration
+
+                'tournament' is the current element in the array
+
+                'index' is the current index in the array
+
+                Finds a tournament in sorted tournament matching current tournament and player
+                Gets the abbreviation for this tournament
+                adds to 'finishData' the finish if an entry is found, otherwise null
+                returns this 'finishData'
+            */
+            let recentFinishData = recentTournaments.reduce((finishData, tournament, index) => {
+                let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
+                let abbreviation = tournamentAbbreviations[`recent${index + 1}`]; // Get the abbreviation for the current tournament
+                finishData[abbreviation] = entry ? entry.finish : null; // Use abbreviation as column name
+
+                // Set null if the player has no data for the current tournament
+                if (!entry) {
+                    recentHistory[index] = null;
+                }
+
+                return finishData;
+            }, {});
+
+            // Check if player exists in pgatour
+            if (pgatourData) {
+                // If player in pgatour data, add pga tour data
+                let filteredPgatourData = {
+                    sgPuttPGA: Number(pgatourData.sgPutt.toFixed(2)),
+                    sgArgPGA: Number(pgatourData.sgArg.toFixed(2)),
+                    sgAppPGA: Number(pgatourData.sgApp.toFixed(2)),
+                    sgOttPGA: Number(pgatourData.sgOtt.toFixed(2)),
+                    sgT2GPGA: Number(pgatourData.sgT2G.toFixed(2)),
+                    sgTotPGA: Number(pgatourData.sgTot.toFixed(2)),
+                    drDist: Number(pgatourData.drDist.toFixed(2)),
+                    drAcc: Number(pgatourData.drAcc.toFixed(2)),
+                    gir: Number(pgatourData.gir.toFixed(2)),
+                    sandSave: Number(pgatourData.sandSave.toFixed(2)),
+                    scrambling: Number(pgatourData.scrambling.toFixed(2)),
+                    app50_75: Number(pgatourData.app50_75.toFixed(2)),
+                    app75_100: Number(pgatourData.app75_100.toFixed(2)),
+                    app100_125: Number(pgatourData.app100_125.toFixed(2)),
+                    app125_150: Number(pgatourData.app125_150.toFixed(2)),
+                    app150_175: Number(pgatourData.app150_175.toFixed(2)),
+                    app175_200: Number(pgatourData.app175_200.toFixed(2)),
+                    app200_up: Number(pgatourData.app200_up.toFixed(2)),
+                    bob: Number(pgatourData.bob.toFixed(2)),
+                    bogAvd: Number(pgatourData.bogAvd.toFixed(2)),
+                    par3Scoring: Number(pgatourData.par3Scoring.toFixed(2)),
+                    par4Scoring: Number(pgatourData.par4Scoring.toFixed(2)),
+                    par5Scoring: Number(pgatourData.par5Scoring.toFixed(2)),
+                    prox: Number(pgatourData.prox.toFixed(2)),
+                    roughProx: Number(pgatourData.roughProx.toFixed(2)),
+                    puttingBob: Number(pgatourData.puttingBob.toFixed(2)),
+                    threePuttAvd: Number(pgatourData.threePuttAvd.toFixed(2)),
+                    bonusPutt: Number(pgatourData.bonusPutt.toFixed(2)),
+                    // Add other fields as needed
+                };
+
+                // Returns all of this data in cumulation as a list of dicts in dataTableData
+                return {
+                    player,
+                    fdSalary,
+                    dkSalary,
+                    ...filteredPgatourData,
+                    ...courseHistoryData, // Include course history data
+                    ...avgRoundData12, // Include average round data
+                    ...avgRoundData24,
+                    ...avgRoundData36,
+                    ...avgRoundData50,
+                    ...recentHistory.reduce((result, finish, index) => {
+                        result[`recent${index + 1}`] = finish;
+                        return result;
+                    }, {}),
+                    ...recentFinishData, // Include finish data for recent tournaments
+                    tournamentAbbreviations, // Include tournament abbreviations
+                };
+            } else {
+                // Set pgatour data for the player as null because player doesn't have data.
+                let filteredPgatourData = {
+                    sgPuttPGA: null,
+                    sgArgPGA: null,
+                    sgAppPGA: null,
+                    sgOttPGA: null,
+                    sgT2GPGA: null,
+                    sgTotPGA: null,
+                    drDist: null,
+                    drAcc: null,
+                    gir: null,
+                    sandSave: null,
+                    scrambling: null,
+                    app50_75: null,
+                    app75_100: null,
+                    app100_125: null,
+                    app125_150: null,
+                    app150_175: null,
+                    app175_200: null,
+                    app200_up: null,
+                    bob: null,
+                    bogAvd: null,
+                    par3Scoring: null,
+                    par4Scoring: null,
+                    par5Scoring: null,
+                    prox: null,
+                    roughProx: null,
+                    puttingBob: null,
+                    threePuttAvd: null,
+                    bonusPutt: null,
+                    // Add other fields as needed
+                };
+
+                // Returns all of this data in cumulation as a list of dicts in dataTableData
+                return {
+                    player,
+                    fdSalary,
+                    dkSalary,
+                    ...filteredPgatourData,
+                    ...courseHistoryData, // Include course history data
+                    ...avgRoundData12, // Include average round data
+                    ...avgRoundData24,
+                    ...avgRoundData36,
+                    ...avgRoundData50,
+                    ...recentHistory.reduce((result, finish, index) => {
+                        result[`recent${index + 1}`] = finish;
+                        return result;
+                    }, {}),
+                    ...recentFinishData, // Include finish data for recent tournaments
+                    tournamentAbbreviations, // Include tournament abbreviations
+                };
+            }
+        }).filter(Boolean); // Remove null entries
+
+        // Define the fields for which you want to calculate z-scores
+        const zScoreFields = [
+            'sgPutt12', 'sgArg12', 'sgApp12', 'sgOtt12', 'sgT2G12', 'sgTot12',
+            'sgPutt24', 'sgArg24', 'sgApp24', 'sgOtt24', 'sgT2G24', 'sgTot24',
+            'sgPutt36', 'sgArg36', 'sgApp36', 'sgOtt36', 'sgT2G36', 'sgTot36',
+            'sgPutt50', 'sgArg50', 'sgApp50', 'sgOtt50', 'sgT2G50', 'sgTot50',
+            'sgPuttPGA', 'sgArgPGA', 'sgAppPGA', 'sgOttPGA', 'sgT2GPGA', 'sgTotPGA',
+            'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75',
+            'app75_100', 'app100_125', 'app125_150', 'app150_175', 'app175_200',
+            'app200_up', 'bob', 'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring',
+            'prox', 'roughProx', 'puttingBob', 'threePuttAvd', 'bonusPutt'
+        ];
+
+        // Calculate mean and standard deviation for each stat
+        let statSums = {};
+        let statSumsSquared = {};
+        let statCounts = {};
+
+        // Iterate through data to calculate sums and counts
+        dataTableData.forEach((playerData) => {
+            Object.keys(playerData).forEach((stat) => {
+                // Check if the field is in the zScoreFields array
+                if (zScoreFields.includes(stat) && typeof playerData[stat] === 'number' && playerData[stat] !== null) {
+                    if (!statSums[stat]) statSums[stat] = 0;
+                    if (!statSumsSquared[stat]) statSumsSquared[stat] = 0;
+                    if (!statCounts[stat]) statCounts[stat] = 0;
+
+                    statSums[stat] += playerData[stat];
+                    statSumsSquared[stat] += Math.pow(playerData[stat], 2);
+                    statCounts[stat]++;
+                }
+            });
+        });
+
+        // Calculate mean and standard deviation
+        let statMeans = {};
+        let statStdDevs = {};
+
+        Object.keys(statSums).forEach((stat) => {
+            statMeans[stat] = statSums[stat] / statCounts[stat];
+            statStdDevs[stat] = Math.sqrt((statSumsSquared[stat] / statCounts[stat]) - Math.pow(statMeans[stat], 2));
+        });
+
+        // Compute z-score for each data point
+        dataTableData.forEach((playerData) => {
+            Object.keys(playerData).forEach((stat) => {
+                // Check if the field is in the zScoreFields array and is a number
+                if (zScoreFields.includes(stat) && typeof playerData[stat] === 'number') {
+                    // Calculate z-score for the current stat
+                    let zScore = playerData[stat] !== null
+                        ? (playerData[stat] - statMeans[stat]) / statStdDevs[stat]
+                        : null;
+
+                    // Add z-score to playerData
+                    playerData[`${stat}_zScore`] = zScore;
+                }
+            });
+        });
+
+        function normalCDF(mean, sigma, to) {
+            var z = (to-mean)/Math.sqrt(2*sigma*sigma);
+            var t = 1/(1+0.3275911*Math.abs(z));
+            var a1 =  0.254829592;
+            var a2 = -0.284496736;
+            var a3 =  1.421413741;
+            var a4 = -1.453152027;
+            var a5 =  1.061405429;
+            var erf = 1-(((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-z*z);
+            var sign = 1;
+            if(z < 0)
+            {
+                sign = -1;
+            }
+            return (1/2)*(1+sign*erf);
+        }
+
+        let weightDict = {
+            // PGA Tour SG Stats
+            'sgPuttPGA': sgPuttPGAinput,
+            'sgAppPGA': sgAppPGAinput,
+            'sgT2GPGA': sgT2GPGAinput,
+            'sgArgPGA': sgArgPGAinput,
+            'sgOttPGA': sgOttPGAinput,
+            'sgTotPGA': sgTotPGAinput,
+        
+            // SG Last 12 Rds
+            'sgPutt12': sgPutt12input,
+            'sgApp12': sgApp12input,
+            'sgT2G12': sgT2G12input,
+            'sgArg12': sgArg12input,
+            'sgOtt12': sgOtt12input,
+            'sgTot12': sgTot12input,
+        
+            // SG Last 24 Rds
+            'sgPutt24': sgPutt24input,
+            'sgApp24': sgApp24input,
+            'sgT2G24': sgT2G24input,
+            'sgArg24': sgArg24input,
+            'sgOtt24': sgOtt24input,
+            'sgTot24': sgTot24input,
+        
+            // SG Last 36 Rds
+            'sgPutt36': sgPutt36input,
+            'sgApp36': sgApp36input,
+            'sgT2G36': sgT2G36input,
+            'sgArg36': sgArg36input,
+            'sgOtt36': sgOtt36input,
+            'sgTot36': sgTot36input,
+        
+            // SG Last 50 Rds
+            'sgPutt50': sgPutt50input,
+            'sgApp50': sgApp50input,
+            'sgT2G50': sgT2G50input,
+            'sgArg50': sgArg50input,
+            'sgOtt50': sgOtt50input,
+            'sgTot50': sgTot50input,
+        
+            // Other Stats
+            'drDist': drDist,
+            'bob': bob,
+            'sandSave': sandSave,
+            'par3Scoring': par3scoring,
+            'par5Scoring': par5scoring,
+            'prox': prox,
+            'app50_75': app50_75,
+            'app100_125': app100_125,
+            'app150_175': app150_175,
+            'app200_up': app200_up,
+            'bonusPutt': bonusPutt,
+            'drAcc': drAcc,
+            'bogAvd': bogAvd,
+            'scrambling': scrambling,
+            'par4Scoring': par4scoring,
+            'gir': gir,
+            'roughProx': roughProx,
+            'app75_100': app75_100,
+            'app125_150': app125_150,
+            'app175_200': app175_200,
+            'puttingBob': puttingBob,
+            'threePuttAvd': threePuttAvd,
+        };
+
+        console.log('weightDict: ', weightDict);
+
+        const reverseStats = ['app50_75','app75_100',
+        'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
+        'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd'];
+
+        dataTableData.forEach((playerData) =>{
+            let ratingSum = 0;
+            let weightSum = 0;
+
+            let statLog = {};
+            for (let key in weightDict){
+                let zScore = playerData[`${key}_zScore`];
+                let weight = parseFloat(weightDict[key]); // Convert weight to a number
+
+                // Check if zScore is not null, not undefined, and weight is not null before incrementing
+                if (zScore !== null && zScore !== undefined && weight !== null && weight !== 0 && weight !== '' && !isNaN(weight)) {
+                    // Reverse the sign of z-score for stats in reverseStats
+                    if (reverseStats.includes(key)) {
+                        zScore = -zScore;
+                    }
+                    
+                    ratingSum += zScore * weight;
+                    weightSum += weight;
+
+                    if(playerData['player'] == 'Dylan Frittelli'){
+                        console.log('stat: ',key ,'zscore: ', zScore, 'weight: ', weight, 'mult: ', zScore * weight);
+                    }
+
+                    statLog[key] = weight;
+                }
+            }
+
+            
+
+            // Calculate weighted average rating
+            let rating = weightSum !== 0 ? ratingSum / weightSum : null;
+
+            // Calculate the percentile using the CDF of the standard normal distribution
+            let percentile = rating !== null ? Number((normalCDF(0, 1, rating) * 100).toFixed(2)) : null;
+
+            if(playerData['player'] == 'Dylan Frittelli'){
+                console.log('weightsum: ', weightSum, ' rating sum: ', ratingSum);
+                console.log('stat log', statLog);
+                console.log('rating: ', rating, ' percentile: ', percentile);
+            }
+
+            // Calculate fdValue and dkValue
+            let fdSalary = playerData['fdSalary']; // Replace with the actual key for FanDuel salary
+            let dkSalary = playerData['dkSalary']; // Replace with the actual key for DraftKings salary
+
+            let fdValue = rating !== null && fdSalary !== null ? Number((percentile / (fdSalary / 1000)).toFixed(2)) : null;
+            let dkValue = rating !== null && dkSalary !== null ? Number((percentile / (dkSalary / 1000)).toFixed(2)) : null;
+
+            // Add fdValue and dkValue to playerData
+            playerData['fdValue'] = fdValue;
+            playerData['dkValue'] = dkValue;
+
+            playerData['rating'] = percentile;
+        });
+
+        console.log('data table data: ', dataTableData);
+
+        function customComparator(valueA, valueB) {
+            if (valueA === null && valueB === null) {
+              return 0; // If both values are null, consider them equal
+            }
+          
+            if (valueA === null) {
+              return 1; // If valueA is null, consider it greater
+            }
+          
+            if (valueB === null) {
+              return -1; // If valueB is null, consider it greater
+            }
+          
+            // Compare non-null values as usual
+            if (valueA > valueB) {
+              return 1;
+            } else if (valueA < valueB) {
+              return -1;
+            }
+          
+            return 0; // If values are equal
+          }
+
+        // Create column definitions
+        let columnDefs = [
+            { headerName: 'Player', field: 'player', pinned: 'left'},
+            { headerName: 'FD Salary', field: 'fdSalary', pinned: 'left' },
+            { headerName: 'DK Salary', field: 'dkSalary', pinned: 'left' },
+            { headerName: 'FD Value', field: 'fdValue'},
+            { headerName: 'DK Value', field: 'dkValue'},
+            {headerName: 'Model Rtg.', field: 'rating', sortable: true, sort: 'desc'},
+
+            { headerName: 'SG: Putt L12', field: 'sgPutt12', hide: true },
+            { headerName: 'SG: Arg L12', field: 'sgArg12', hide: true },
+            { headerName: 'SG: App L12', field: 'sgApp12', hide: true },
+            { headerName: 'SG: Ott L12', field: 'sgOtt12', hide: true },
+            { headerName: 'SG: T2G L12', field: 'sgT2G12', hide: true },
+            { headerName: 'SG: Tot L12', field: 'sgTot12', hide: true },
+
+            { headerName: 'SG: Putt L24', field: 'sgPutt24', hide: true },
+            { headerName: 'SG: Arg L24', field: 'sgArg24', hide: true },
+            { headerName: 'SG: App L24', field: 'sgApp24', hide: true },
+            { headerName: 'SG: Ott L24', field: 'sgOtt24', hide: true },
+            { headerName: 'SG: T2G L24', field: 'sgT2G24', hide: true },
+            { headerName: 'SG: Tot L24', field: 'sgTot24', hide: true },
+
+            { headerName: 'SG: Putt L36', field: 'sgPutt36', hide: true },
+            { headerName: 'SG: Arg L36', field: 'sgArg36', hide: true },
+            { headerName: 'SG: App L36', field: 'sgApp36', hide: true },
+            { headerName: 'SG: Ott L36', field: 'sgOtt36', hide: true },
+            { headerName: 'SG: T2G L36', field: 'sgT2G36', hide: true },
+            { headerName: 'SG: Tot L36', field: 'sgTot36', hide: true },
+
+            { headerName: 'SG: Putt L50', field: 'sgPutt50', hide: true },
+            { headerName: 'SG: Arg L50', field: 'sgArg50', hide: true },
+            { headerName: 'SG: App L50', field: 'sgApp50', hide: true },
+            { headerName: 'SG: Ott L50', field: 'sgOtt50', hide: true },
+            { headerName: 'SG: T2G L50', field: 'sgT2G50', hide: true },
+            { headerName: 'SG: Tot L50', field: 'sgTot50', hide: true },
+
+            { headerName: 'SG: Putt PGA', field: 'sgPuttPGA', hide: true },
+            { headerName: 'SG: Arg PGA', field: 'sgArgPGA', hide: true },
+            { headerName: 'SG: App PGA', field: 'sgAppPGA', hide: true },
+            { headerName: 'SG: Ott PGA', field: 'sgOttPGA', hide: true},
+            { headerName: 'SG: T2G PGA', field: 'sgT2GPGA', hide: true },
+            { headerName: 'SG: Tot PGA', field: 'sgTotPGA', hide: true },
+
+            { headerName: 'Dr. Dist.', field: 'drDist', hide: true },
+            { headerName: 'Dr. Acc.', field: 'drAcc', hide: true },
+            { headerName: 'GIR %', field: 'gir', hide: true },
+            { headerName: 'Sand Save %', field: 'sandSave', hide: true },
+            { headerName: 'Scrambling %', field: 'scrambling', hide: true },
+            { headerName: 'App. 50-75', field: 'app50_75', hide: true, comparator: customComparator },
+            { headerName: 'App. 75-100', field: 'app75_100', hide: true, comparator: customComparator },
+            { headerName: 'App. 100-125', field: 'app100_125', hide: true, comparator: customComparator },
+            { headerName: 'App. 125-150', field: 'app125_150', hide: true, comparator: customComparator },
+            { headerName: 'App. 150-175', field: 'app150_175', hide: true, comparator: customComparator },
+            { headerName: 'App. 175-200', field: 'app175_200', hide: true, comparator: customComparator },
+            { headerName: 'App. 200+', field: 'app200_up', hide: true, comparator: customComparator },
+            { headerName: 'BoB %', field: 'bob', hide: true },
+            { headerName: 'Bogey Avd.', field: 'bogAvd', hide: true, comparator: customComparator },
+            { headerName: 'Par 3s Avg', field: 'par3Scoring', hide: true, comparator: customComparator },
+            { headerName: 'Par 4s Avg', field: 'par4Scoring', hide: true, comparator: customComparator },
+            { headerName: 'Par 5s Avg', field: 'par5Scoring', hide: true, comparator: customComparator },
+            { headerName: 'Prox.', field: 'prox', hide: true, comparator: customComparator },
+            { headerName: 'Rough Prox.', field: 'roughProx', hide: true, comparator: customComparator },
+            { headerName: 'Putt. BoB %', field: 'puttingBob', hide: true },
+            { headerName: '3-Putt Avd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
+            { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
+        ];
+
+        // Function to determine if a column should not be hidden
+        function shouldNotHideColumn(key, weightDict) {
+            const value = weightDict[key];
+
+            // Check if the value is a number
+            if (value !== '' && value !== undefined) {
+                console.log('key: ', key, ' value: ', value);
+                return true; // Do not hide if it's a number
+            }
+
+            return false; // Hide for other cases
+        }
+
+        // Apply the function to the columnDefs array
+        columnDefs.forEach((column) => {
+            if (column.field && shouldNotHideColumn(column.field, weightDict)) {
+                column.hide = false;
+            }
+        });
+
+        // Calculate min, mid, and max values for each column
+        const columnMinMaxValues = columnDefs.reduce((acc, column) => {
+            if (column.children) {
+                // If it's a column group, iterate over its children
+                column.children.forEach(childColumn => {
+                    const fieldName = childColumn.field;
+                    const values = dataTableData.map(row => row[fieldName]);
+                    const sortedValues = [...values].sort((a, b) => a - b);
+                    const filteredValues = values.filter(value => value !== null && value !== 0);
+
+                    const minValue = filteredValues.length > 0 ? Math.min(...filteredValues) : 0;
+                    const maxValue = Math.max(...values);
+
+                    const midIndex = Math.floor(sortedValues.length / 2);
+                    const midValue = sortedValues.length % 2 === 0
+                        ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
+                        : sortedValues[midIndex];
+
+                    acc[fieldName] = { minValue, midValue, maxValue };
+                });
+            } else {
+                // If it's an individual column
+                const fieldName = column.field;
+                const values = dataTableData.map(row => row[fieldName]);
+                const sortedValues = [...values].sort((a, b) => a - b);
+                const filteredValues = values.filter(value => value !== null && value !== 0);
+
+                const minValue = filteredValues.length > 0 ? Math.min(...filteredValues) : 0;
+                const maxValue = Math.max(...values);
+
+
+                const midIndex = Math.floor(sortedValues.length / 2);
+                const midValue = sortedValues.length % 2 === 0
+                    ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
+                    : sortedValues[midIndex];
+
+                acc[fieldName] = { minValue, midValue, maxValue };
+            }
+
+            return acc;
+        }, {});
+
+        // List of columns where you want to reverse the color scale
+        const columnsWithReversedColorScale = ['app50_75','app75_100',
+        'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
+        'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd'];
+
+        // Define the color scale for each column based on the calculated values
+        const colorScales = columnDefs.reduce((acc, column) => {
+            if (column.children) {
+                // If it's a column group, iterate over its children
+                column.children.forEach(childColumn => {
+                    const fieldName = childColumn.field;
+                    const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
+        
+                    const colorScale = d3.scaleLinear()
+                        .domain([minValue, midValue, maxValue]);
+        
+                    if (columnsWithReversedColorScale.includes(fieldName)) {
+                        console.log('Reversed ', fieldName);
+                        colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
+                    } else {
+                        colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
+                    }
+        
+                    acc[fieldName] = colorScale;
+                });
+            } else {
+                // If it's an individual column
+                const fieldName = column.field;
+                const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
+        
+                const colorScale = d3.scaleLinear()
+                    .domain([minValue, midValue, maxValue]);
+        
+                if (columnsWithReversedColorScale.includes(fieldName)) {
+                    console.log('Reversed ', fieldName);
+                    colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
+                } else {
+                    colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
+                }
+        
+                acc[fieldName] = colorScale;
+            }
+        
+            return acc;
+        }, {});
+        
+
+        // List of columns for which to apply the color scale
+        const columnsWithColorScale = ['sgOtt12', 'sgApp12', 'sgArg12', 'sgPutt12', 'sgT2G12', 'sgTot12',
+        'sgOtt24', 'sgApp24', 'sgArg24', 'sgPutt24', 'sgT2G24', 'sgTot24',
+        'sgOtt36', 'sgApp36', 'sgArg36', 'sgPutt36', 'sgT2G36', 'sgTot36',
+        'sgOtt50', 'sgApp50', 'sgArg50', 'sgPutt50', 'sgT2G50', 'sgTot50',
+                                        'sgPuttPGA', 'sgArgPGA', 'sgAppPGA', 'sgOttPGA', 'sgT2GPGA', 'sgTotPGA',
+                                        'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75', 'app75_100',
+                                        'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bob',
+                                        'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
+                                        'puttingBob', 'threePuttAvd', 'bonusPutt', 'rating'];
+        
+        function globalCellStyle(params) {
+            const fieldName = params.colDef.field;
+            const numericValue = params.value;
+
+            // Set background color to white for null values
+            if (numericValue === null) {
+                return { backgroundColor: '#FFFFFF' };
+            }
+        
+            // Check if the column is in the list and the value is numeric before applying the color scale
+            if (columnsWithColorScale.includes(fieldName) && !isNaN(numericValue) && isFinite(numericValue)) {
+                const cellColor = colorScales[fieldName](numericValue);
+                return { backgroundColor: cellColor };
+            }
+        
+            // Return default style if the column is not in the list or the value is not numeric
+            return {};
+        }
+
+        function clearCheatSheetContent() {
+            /*
+                Clears the content of the cheatSheet.
+            */
+            const cheatSheet = document.getElementById('modelSheet');
+            if (cheatSheet) {
+                cheatSheet.innerHTML = ''; // Clear content
+            }
+        }
+
+        function initializeCheatSheet() {
+            /*
+                clears cheat sheet if already initialized
+
+                builds up grid options - specifies column defs, row data,...
+                
+                creates the grid and puts it in #cheatSheet
+            */
+            if (isModelSheetInitialized) {
+                clearCheatSheetContent();
+            }
+    
+            // setup grid options
+            const gridOptions = {
+                columnDefs: columnDefs.map(column => ({
+                    ...column,
+                    cellStyle: globalCellStyle,
+                    children: column.children ? column.children.map(child => ({
+                        ...child,
+                        cellStyle: globalCellStyle,
+                    })) : undefined,
+                })),
+                rowData: dataTableData,
+                suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
+                onFirstDataRendered: function (params) {
+                    console.log('grid is ready');
+                    params.api.autoSizeAllColumns();
+                    params.api.setColumnWidth('rating', 90);
+                },
+                getRowHeight: function(params) {
+                    // return the desired row height in pixels
+                    return 25; // adjust this value based on your preference
+                },
+                headerHeight: 30,
+            };
+
+            gridApiModel = agGrid.createGrid(document.querySelector('#modelSheet'), gridOptions);
+            isModelSheetInitialized = true;
+        }
+
+        /*
+            For hovering the entire row - considering we have pinned rows...
+        */
+        document.addEventListener('DOMContentLoaded', function () {
+            const cheatSheet = document.getElementById('modelSheet');
+            
+            cheatSheet.addEventListener('mouseover', function (event) {
+                const targetRow = event.target.closest('.ag-row');
+                if (targetRow) {
+                targetRow.classList.add('ag-row-hover');
+                }
+            });
+            
+            cheatSheet.addEventListener('mouseout', function (event) {
+                const targetRow = event.target.closest('.ag-row');
+                if (targetRow) {
+                targetRow.classList.remove('ag-row-hover');
+                }
+            });
+        });
+
+        initializeCheatSheet();
+    })
+    .catch((error) => {
+        console.error('Error:', error.message);
+    });
+}
+
+function onFilterTextBoxChangedModel() {
+    // the function for the search box which filters the table 
+    // based on 'filter-text-box' for gridApi grid
+    gridApiModel.setGridOption(
+      'quickFilterText',
+      document.getElementById('filter-text-box-model').value
     );
 }

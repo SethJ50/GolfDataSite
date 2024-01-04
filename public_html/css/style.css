@@ -583,4 +583,181 @@ div.dt-button-collection {
     filter: brightness(0.7);
   }
 
+#customModelBody {
+    overflow: hidden;
+}
+
+#mainBodyModel {
+    display: flex;
+    width: 100%;
+    height: calc(100% - 50px);
+    position: absolute;
+    top:50px;
+    background-color: white;
+    z-index: 5;
+    border: 1px solid purple;
+    overflow: hidden;
+}
+
+#modelInputDiv {
+    display: block;
+    width: 400px;
+    max-height: 100%;
+    top:50px;
+    left: 0px;
+    border: 1px solid green;
+    z-index: 6;
+    overflow-y: auto;
+    padding-bottom: 15px;
+}
+
+#modelOutputDiv {
+    display: inline;
+    position: absolute;
+    width: calc(100% - 403px);
+    height: 100%;
+    right: 0px;
+    background-color: white;
+    z-index: 5;
+    border: 1px solid red;
+}
+
+.indInputDiv {
+    display: flex;
+    align-items: center;
+    width: 95%;
+    height: fit-content;
+    padding-right: 1px;
+    margin-bottom: 5px;
+}
+
+.modelInputLabel {
+    font-size: 15px;
+    width: 280px;
+    margin-right: 5px;
+}
+
+.modelInput{
+    width: 50px;
+    height: 20px;
+}
+
+.sectLabel{
+    font-size: 16px;
+    font-weight: bold;
+    font-family: Verdana;
+    margin-bottom: 10px;
+    padding-left: 2px;
+}
+
+#mainInputLabel {
+    font-size: 20px;
+    font-weight: bold;
+    font-family: Verdana;
+    margin-bottom: 15px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.outerSect {
+    display: flex;
+    padding-left: 1px;
+    padding-right: 1px;
+}
+
+.innerSectLeft {
+    display: inline-block;
+    width: 50%;
+    height:fit-content;
+}
+
+.innerSectRight {
+    display: inline-block;
+    width: 50%;
+    height:fit-content;
+}
+
+#sgPgaInput {
+    text-align: center;
+    margin-top: 10px;
+    height: fit-content;
+    margin-bottom: 5px;
+}
+
+#sgRoundInput {
+    text-align: center;
+    height: fit-content;
+}
+
+#otherStats {
+    text-align: center;
+    height: fit-content;
+}
+
+#otherInputs {
+    text-align: center;
+    height: fit-content;
+}
+
+#modelInputButtons {
+    text-align: center;
+    height: fit-content;
+    margin-top: 15px;
+}
+
+#currSumModel {
+    text-align: center;
+    height: fit-content;
+    margin-top: 10px;
+    font-family: Verdana;
+    font-size: 14px;
+}
+
+#sumNote {
+    text-align: center;
+    height: fit-content;
+    margin-top: 3px;
+    font-family: Verdana;
+    font-size: 10px;
+}
+
+#filterContainerCM {
+    display: flex;
+    position: relative;
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 15px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+#searchAreaCM {
+    display: inline;
+    width: fit-content;
+}
+
+#searchInnerAreaCM {
+    display: inline-block;
+}
+
+#modelSheet {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 1000px;
+    height: 700px;
+    overflow-x: auto;
+}
+
+#modelSheet .ag-row:hover {
+    filter: brightness(0.7);
+  }
+  
+  #modelSheet .ag-row-hover {
+    filter: brightness(0.7);
+  }
+
+
+
 
