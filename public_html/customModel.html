@@ -13,7 +13,7 @@
 
         <link rel="stylesheet" type="text/css" href="css/style.css"> <!-- Your custom stylesheet -->
     </head>
-    <body id="customModelBody" onload="loadModelResults();">
+    <body id="customModelBody" onload="loadModelResults(); onModelInputChange();">
         <div id="headerBar">
             <a href="#" class="navText" id="navTitle" onclick="home();">DataCaddie</a>
             <a href="#" class="navText" onclick="home();">Home</a>
@@ -55,7 +55,7 @@
                             </div>
                             <div class="indInputDiv">
                                 <label for="sgTotPGAinput" class="modelInputLabel">SG: Tot PGA</label>
-                                <input type="text" id="sgTotPGAinput" class="modelInput" value="70">
+                                <input type="text" id="sgTotPGAinput" class="modelInput" value="100">
                             </div>
                         </div>  
                     </div>    
@@ -204,7 +204,7 @@
                         <div class="innerSectLeft">
                             <div class="indInputDiv">
                                 <label for="drDist" class="modelInputLabel">Dr. Dist.</label>
-                                <input type="text" id="drDist" class="modelInput" value="30">
+                                <input type="text" id="drDist" class="modelInput">
                             </div>
                             <div class="indInputDiv">
                                 <label for="bob" class="modelInputLabel">BOB%</label>
@@ -322,6 +322,13 @@
                             <div>Search:</div>
                             <input type="text" id="filter-text-box-model" placeholder="Filter..." oninput="onFilterTextBoxChangedModel();">
                         </div>
+                    </div>
+                    <div id="platformDiv">
+                        <div id="platformLbl">Platform:</div>
+                        <select id="platform" onchange="loadModelResults();">
+                            <option value="fanduel" selected>FanDuel</option>
+                            <option value="draftkings">DraftKings</option>
+                        </select>
                     </div>
                 </div>
                 <div id="modelSheet" class="ag-theme-quartz">

@@ -2726,18 +2726,11 @@ function loadModelResults() {
         }
 
         function initializeCheatSheet() {
-            /*
-                clears cheat sheet if already initialized
-
-                builds up grid options - specifies column defs, row data,...
-                
-                creates the grid and puts it in #cheatSheet
-            */
             if (isModelSheetInitialized) {
                 clearCheatSheetContent();
             }
-    
-            // setup grid options
+        
+            // Setup grid options
             const gridOptions = {
                 columnDefs: columnDefs.map(column => ({
                     ...column,
@@ -2748,20 +2741,46 @@ function loadModelResults() {
                     })) : undefined,
                 })),
                 rowData: dataTableData,
-                suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
+                suppressColumnVirtualisation: true,
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
                     params.api.autoSizeAllColumns();
                     params.api.setColumnWidth('rating', 90);
                 },
                 getRowHeight: function(params) {
-                    // return the desired row height in pixels
-                    return 25; // adjust this value based on your preference
+                    return 25;
                 },
                 headerHeight: 30,
             };
-
-            gridApiModel = agGrid.createGrid(document.querySelector('#modelSheet'), gridOptions);
+        
+            function updateColumnVisibility() {
+                let selectedPlatform = document.getElementById('platform').value;
+            
+                gridOptions.columnDefs.forEach(column => {
+                    const colId = column.field;
+            
+                    if (selectedPlatform === 'fanduel') {
+                        if (colId === 'fdSalary' || colId === 'fdValue') {
+                            column.hide = false;
+                        } else if (colId === 'dkSalary' || colId === 'dkValue') {
+                            column.hide = true;
+                        }
+                    } else if (selectedPlatform === 'draftkings') {
+                        if (colId === 'fdSalary' || colId === 'fdValue') {
+                            column.hide = true;
+                        } else if (colId === 'dkSalary' || colId === 'dkValue') {
+                            column.hide = false;
+                        }
+                    }
+                });
+            
+                gridOptions.api.setColumnDefs(gridOptions.columnDefs);
+            }                      
+        
+            const gridDiv = document.querySelector('#modelSheet');
+            gridApiModel = new agGrid.Grid(gridDiv, gridOptions); // Use new agGrid.Grid constructor
+            updateColumnVisibility();
+        
             isModelSheetInitialized = true;
         }
 
@@ -2801,3 +2820,104 @@ function onFilterTextBoxChangedModel() {
       document.getElementById('filter-text-box-model').value
     );
 }
+
+function onModelInputChange() {
+    let currentSum = document.getElementById('currSumModel');
+
+    let sgPuttPGAinput = document.getElementById('sgPuttPGAinput').value;
+    let sgAppPGAinput = document.getElementById('sgAppPGAinput').value;
+    let sgT2GPGAinput = document.getElementById('sgT2GPGAinput').value;
+    let sgArgPGAinput = document.getElementById('sgArgPGAinput').value;
+    let sgOttPGAinput = document.getElementById('sgOttPGAinput').value;
+    let sgTotPGAinput = document.getElementById('sgTotPGAinput').value;
+
+    // SG Last 12 Rds
+    let sgPutt12input = document.getElementById('sgPutt12input').value;
+    let sgApp12input = document.getElementById('sgApp12input').value;
+    let sgT2G12input = document.getElementById('sgT2G12input').value;
+    let sgArg12input = document.getElementById('sgArg12input').value;
+    let sgOtt12input = document.getElementById('sgOtt12input').value;
+    let sgTot12input = document.getElementById('sgTot12input').value;
+
+    // SG Last 24 Rds
+    let sgPutt24input = document.getElementById('sgPutt24input').value;
+    let sgApp24input = document.getElementById('sgApp24input').value;
+    let sgT2G24input = document.getElementById('sgT2G24input').value;
+    let sgArg24input = document.getElementById('sgArg24input').value;
+    let sgOtt24input = document.getElementById('sgOtt24input').value;
+    let sgTot24input = document.getElementById('sgTot24input').value;
+
+    // SG Last 36 Rds
+    let sgPutt36input = document.getElementById('sgPutt36input').value;
+    let sgApp36input = document.getElementById('sgApp36input').value;
+    let sgT2G36input = document.getElementById('sgT2G36input').value;
+    let sgArg36input = document.getElementById('sgArg36input').value;
+    let sgOtt36input = document.getElementById('sgOtt36input').value;
+    let sgTot36input = document.getElementById('sgTot36input').value;
+
+    // SG Last 50 Rds
+    let sgPutt50input = document.getElementById('sgPutt50input').value;
+    let sgApp50input = document.getElementById('sgApp50input').value;
+    let sgT2G50input = document.getElementById('sgT2G50input').value;
+    let sgArg50input = document.getElementById('sgArg50input').value;
+    let sgOtt50input = document.getElementById('sgOtt50input').value;
+    let sgTot50input = document.getElementById('sgTot50input').value;
+
+    // Other Stats
+    let drDist = document.getElementById('drDist').value;
+    let bob = document.getElementById('bob').value;
+    let sandSave = document.getElementById('sandSave').value;
+    let par3scoring = document.getElementById('par3scoring').value;
+    let par5scoring = document.getElementById('par5scoring').value;
+    let prox = document.getElementById('prox').value;
+    let app50_75 = document.getElementById('app50_75').value;
+    let app100_125 = document.getElementById('app100_125').value;
+    let app150_175 = document.getElementById('app150_175').value;
+    let app200_up = document.getElementById('app200_up').value;
+    let bonusPutt = document.getElementById('bonusPutt').value;
+    let drAcc = document.getElementById('drAcc').value;
+    let bogAvd = document.getElementById('bogAvd').value;
+    let scrambling = document.getElementById('scrambling').value;
+    let par4scoring = document.getElementById('par4scoring').value;
+    let gir = document.getElementById('gir').value;
+    let roughProx = document.getElementById('roughProx').value;
+    let app75_100 = document.getElementById('app75_100').value;
+    let app125_150 = document.getElementById('app125_150').value;
+    let app175_200 = document.getElementById('app175_200').value;
+    let puttingBob = document.getElementById('puttingBob').value;
+    let threePuttAvd = document.getElementById('threePuttAvd').value;
+
+    const inputElements = [
+        sgPuttPGAinput, sgAppPGAinput, sgT2GPGAinput, sgArgPGAinput, sgOttPGAinput, sgTotPGAinput,
+        sgPutt12input, sgApp12input, sgT2G12input, sgArg12input, sgOtt12input, sgTot12input,
+        sgPutt24input, sgApp24input, sgT2G24input, sgArg24input, sgOtt24input, sgTot24input,
+        sgPutt36input, sgApp36input, sgT2G36input, sgArg36input, sgOtt36input, sgTot36input,
+        sgPutt50input, sgApp50input, sgT2G50input, sgArg50input, sgOtt50input, sgTot50input,
+        drDist, bob, sandSave, par3scoring, par5scoring, prox, app50_75, app100_125, app150_175,
+        app200_up, bonusPutt, drAcc, bogAvd, scrambling, par4scoring, gir, roughProx, app75_100,
+        app125_150, app175_200, puttingBob, threePuttAvd
+    ];
+
+    // Sum of all stats
+    const totalSum = inputElements.reduce((sum, input) => {
+        const value = parseFloat(input) || 0; // Convert input value to number, default to 0 if NaN
+        return sum + value;
+    }, 0);
+
+
+    currentSum.innerText = "";
+
+    // Update currentSum element
+    currentSum.innerText = "Current Sum: " + totalSum.toFixed(1); // Display sum with 2 decimal places
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Get all elements with the class 'modelInput'
+    const modelInputs = document.querySelectorAll('.modelInput');
+
+    // Attach onModelInputChange function to the change event of each modelInput element
+    modelInputs.forEach(function (input) {
+        console.log('on change');
+        input.addEventListener('change', onModelInputChange);
+    });
+});

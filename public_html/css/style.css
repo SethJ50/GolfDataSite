@@ -605,7 +605,6 @@ div.dt-button-collection {
     max-height: 100%;
     top:50px;
     left: 0px;
-    border: 1px solid green;
     z-index: 6;
     overflow-y: auto;
     padding-bottom: 15px;
@@ -619,7 +618,6 @@ div.dt-button-collection {
     right: 0px;
     background-color: white;
     z-index: 5;
-    border: 1px solid red;
 }
 
 .indInputDiv {
@@ -757,6 +755,16 @@ div.dt-button-collection {
   #modelSheet .ag-row-hover {
     filter: brightness(0.7);
   }
+
+#platformDiv{
+    margin-left: 10px;
+}
+
+#platform {
+    height: 21.5px;
+    width: 100px;
+}
+
 
 
 
