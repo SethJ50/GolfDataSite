@@ -1892,6 +1892,7 @@ function onFilterTextBoxChangedFlag() {
 
 let isModelSheetInitialized = false;
 let gridApiModel;
+let gridOptionsModel;
 
 function loadModelResults() {
     // PGA Tour SG Stats
@@ -1957,6 +1958,7 @@ function loadModelResults() {
     let app175_200 = document.getElementById('app175_200').value;
     let puttingBob = document.getElementById('puttingBob').value;
     let threePuttAvd = document.getElementById('threePuttAvd').value;
+    let courseHistoryInput = document.getElementById('courseHistory').value;
 
 
     let url = '/get/modelSheet/';
@@ -2030,7 +2032,7 @@ function loadModelResults() {
             // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
             let playerRounds24 = jsonData.tournamentRow.filter((round) => round.player === player)
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, 12); // Grab at most the specified number of rounds
+                .slice(0, 24); // Grab at most the specified number of rounds
 
             // Calculate the average of specific columns for the player's rounds
             let avgRoundData24 = {};
@@ -2052,7 +2054,7 @@ function loadModelResults() {
             // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
             let playerRounds36 = jsonData.tournamentRow.filter((round) => round.player === player)
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, 12); // Grab at most the specified number of rounds
+                .slice(0, 36); // Grab at most the specified number of rounds
 
             // Calculate the average of specific columns for the player's rounds
             let avgRoundData36 = {};
@@ -2074,7 +2076,7 @@ function loadModelResults() {
             // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
             let playerRounds50 = jsonData.tournamentRow.filter((round) => round.player === player)
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, 12); // Grab at most the specified number of rounds
+                .slice(0, 50); // Grab at most the specified number of rounds
 
             // Calculate the average of specific columns for the player's rounds
             let avgRoundData50 = {};
@@ -2280,6 +2282,24 @@ function loadModelResults() {
             }
         }).filter(Boolean); // Remove null entries
 
+        dataTableData.forEach(playerData => {
+            // Extract the relevant stats for chAvg calculation
+            let statsToAverage = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];
+        
+            // Filter out null values and convert to numbers
+            let validStats = statsToAverage.map(stat => {
+                let statValue = playerData[stat];
+                return statValue !== null ? parseFloat(statValue) : null;
+            });
+        
+            // Filter out null values and calculate the average
+            let filteredStats = validStats.filter(stat => stat !== null);
+            let chAvg = filteredStats.length > 0 ? Number((filteredStats.reduce((sum, stat) => sum + stat, 0) / filteredStats.length).toFixed(2)) : null;
+        
+            // Add chAvg to playerData
+            playerData['chAvg'] = chAvg;
+        });
+        
         // Define the fields for which you want to calculate z-scores
         const zScoreFields = [
             'sgPutt12', 'sgArg12', 'sgApp12', 'sgOtt12', 'sgT2G12', 'sgTot12',
@@ -2290,7 +2310,7 @@ function loadModelResults() {
             'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75',
             'app75_100', 'app100_125', 'app125_150', 'app150_175', 'app175_200',
             'app200_up', 'bob', 'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring',
-            'prox', 'roughProx', 'puttingBob', 'threePuttAvd', 'bonusPutt'
+            'prox', 'roughProx', 'puttingBob', 'threePuttAvd', 'bonusPutt', 'chAvg', 'fdSalary', 'dkSalary'
         ];
 
         // Calculate mean and standard deviation for each stat
@@ -2420,14 +2440,18 @@ function loadModelResults() {
             'app175_200': app175_200,
             'puttingBob': puttingBob,
             'threePuttAvd': threePuttAvd,
+            'chAvg': courseHistoryInput
         };
 
         console.log('weightDict: ', weightDict);
 
         const reverseStats = ['app50_75','app75_100',
         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
-        'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd'];
+        'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd', 'chAvg'];
 
+        let testPlayer = 'Padraig Harrington';
+        console.log('Player: ', testPlayer);
+        
         dataTableData.forEach((playerData) =>{
             let ratingSum = 0;
             let weightSum = 0;
@@ -2447,7 +2471,7 @@ function loadModelResults() {
                     ratingSum += zScore * weight;
                     weightSum += weight;
 
-                    if(playerData['player'] == 'Dylan Frittelli'){
+                    if(playerData['player'] == testPlayer){
                         console.log('stat: ',key ,'zscore: ', zScore, 'weight: ', weight, 'mult: ', zScore * weight);
                     }
 
@@ -2455,15 +2479,40 @@ function loadModelResults() {
                 }
             }
 
+            let fullModel = true;
+            if(weightSum !== 100){
+                fullModel = false;
+                console.log('adjustment for: ', playerData['player']);
+                let remSum = 100 - weightSum;
+                let platformCheck = document.getElementById('platform').value;
+                let salZScore;
+
+                if(platformCheck == 'fanduel'){
+                    salZScore = playerData['fdSalary_zScore'];
+                } else{
+                    salZScore = playerData['dkSalary_zScore'];
+                }
+
+                ratingSum += salZScore * remSum;
+                weightSum += remSum;
+            }
+
+
+
             
 
             // Calculate weighted average rating
             let rating = weightSum !== 0 ? ratingSum / weightSum : null;
 
             // Calculate the percentile using the CDF of the standard normal distribution
-            let percentile = rating !== null ? Number((normalCDF(0, 1, rating) * 100).toFixed(2)) : null;
+            let percentile;
+            if (fullModel == false){
+                percentile = rating !== null ? (Number((normalCDF(0, 1, rating) * 100).toFixed(2)) - 5) : null; // IMPORTANT, can change value of 5 here
+            } else {
+                percentile = rating !== null ? Number((normalCDF(0, 1, rating) * 100).toFixed(2)) : null;
+            }
 
-            if(playerData['player'] == 'Dylan Frittelli'){
+            if(playerData['player'] == testPlayer){
                 console.log('weightsum: ', weightSum, ' rating sum: ', ratingSum);
                 console.log('stat log', statLog);
                 console.log('rating: ', rating, ' percentile: ', percentile);
@@ -2574,6 +2623,7 @@ function loadModelResults() {
             { headerName: 'Putt. BoB %', field: 'puttingBob', hide: true },
             { headerName: '3-Putt Avd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
             { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
+            { headerName: 'Course History', field: 'chAvg', hide: true, comparator: customComparator },
         ];
 
         // Function to determine if a column should not be hidden
@@ -2641,7 +2691,7 @@ function loadModelResults() {
         // List of columns where you want to reverse the color scale
         const columnsWithReversedColorScale = ['app50_75','app75_100',
         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
-        'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd'];
+        'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd', 'chAvg'];
 
         // Define the color scale for each column based on the calculated values
         const colorScales = columnDefs.reduce((acc, column) => {
@@ -2655,7 +2705,6 @@ function loadModelResults() {
                         .domain([minValue, midValue, maxValue]);
         
                     if (columnsWithReversedColorScale.includes(fieldName)) {
-                        console.log('Reversed ', fieldName);
                         colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
                     } else {
                         colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
@@ -2672,7 +2721,6 @@ function loadModelResults() {
                     .domain([minValue, midValue, maxValue]);
         
                 if (columnsWithReversedColorScale.includes(fieldName)) {
-                    console.log('Reversed ', fieldName);
                     colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
                 } else {
                     colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
@@ -2694,7 +2742,7 @@ function loadModelResults() {
                                         'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75', 'app75_100',
                                         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bob',
                                         'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
-                                        'puttingBob', 'threePuttAvd', 'bonusPutt', 'rating'];
+                                        'puttingBob', 'threePuttAvd', 'bonusPutt', 'rating', 'chAvg'];
         
         function globalCellStyle(params) {
             const fieldName = params.colDef.field;
@@ -2731,7 +2779,7 @@ function loadModelResults() {
             }
         
             // Setup grid options
-            const gridOptions = {
+            gridOptionsModel = {
                 columnDefs: columnDefs.map(column => ({
                     ...column,
                     cellStyle: globalCellStyle,
@@ -2756,7 +2804,7 @@ function loadModelResults() {
             function updateColumnVisibility() {
                 let selectedPlatform = document.getElementById('platform').value;
             
-                gridOptions.columnDefs.forEach(column => {
+                gridOptionsModel.columnDefs.forEach(column => {
                     const colId = column.field;
             
                     if (selectedPlatform === 'fanduel') {
@@ -2774,11 +2822,11 @@ function loadModelResults() {
                     }
                 });
             
-                gridOptions.api.setColumnDefs(gridOptions.columnDefs);
+                gridOptionsModel.api.setColumnDefs(gridOptionsModel.columnDefs);
             }                      
         
             const gridDiv = document.querySelector('#modelSheet');
-            gridApiModel = new agGrid.Grid(gridDiv, gridOptions); // Use new agGrid.Grid constructor
+            gridApiModel = new agGrid.Grid(gridDiv, gridOptionsModel); // Use new agGrid.Grid constructor
             updateColumnVisibility();
         
             isModelSheetInitialized = true;
@@ -2814,11 +2862,9 @@ function loadModelResults() {
 
 function onFilterTextBoxChangedModel() {
     // the function for the search box which filters the table 
-    // based on 'filter-text-box' for gridApi grid
-    gridApiModel.setGridOption(
-      'quickFilterText',
-      document.getElementById('filter-text-box-model').value
-    );
+    // based on 'filter-text-box' for gridOptionsModel
+    const filterText = document.getElementById('filter-text-box-model').value;
+    gridOptionsModel.api.setQuickFilter(filterText);
 }
 
 function onModelInputChange() {
@@ -2886,6 +2932,7 @@ function onModelInputChange() {
     let app175_200 = document.getElementById('app175_200').value;
     let puttingBob = document.getElementById('puttingBob').value;
     let threePuttAvd = document.getElementById('threePuttAvd').value;
+    let courseHistoryInput = document.getElementById('courseHistory').value;
 
     const inputElements = [
         sgPuttPGAinput, sgAppPGAinput, sgT2GPGAinput, sgArgPGAinput, sgOttPGAinput, sgTotPGAinput,
@@ -2895,7 +2942,7 @@ function onModelInputChange() {
         sgPutt50input, sgApp50input, sgT2G50input, sgArg50input, sgOtt50input, sgTot50input,
         drDist, bob, sandSave, par3scoring, par5scoring, prox, app50_75, app100_125, app150_175,
         app200_up, bonusPutt, drAcc, bogAvd, scrambling, par4scoring, gir, roughProx, app75_100,
-        app125_150, app175_200, puttingBob, threePuttAvd
+        app125_150, app175_200, puttingBob, threePuttAvd, courseHistoryInput
     ];
 
     // Sum of all stats
@@ -2918,6 +2965,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Attach onModelInputChange function to the change event of each modelInput element
     modelInputs.forEach(function (input) {
         console.log('on change');
-        input.addEventListener('change', onModelInputChange);
+        input.addEventListener('input', onModelInputChange);
     });
 });
