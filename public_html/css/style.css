@@ -765,6 +765,34 @@ div.dt-button-collection {
     width: 100px;
 }
 
+#goOptimizeDiv {
+    margin-left: 10px;
+}
+
+#modelSettingsDiv {
+    width: 500px;
+    height: 700px;
+    display: block;
+    border: 1px solid lightgray;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    text-align: center;
+}
+
+#modelSettingsHeader{
+    font-size: 25px;
+    font-weight: bold;
+    font-family: Verdana;
+    margin-bottom: 15px;
+}
+
+.modelSettingSect{
+    width: 100%;
+    height: fit-content;
+    margin-bottom: 10px;
+}
+
 
 
 

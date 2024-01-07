@@ -28,6 +28,29 @@ function modelPage() {
     window.location.href = './customModel.html';
 }
 
+function optimizerSettings() {
+    window.location.href = './optimizerSettings.html';
+}
+
+function logSavedData(){
+    const savedDataJSON = localStorage.getItem('modelData');
+
+    if(savedDataJSON){
+        let inModelData = JSON.parse(savedDataJSON);
+        console.log('model data: ', inModelData);
+    } else {
+        console.log('No saved model data found');
+    }
+}
+
+function goOptimizerResults() {
+    let numLineups = document.getElementById('numLineups').value;
+
+    localStorage.setItem('numLineups', numLineups);
+
+    window.location.href = './optimizerResults.html';
+}
+
 
 function applyClassesBasedOnValue(element, numericValue, lowestCutoff, lowCutoff, mediumCutoff, highCutoff, higherCutoff, highestCutoff) {
     if (!isNaN(numericValue)) {
@@ -1893,6 +1916,7 @@ function onFilterTextBoxChangedFlag() {
 let isModelSheetInitialized = false;
 let gridApiModel;
 let gridOptionsModel;
+let savedData;
 
 function loadModelResults() {
     // PGA Tour SG Stats
@@ -2482,7 +2506,6 @@ function loadModelResults() {
             let fullModel = true;
             if(weightSum !== 100){
                 fullModel = false;
-                console.log('adjustment for: ', playerData['player']);
                 let remSum = 100 - weightSum;
                 let platformCheck = document.getElementById('platform').value;
                 let salZScore;
@@ -2497,8 +2520,6 @@ function loadModelResults() {
                 weightSum += remSum;
             }
 
-
-
             
 
             // Calculate weighted average rating
@@ -2507,7 +2528,7 @@ function loadModelResults() {
             // Calculate the percentile using the CDF of the standard normal distribution
             let percentile;
             if (fullModel == false){
-                percentile = rating !== null ? (Number((normalCDF(0, 1, rating) * 100).toFixed(2)) - 5) : null; // IMPORTANT, can change value of 5 here
+                percentile = rating !== null ? Number((Number((normalCDF(0, 1, rating) * 100).toFixed(2)) - 5).toFixed(2)) : null; // IMPORTANT, can change value of 5 here
             } else {
                 percentile = rating !== null ? Number((normalCDF(0, 1, rating) * 100).toFixed(2)) : null;
             }
@@ -2533,6 +2554,20 @@ function loadModelResults() {
         });
 
         console.log('data table data: ', dataTableData);
+
+        let savePlatform = document.getElementById('platform').value;
+        // Save current model data for optimizer
+        savedData = dataTableData.map(playerData => ({
+            player: playerData.player,
+            fdSalary: playerData.fdSalary,
+            dkSalary: playerData.dkSalary,
+            rating: playerData.rating,
+            platform: savePlatform
+        }));
+
+        localStorage.setItem('modelData', JSON.stringify(savedData));
+    
+        console.log('Data saved:', savedData);
 
         function customComparator(valueA, valueB) {
             if (valueA === null && valueB === null) {
@@ -2968,3 +3003,138 @@ document.addEventListener('DOMContentLoaded', function () {
         input.addEventListener('input', onModelInputChange);
     });
 });
+
+function loadOptimizedLineups() {
+    let numLineups;
+    let modelData;
+
+    const savedDataJSONModel = localStorage.getItem('modelData');
+    const savedDataJSONNum = localStorage.getItem('numLineups');
+
+    if (savedDataJSONModel) {
+        modelData = JSON.parse(savedDataJSONModel);
+        console.log('model data: ', modelData);
+    } else {
+        console.log('No saved model data found');
+        return;
+    }
+
+    if (savedDataJSONNum) {
+        numLineups = parseInt(savedDataJSONNum);
+        console.log('numLineups: ', numLineups);
+    } else {
+        console.log('No saved number of lineups found');
+        return;
+    }
+
+    modelData.sort((a, b) => b.rating - a.rating);
+
+    function generateOptimalLineup(modelData, currentIndex, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating) {
+        // Base case: if the lineup has 6 players, update the best lineup if needed
+        if (currentLineup.length === 6) {
+            // Calculate total rating and total salary for the current lineup
+            const totalRating = currentLineup.reduce((sum, player) => sum + player.rating, 0);
+            const totalSalary = currentLineup.reduce((sum, player) => sum + player.fdSalary, 0);
+    
+            // Check if the current lineup is better than the current best lineup
+            if (!bestLineup.totalRating || totalRating > bestLineup.totalRating) {
+                // Update the best lineup information
+                bestLineup.players = [...currentLineup];
+                bestLineup.totalRating = totalRating;
+                bestLineup.totalSalary = totalSalary;
+            }
+            return; // Exit the function as the lineup is complete
+        }
+    
+        // Iterate through the remaining players in modelData
+        for (let i = currentIndex; i < modelData.length; i++) {
+            const currentPlayer = modelData[i];
+    
+            // Check if adding the current player exceeds the salary limit
+            if (currentTotalSalary + currentPlayer.fdSalary <= 60000 &&
+                (!targetRating || currentTotalRating + currentPlayer.rating < targetRating)) {
+                // Choose the current player for the lineup
+                currentLineup.push(currentPlayer);
+                currentTotalSalary += currentPlayer.fdSalary;
+                currentTotalRating += currentPlayer.rating;
+    
+                // Recursively generate lineups with the current player chosen
+                generateOptimalLineup(modelData, i + 1, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating);
+    
+                // Backtrack: remove the last player to explore other combinations
+                currentLineup.pop();
+                currentTotalSalary -= currentPlayer.fdSalary;
+                currentTotalRating -= currentPlayer.rating;
+    
+            }
+        }
+    }    
+
+    function choose(x, y) {
+        if (y < 0 || y > x) {
+            return 0;
+        }
+    
+        let result = 1;
+        for (let i = 1; i <= y; i++) {
+            result *= (x - i + 1) / i;
+        }
+    
+        return Math.round(result);
+    }
+    
+    function generateOptimalLineups(modelData, numLineups) {
+        const sortedModelData = modelData.sort((a, b) => b.rating - a.rating);
+        const allLineups = [];
+        let numChoose = choose(sortedModelData.length, 6);
+        let numGen = numLineups;
+        if( numChoose < numLineups){
+            console.log('Could only generate ', numChoose, ' unique lineups. Add more players to fully generate!');
+            numGen = numChoose;
+        }
+
+    
+        // Generate the specified number of lineups
+        for (let i = 0; i < numGen; i++) {
+            const bestLineup = { players: [], totalRating: 0, totalSalary: 0 };
+            const targetRating = i === 0 ? 601 : allLineups[allLineups.length - 1].totalRating;
+    
+            generateOptimalLineup(sortedModelData, 0, [], 0, bestLineup, targetRating, 0);
+    
+            // Add the best lineup to the list
+            allLineups.push({ ...bestLineup });
+        }
+    
+        return allLineups;
+    }
+
+    // Example usage:
+    const modelData2 = [
+        { player: 'player1', fdSalary: 10000, rating: 97 },
+        { player: 'player2', fdSalary: 9500, rating: 85 },
+        { player: 'player3', fdSalary: 11000, rating: 92 },
+        { player: 'player4', fdSalary: 8800, rating: 78 },
+        { player: 'player5', fdSalary: 10500, rating: 89 },
+        { player: 'player6', fdSalary: 9300, rating: 88 },
+        { player: 'player7', fdSalary: 9700, rating: 90 },
+        { player: 'player8', fdSalary: 9200, rating: 91 },
+        { player: 'player9', fdSalary: 8900, rating: 86 },
+        { player: 'player10', fdSalary: 10200, rating: 94 }
+        // ... (other players)
+    ];  
+    
+    const n = numLineups; // Specify the number of lineups to generate
+    const allLineups = generateOptimalLineups(modelData2, n);
+    
+    console.log(allLineups);
+}
+
+
+
+
+
+
+
+
+
+

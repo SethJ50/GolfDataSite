@@ -8,7 +8,7 @@
         <title>DataCaddie</title>
   </head>
     </head>
-    <body>
+    <body onload="logSavedData();">
         <div id="headerBar">
             <a href="#" class="navText" id="navTitle" onclick="home();">DataCaddie</a>
             <a href="#" class="navText" onclick="home();">Home</a>
@@ -20,8 +20,16 @@
             <a href="#" class="navText" onclick="uploadPage();">Upload Data</a>
         </div>
         <div id="mainBody">
-            <p id="mainParagraph">Welcome to the greatest website for golf analytics... ANYWHERE!</p>
-            <img src="img/rory1.jpg" alt="Rory McIlroy" class="mainPagePic">
+            <div id="modelSettingsDiv">
+                <div id="modelSettingsHeader">Model Settings: </div>
+                <div class="modelSettingSect">
+                    <label for="numLineups" class="modelSettingLbl"># of Lineups: </label>
+                    <input type="number" id="numLineups" class="modelSettingsInput" value="10">
+                </div>
+                <div class="modelSettingSect">
+                    <button id="runOptimizerBtn" onclick="goOptimizerResults();">Run Optimizer</button>
+                </div>
+            </div>
         </div>
         <script src="functions.js"></script>
     </body>

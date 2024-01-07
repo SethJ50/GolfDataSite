@@ -6,7 +6,8 @@ const crypto = require('crypto');
 const multer = require('multer');
 const xlsx = require('xlsx');
 const port = 80;
-const app = express()
+const app = express();
+
 app.use(express.json());
 app.use(cookieParser());
 
