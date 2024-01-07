@@ -3100,11 +3100,20 @@ function loadOptimizedLineups() {
         const allLineups = [];
         let numChoose = choose(sortedModelDataSlice.length, 6);
         let numGen = numLineups;
-        if( numChoose < numLineups){
+        if (numChoose < numLineups) {
             console.log('Could only generate ', numChoose, ' unique lineups. Add more players to fully generate!');
             numGen = numChoose;
         }
-
+    
+        // Initialize DataTable
+        var dataTable = $('#allLineupsTable').DataTable({
+            order: [[6, 'desc']],  // Sort by totalRating column in descending order
+            pageLength: numChoose,
+            dom: 'Bfrtip',  // Specify that you want to use the Buttons extension
+            buttons: [
+                'excelHtml5',
+            ]
+        });
     
         // Generate the specified number of lineups
         for (let i = 0; i < numGen; i++) {
@@ -3115,10 +3124,18 @@ function loadOptimizedLineups() {
     
             // Add the best lineup to the list
             allLineups.push({ ...bestLineup });
+    
+            // Populate DataTable with data for each lineup
+            var rowData = bestLineup.players.map(player => player.player).concat([bestLineup.totalRating.toFixed(2), bestLineup.totalSalary]);
+            dataTable.row.add(rowData);
         }
+    
+        // Draw the DataTable
+        dataTable.draw();
     
         return allLineups;
     }
+    
 
     // Example usage:
     const modelData2 = [

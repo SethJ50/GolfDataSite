@@ -794,6 +794,18 @@ div.dt-button-collection {
 }
 
 
+#lineupResDiv {
+    width: 95%;
+    height: fit-content;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    padding-bottom: 20px;
+}
 
+#allLineupsTable tbody tr:hover {
+    filter: brightness(0.7);
+}
 
 
