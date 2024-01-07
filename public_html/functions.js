@@ -3029,7 +3029,7 @@ function loadOptimizedLineups() {
 
     modelData.sort((a, b) => b.rating - a.rating);
 
-    function generateOptimalLineup(modelData, currentIndex, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating) {
+    function generateOptimalLineup(modelData, currentIndex, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating, platform) {
         // Base case: if the lineup has 6 players, update the best lineup if needed
         if (currentLineup.length === 6) {
             // Calculate total rating and total salary for the current lineup
@@ -3049,21 +3049,30 @@ function loadOptimizedLineups() {
         // Iterate through the remaining players in modelData
         for (let i = currentIndex; i < modelData.length; i++) {
             const currentPlayer = modelData[i];
+            let maxSalary;
+            let playerSalary;
+            if(platform == 'fanduel'){
+                maxSalary = 60000;
+                playerSalary = currentPlayer.fdSalary;
+            } else {
+                maxSalary = 50000;
+                playerSalary = currentPlayer.dkSalary;
+            }
     
             // Check if adding the current player exceeds the salary limit
-            if (currentTotalSalary + currentPlayer.fdSalary <= 60000 &&
+            if (currentTotalSalary + playerSalary <= maxSalary &&
                 (!targetRating || currentTotalRating + currentPlayer.rating < targetRating)) {
                 // Choose the current player for the lineup
                 currentLineup.push(currentPlayer);
-                currentTotalSalary += currentPlayer.fdSalary;
+                currentTotalSalary += playerSalary;
                 currentTotalRating += currentPlayer.rating;
     
                 // Recursively generate lineups with the current player chosen
-                generateOptimalLineup(modelData, i + 1, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating);
+                generateOptimalLineup(modelData, i + 1, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating, platform);
     
                 // Backtrack: remove the last player to explore other combinations
                 currentLineup.pop();
-                currentTotalSalary -= currentPlayer.fdSalary;
+                currentTotalSalary -= playerSalary;
                 currentTotalRating -= currentPlayer.rating;
     
             }
@@ -3085,8 +3094,11 @@ function loadOptimizedLineups() {
     
     function generateOptimalLineups(modelData, numLineups) {
         const sortedModelData = modelData.sort((a, b) => b.rating - a.rating);
+        let sortedModelDataSlice = sortedModelData.slice(0, 40);
+        let platform = sortedModelDataSlice[0].platform;
+        console.log('sorted model data sliced: ', sortedModelDataSlice, ' length: ', sortedModelDataSlice.length);
         const allLineups = [];
-        let numChoose = choose(sortedModelData.length, 6);
+        let numChoose = choose(sortedModelDataSlice.length, 6);
         let numGen = numLineups;
         if( numChoose < numLineups){
             console.log('Could only generate ', numChoose, ' unique lineups. Add more players to fully generate!');
@@ -3097,9 +3109,9 @@ function loadOptimizedLineups() {
         // Generate the specified number of lineups
         for (let i = 0; i < numGen; i++) {
             const bestLineup = { players: [], totalRating: 0, totalSalary: 0 };
-            const targetRating = i === 0 ? 601 : allLineups[allLineups.length - 1].totalRating;
+            const targetRating = i === 0 ? 601 : (allLineups[allLineups.length - 1].totalRating - 0.01);
     
-            generateOptimalLineup(sortedModelData, 0, [], 0, bestLineup, targetRating, 0);
+            generateOptimalLineup(sortedModelDataSlice, 0, [], 0, bestLineup, targetRating, 0, platform);
     
             // Add the best lineup to the list
             allLineups.push({ ...bestLineup });
@@ -3119,12 +3131,52 @@ function loadOptimizedLineups() {
         { player: 'player7', fdSalary: 9700, rating: 90 },
         { player: 'player8', fdSalary: 9200, rating: 91 },
         { player: 'player9', fdSalary: 8900, rating: 86 },
-        { player: 'player10', fdSalary: 10200, rating: 94 }
+        { player: 'player10', fdSalary: 10200, rating: 94 },
+        { player: 'player11', fdSalary: 9800, rating: 87 },
+        { player: 'player12', fdSalary: 9400, rating: 93 },
+        { player: 'player13', fdSalary: 9900, rating: 96 },
+        { player: 'player14', fdSalary: 9100, rating: 84 },
+        { player: 'player15', fdSalary: 10800, rating: 88 },
+        { player: 'player16', fdSalary: 9600, rating: 90 },
+        { player: 'player17', fdSalary: 9300, rating: 85 },
+        { player: 'player18', fdSalary: 9800, rating: 89 },
+        { player: 'player19', fdSalary: 9500, rating: 91 },
+        { player: 'player20', fdSalary: 10300, rating: 92 },
+        { player: 'player21', fdSalary: 9700, rating: 94 },
+        { player: 'player22', fdSalary: 9200, rating: 86 },
+        { player: 'player23', fdSalary: 9000, rating: 88 },
+        { player: 'player24', fdSalary: 9400, rating: 91 },
+        { player: 'player25', fdSalary: 9900, rating: 93 },
+        { player: 'player26', fdSalary: 9600, rating: 95 },
+        { player: 'player27', fdSalary: 9200, rating: 87 },
+        { player: 'player28', fdSalary: 9100, rating: 89 },
+        { player: 'player29', fdSalary: 8800, rating: 84 },
+        { player: 'player30', fdSalary: 10500, rating: 91 },
+        { player: 'player31', fdSalary: 10200, rating: 92 },
+        { player: 'player32', fdSalary: 9800, rating: 90 },
+        { player: 'player33', fdSalary: 9300, rating: 86 },
+        { player: 'player34', fdSalary: 9200, rating: 88 },
+        { player: 'player35', fdSalary: 9400, rating: 89 },
+        { player: 'player36', fdSalary: 9500, rating: 87 },
+        { player: 'player37', fdSalary: 9900, rating: 91 },
+        { player: 'player38', fdSalary: 9600, rating: 88 },
+        { player: 'player39', fdSalary: 9700, rating: 89 },
+        { player: 'player40', fdSalary: 9000, rating: 92 },
+        { player: 'player41', fdSalary: 9200, rating: 94 },
+        { player: 'player42', fdSalary: 9300, rating: 86 },
+        { player: 'player43', fdSalary: 9500, rating: 88 },
+        { player: 'player44', fdSalary: 9800, rating: 89 },
+        { player: 'player45', fdSalary: 9600, rating: 90 },
+        { player: 'player46', fdSalary: 9400, rating: 91 },
+        { player: 'player47', fdSalary: 9700, rating: 92 },
+        { player: 'player48', fdSalary: 9200, rating: 93 },
+        { player: 'player49', fdSalary: 9000, rating: 94 },
+        { player: 'player50', fdSalary: 9100, rating: 95 },
         // ... (other players)
-    ];  
+    ];    
     
     const n = numLineups; // Specify the number of lineups to generate
-    const allLineups = generateOptimalLineups(modelData2, n);
+    const allLineups = generateOptimalLineups(modelData, n);
     
     console.log(allLineups);
 }
