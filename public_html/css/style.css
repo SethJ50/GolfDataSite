@@ -778,6 +778,7 @@ div.dt-button-collection {
     margin-right: auto;
     margin-top: 20px;
     text-align: center;
+    overflow-y: auto;
 }
 
 #modelSettingsHeader{
@@ -808,4 +809,29 @@ div.dt-button-collection {
     filter: brightness(0.7);
 }
 
+#runOptimizerBtn {
+    margin-top: 20px;
+}
+
+.checkboxDropSubtitle{
+    font-size: 12px;
+    margin-top: 2px;
+    margin-bottom: 5px;
+    font-family: Verdana;
+}
+
+#choosePlayerBox, #excludePlayerBox{
+    width: 200px;
+    text-align: center;
+}
+
+.modelSettingLbl {
+    font-weight: bold;
+    font-family: Verdana;
+    font-size: 15px;
+}
+
+.selectionDropdownDiv{
+    margin-top: 10px;
+}
 

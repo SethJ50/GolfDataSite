@@ -32,16 +32,133 @@ function optimizerSettings() {
     window.location.href = './optimizerSettings.html';
 }
 
-function logSavedData(){
+function logSavedData() {
     const savedDataJSON = localStorage.getItem('modelData');
+    let inModelData = savedDataJSON ? JSON.parse(savedDataJSON) : [];
+    console.log('in model data: ', inModelData);
 
-    if(savedDataJSON){
-        let inModelData = JSON.parse(savedDataJSON);
-        console.log('model data: ', inModelData);
+    // Dynamically populate the "Choose Players" dropdown with player names
+    var selectDropdown = document.getElementById('choosePlayerBox');
+    var htmlString = "";
+
+    inModelData.forEach(function(data) {
+        var playerName = data.player;
+        var option = document.createElement('option');
+        option.text = playerName;
+        option.value = playerName;
+        selectDropdown.add(option);
+    });
+
+    // Dynamically populate the "Exclude Players" dropdown with player names
+    var excludeDropdown = document.getElementById('excludePlayerBox');
+    inModelData.forEach(function(data) {
+        var playerName = data.player;
+        var option = document.createElement('option');
+        option.text = playerName;
+        option.value = playerName;
+        excludeDropdown.add(option);
+    });
+
+    // Trigger Chosen update after adding options to both dropdowns
+    $(selectDropdown).trigger('chosen:updated');
+    $(excludeDropdown).trigger('chosen:updated');
+
+    // Check for selected data in local storage
+    const selectedModelDataJSON = localStorage.getItem('chosenPlayers');
+    if (selectedModelDataJSON) {
+        var selectedModelData = JSON.parse(selectedModelDataJSON);
+
+        // Iterate through the options and select excluded players in "Exclude Players" dropdown
+        for (var i = 0; i < selectDropdown.options.length; i++) {
+            var playerName = selectDropdown.options[i].value;
+            if (selectedModelData.includes(playerName)) {
+                selectDropdown.options[i].selected = true;
+            }
+        }
+
+        // Trigger Chosen update after updating selected options for "Choose Players" dropdown
+        $(selectDropdown).trigger('chosen:updated');
+    }
+
+    // Check for excluded players in local storage
+    const excludedPlayersJSON = localStorage.getItem('excludedPlayers');
+    if (excludedPlayersJSON) {
+        var excludedPlayers = JSON.parse(excludedPlayersJSON);
+
+        // Iterate through the options and select excluded players in "Exclude Players" dropdown
+        for (var i = 0; i < excludeDropdown.options.length; i++) {
+            var playerName = excludeDropdown.options[i].value;
+            if (excludedPlayers.includes(playerName)) {
+                excludeDropdown.options[i].selected = true;
+            }
+        }
+        $(excludeDropdown).trigger('chosen:updated');
+    }
+    
+
+    // Initialize the Chosen plugin for "Choose Players"
+    $(selectDropdown).chosen();
+
+    // Initialize the Chosen plugin for "Exclude Players"
+    $(excludeDropdown).chosen();
+
+    // Add event listener for Chosen's 'change' event on "Choose Players" dropdown
+    $(selectDropdown).on('change', function() {
+        updateSelectedData(inModelData, savedDataJSON);
+    });
+
+    // Add event listener for Chosen's 'change' event on "Exclude Players" dropdown
+    $(excludeDropdown).on('change', function() {
+        updateSelectedData(inModelData, savedDataJSON);
+    });
+}
+
+function updateSelectedData(inModelData, savedDataJSON) {
+    console.log('update selected data called');
+    var selectDropdown = document.getElementById('choosePlayerBox');
+    var excludeDropdown = document.getElementById('excludePlayerBox');
+
+    // Get selected players from "Choose Players" dropdown
+    var selectedPlayers = Array.from(selectDropdown.selectedOptions).map(option => option.value);
+
+    // Get excluded players from "Exclude Players" dropdown
+    var excludedPlayers = Array.from(excludeDropdown.selectedOptions).map(option => option.value);
+
+    // Exclude players selected in both "Choose Players" and "Exclude Players"
+    excludedPlayers.forEach(function(player) {
+        var index = selectedPlayers.indexOf(player);
+        if (index !== -1) {
+            selectedPlayers.splice(index, 1);
+        }
+    });
+
+    localStorage.setItem('excludedPlayers', JSON.stringify(excludedPlayers));
+    localStorage.setItem('chosenPlayers', JSON.stringify(selectedPlayers));
+
+    // Check if any players are selected in "Choose Players" or "Exclude Players"
+    if (selectedPlayers.length > 0 || excludedPlayers.length > 0) {
+        var selectedData;
+
+        // If players are selected in "Choose Players," filter modelData based on selected players
+        if (selectedPlayers.length > 0) {
+            selectedData = inModelData.filter(data => selectedPlayers.includes(data.player));
+        } else {
+            // If no players are selected in "Choose Players," include all players other than those selected in "Exclude Players"
+            selectedData = inModelData.filter(data => !excludedPlayers.includes(data.player));
+        }
+
+        // Save excluded players to local storage
+
+        localStorage.setItem('selectedModelData', JSON.stringify(selectedData));
+        console.log('Selected model data: ', selectedData);
     } else {
-        console.log('No saved model data found');
+        console.log('No players selected. Using all saved model data.');
+        localStorage.setItem('selectedModelData', savedDataJSON);
+        console.log('All saved model data: ', inModelData);
     }
 }
+
+
 
 function goOptimizerResults() {
     let numLineups = document.getElementById('numLineups').value;
@@ -2528,7 +2645,7 @@ function loadModelResults() {
             // Calculate the percentile using the CDF of the standard normal distribution
             let percentile;
             if (fullModel == false){
-                percentile = rating !== null ? Number((Number((normalCDF(0, 1, rating) * 100).toFixed(2)) - 5).toFixed(2)) : null; // IMPORTANT, can change value of 5 here
+                percentile = rating !== null ? Number((Number((normalCDF(0, 1, rating) * 100).toFixed(2)) - 10).toFixed(2)) : null; // IMPORTANT, can change value of 5 here
             } else {
                 percentile = rating !== null ? Number((normalCDF(0, 1, rating) * 100).toFixed(2)) : null;
             }
@@ -3008,7 +3125,7 @@ function loadOptimizedLineups() {
     let numLineups;
     let modelData;
 
-    const savedDataJSONModel = localStorage.getItem('modelData');
+    const savedDataJSONModel = localStorage.getItem('selectedModelData');
     const savedDataJSONNum = localStorage.getItem('numLineups');
 
     if (savedDataJSONModel) {

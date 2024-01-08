@@ -6,6 +6,8 @@
         <link rel="stylesheet" type="text/css" href="css/style.css">
         <link href="https://fonts.googleapis.com/css2?family=Lato:wght@900&display=swap" rel="stylesheet">
         <title>DataCaddie</title>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.min.css">
   </head>
     </head>
     <body onload="logSavedData();">
@@ -26,11 +28,36 @@
                     <label for="numLineups" class="modelSettingLbl"># of Lineups: </label>
                     <input type="number" id="numLineups" class="modelSettingsInput" value="10">
                 </div>
+                <div class="checkboxDropdown">
+                    <div class="modelSettingLbl">Choose Players for Model: </div>
+                    <div class="checkboxDropSubtitle">If none selected, defaults to all players</div>
+                    <div class="checkboxDropSubtitle">Click anywhere in box to add players, type to search</div>
+                    <div class="selectionDropdownDiv">
+                        <select data-placeholder="Choose Players..." multiple class="chosen-select" id="choosePlayerBox">
+                            <!-- Add more options as needed -->
+                        </select>
+                    </div>
+
+                    <div class="selectionDropdownDiv">
+                        <label for="excludePlayerBox" class="modelSettingLbl">Exclude Players:</label>
+                        <div class="checkboxDropSubtitle">If none selected, no players are excluded...</div>
+                        <select id="excludePlayerBox" data-placeholder="Exclude a player..." class="chosen-select" multiple>
+                            <!-- Options will be dynamically added here using JavaScript -->
+                        </select>
+                    </div>
+                </div>
                 <div class="modelSettingSect">
                     <button id="runOptimizerBtn" onclick="goOptimizerResults();">Run Optimizer</button>
                 </div>
             </div>
         </div>
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+        <script>
+            $(document).ready(function(){
+                $('.chosen-select').chosen();
+            });
+        </script>
         <script src="functions.js"></script>
     </body>
 </html>
