@@ -798,7 +798,7 @@ div.dt-button-collection {
 #lineupResDiv {
     width: 95%;
     height: fit-content;
-    display: block;
+    display: flex;
     margin-left: auto;
     margin-right: auto;
     margin-top: 20px;
@@ -807,6 +807,31 @@ div.dt-button-collection {
 
 #allLineupsTable tbody tr:hover {
     filter: brightness(0.7);
+}
+
+#playerTable tbody tr:hover {
+    filter: brightness(0.7);
+}
+
+#exposuresDiv {
+    width: 20%;
+    display: inline-block;
+    margin-left: 25px;
+    overflow-y: auto;
+}
+
+#optimizerResDiv {
+    width: 75%;
+    overflow-x: auto;
+    overflow-y: auto;
+    display: inline-block;
+}
+
+#optResLabel{
+    font-size: 25px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    font-family: Verdana;
 }
 
 #runOptimizerBtn {

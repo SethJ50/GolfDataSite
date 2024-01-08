@@ -3225,7 +3225,7 @@ function loadOptimizedLineups() {
         // Initialize DataTable
         var dataTable = $('#allLineupsTable').DataTable({
             order: [[6, 'desc']],  // Sort by totalRating column in descending order
-            pageLength: numChoose,
+            pageLength: numLineups,
             dom: 'Bfrtip',  // Specify that you want to use the Buttons extension
             buttons: [
                 'excelHtml5',
@@ -3311,8 +3311,58 @@ function loadOptimizedLineups() {
     
     const n = numLineups; // Specify the number of lineups to generate
     const allLineups = generateOptimalLineups(modelData, n);
+
+    if( allLineups.length < numLineups){
+        let alertString = 'Based on your optimizer settings, can only make ' + allLineups.length + ' total lineups';
+        alert(alertString);
+    }
     
-    console.log(allLineups);
+    console.log('All Lineups: ', allLineups);
+
+    // Function to calculate player occurrences and percentages
+    function calculatePlayerPercentages(allLineups) {
+        const playerCount = {};
+
+        // Count occurrences of each player
+        allLineups.forEach(lineup => {
+            lineup.players.forEach(playerObj => {
+                let playerName = playerObj.player;
+                console.log('player: ', playerName);
+                playerCount[playerName] = (playerCount[playerName] || 0) + 1;
+            });
+        });
+
+        // Calculate percentages
+        const totalLineups = allLineups.length;
+        const playerPercentages = Object.entries(playerCount).map(([player, count]) => ({
+            player,
+            percentage: (count / totalLineups * 100).toFixed(2),
+        }));
+
+        return playerPercentages;
+    }
+
+    // Function to populate DataTable
+    function populateDataTable(playerPercentages) {
+
+        const table = $('#playerTable').DataTable({
+            order: [[1, 'desc']],
+            lengthChange: false,
+            pageLength: -1, 
+        });
+
+        // Clear existing rows
+        table.clear();
+
+        // Add rows with player name and percentage
+        playerPercentages.forEach(player => {
+            table.row.add([player.player, player.percentage + '%']).draw();
+        });
+    }
+
+    let playerExposures = calculatePlayerPercentages(allLineups);
+    console.log('exposures: ', playerExposures);
+    populateDataTable(playerExposures);
 }
 
 

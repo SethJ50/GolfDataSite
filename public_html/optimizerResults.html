@@ -39,23 +39,40 @@
         </div>
         <div id="mainBody">
             <div id="lineupResDiv">
-                <table id="allLineupsTable" class="display">
-                    <thead>
-                        <tr>
-                            <th>Player 1</th>
-                            <th>Player 2</th>
-                            <th>Player 3</th>
-                            <th>Player 4</th>
-                            <th>Player 5</th>
-                            <th>Player 6</th>
-                            <th>Total Rating</th>
-                            <th>Total Salary</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- DataTable rows will be added dynamically here -->
-                    </tbody>
-                </table>
+                <div id="optimizerResDiv">
+                    <div id="optResLabel">Lineups:</div>
+                    <table id="allLineupsTable" class="display">
+                        <thead>
+                            <tr>
+                                <th>Player 1</th>
+                                <th>Player 2</th>
+                                <th>Player 3</th>
+                                <th>Player 4</th>
+                                <th>Player 5</th>
+                                <th>Player 6</th>
+                                <th>Total Rating</th>
+                                <th>Total Salary</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- DataTable rows will be added dynamically here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="exposuresDiv">
+                    <div id="optResLabel">Exposures:</div>
+                    <table id="playerTable" class="display">
+                        <thead>
+                            <tr>
+                                <th>Player Name</th>
+                                <th>Percentage of Lineups</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Player data will be dynamically added here -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         <script src="https://cdn.jsdelivr.net/gh/nicolaspanel/numjs@0.15.1/dist/numjs.min.js"></script>
