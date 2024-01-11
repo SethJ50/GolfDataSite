@@ -954,9 +954,18 @@ function loadProfile(){
             { headerName: 'SG: Arg', field: 'sgArg'},
             { headerName: 'SG: App', field: 'sgApp'},
             { headerName: 'SG: Ott', field: 'sgOtt'},
-            { headerName: 'SG: T2G', field: 'sgT2G'},
+            { headerName: 'SG: T2G', field: 'sgT2G', valueFormatter: roundToTwoDecimals},
             { headerName: 'SG: TOT', field: 'sgTot'},
             ];
+        
+        function roundToTwoDecimals(params) {
+            // Check if the value is a number before rounding
+            if (typeof params.value === 'number') {
+                return params.value.toFixed(2);
+            }
+            // If the value is not a number, return it as is
+            return params.value;
+        }
         
         let indMinMax;
         let t2gMinMax;
