@@ -278,7 +278,11 @@ function loadCheatSheet() {
             // Step 3: Create Abbreviations for Tournament Names
             tournamentAbbreviations = recentTournaments.reduce((abbreviations, tournament, index) => {
                 // Split the tournament name into words
-                const words = tournament.split(' ');
+                let words = tournament.split(' ');
+
+                if(words[0] == 'The'){
+                    words = words.slice(1);
+                }
             
                 // Take the first 3 letters of the first word
                 let abbreviation = words[0].substring(0, 3);
@@ -503,12 +507,12 @@ function loadCheatSheet() {
             {
                 headerName: 'SG PGATOUR.COM',
                 children: [
-                    { headerName: 'SG: Putt PGA', field: 'sgPuttPGA', hide: true },
-                    { headerName: 'SG: Arg PGA', field: 'sgArgPGA', hide: true },
-                    { headerName: 'SG: App PGA', field: 'sgAppPGA', hide: true },
-                    { headerName: 'SG: Ott PGA', field: 'sgOttPGA', hide: true},
-                    { headerName: 'SG: T2G PGA', field: 'sgT2GPGA', hide: true },
-                    { headerName: 'SG: Tot PGA', field: 'sgTotPGA', hide: true },
+                    { headerName: 'SG: Putt', field: 'sgPuttPGA', hide: true },
+                    { headerName: 'SG: Arg', field: 'sgArgPGA', hide: true },
+                    { headerName: 'SG: App', field: 'sgAppPGA', hide: true },
+                    { headerName: 'SG: Ott', field: 'sgOttPGA', hide: true},
+                    { headerName: 'SG: T2G', field: 'sgT2GPGA', hide: true },
+                    { headerName: 'SG: Tot', field: 'sgTotPGA', hide: true },
                 ],
             },
             // Other Stats grouping
@@ -718,6 +722,25 @@ function loadCheatSheet() {
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
                     params.api.autoSizeAllColumns();
+                    params.api.setColumnWidth('player', 150);
+                    params.api.setColumnWidth('fdSalary', 73);
+                    params.api.setColumnWidth('dkSalary', 73);
+                    params.api.setColumnWidth('numRounds', 45);
+                    params.api.setColumnWidth('recent1', 58);
+                    params.api.setColumnWidth('recent2', 58);
+                    params.api.setColumnWidth('recent3', 58);
+                    params.api.setColumnWidth('recent4', 58);
+                    params.api.setColumnWidth('recent5', 58);
+                    params.api.setColumnWidth('recent6', 58);
+                    params.api.setColumnWidth('recent7', 58);
+                    params.api.setColumnWidth('recent8', 58);
+                    params.api.setColumnWidth('recent9', 58);
+                    params.api.setColumnWidth('recent10', 58);
+                    params.api.setColumnWidth('minus1', 40);
+                    params.api.setColumnWidth('minus2', 40);
+                    params.api.setColumnWidth('minus3', 40);
+                    params.api.setColumnWidth('minus4', 40);
+                    params.api.setColumnWidth('minus5', 40);
                     setupColumnVisibilityDropdown(columnDefs);
                 },
                 getRowHeight: function(params) {
@@ -950,12 +973,12 @@ function loadProfile(){
             { headerName: 'Finish', field: 'finish' },
             { headerName: 'Tournament', field: 'tournament' },
             { headerName: 'Round', field: 'Round' },
-            { headerName: 'SG: Putt', field: 'sgPutt'},
-            { headerName: 'SG: Arg', field: 'sgArg'},
-            { headerName: 'SG: App', field: 'sgApp'},
-            { headerName: 'SG: Ott', field: 'sgOtt'},
+            { headerName: 'SG: Putt', field: 'sgPutt', valueFormatter: roundToTwoDecimals},
+            { headerName: 'SG: Arg', field: 'sgArg', valueFormatter: roundToTwoDecimals},
+            { headerName: 'SG: App', field: 'sgApp', valueFormatter: roundToTwoDecimals},
+            { headerName: 'SG: Ott', field: 'sgOtt', valueFormatter: roundToTwoDecimals},
             { headerName: 'SG: T2G', field: 'sgT2G', valueFormatter: roundToTwoDecimals},
-            { headerName: 'SG: TOT', field: 'sgTot'},
+            { headerName: 'SG: TOT', field: 'sgTot', valueFormatter: roundToTwoDecimals},
             ];
         
         function roundToTwoDecimals(params) {

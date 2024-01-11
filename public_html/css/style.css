@@ -235,7 +235,7 @@ tr.profBodyRow:hover {
 
 #golferProfTable{
     height: 600px;
-    width: 900px;
+    width: 950px;
     display: block;
     margin-right: auto;
     margin-left: auto;
@@ -743,7 +743,7 @@ div.dt-button-collection {
     display: block;
     margin-left: auto;
     margin-right: auto;
-    width: 1000px;
+    width: 900px;
     height: 700px;
     overflow-x: auto;
 }
