@@ -36,7 +36,14 @@ function logSavedData() {
     const savedDataJSON = localStorage.getItem('modelData');
     let inModelData = savedDataJSON ? JSON.parse(savedDataJSON) : [];
     console.log('in model data: ', inModelData);
-    localStorage.setItem('selectedModelData', savedDataJSON);
+    let chosenPlayers1 = localStorage.getItem('chosenPlayers');
+    let excludedPlayers1 = localStorage.getItem('excludedPlayers');
+    if (JSON.parse(chosenPlayers1).length == 0 && JSON.parse(excludedPlayers1).length == 0){
+        localStorage.setItem('selectedModelData', savedDataJSON);
+        console.log('set savedModelData to full set');
+    } else {
+        console.log('had some excluded or chosen players already...');
+    }
 
     // Dynamically populate the "Choose Players" dropdown with player names
     var selectDropdown = document.getElementById('choosePlayerBox');
