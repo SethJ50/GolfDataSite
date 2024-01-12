@@ -2181,6 +2181,8 @@ function loadModelResults() {
                 courseHistoryData = Object.fromEntries(courseHistoryKeys.map(key => [key, null]));
             }
 
+
+
             //12, 24, 36, 50
 
             // SG: LAST 12 ROUNDS
@@ -2471,7 +2473,11 @@ function loadModelResults() {
         
             // Filter out null values and calculate the average
             let filteredStats = validStats.filter(stat => stat !== null);
-            let chAvg = filteredStats.length > 0 ? Number((filteredStats.reduce((sum, stat) => sum + stat, 0) / filteredStats.length).toFixed(2)) : null;
+            let filterNaNs = filteredStats.filter(value => !Number.isNaN(value));
+            let chAvg = filterNaNs.length > 0 ? Number((filterNaNs.reduce((sum, stat) => sum + stat, 0) / filterNaNs.length).toFixed(2)) : null;
+            if(Number.isNaN(chAvg)){
+                chAvg = null;
+            }
         
             // Add chAvg to playerData
             playerData['chAvg'] = chAvg;
@@ -2491,7 +2497,7 @@ function loadModelResults() {
         ];
 
         // Calculate mean and standard deviation for each stat
-        let statSums = {};
+        let statSums = {}; // This is the issue !!
         let statSumsSquared = {};
         let statCounts = {};
 
@@ -2499,7 +2505,7 @@ function loadModelResults() {
         dataTableData.forEach((playerData) => {
             Object.keys(playerData).forEach((stat) => {
                 // Check if the field is in the zScoreFields array
-                if (zScoreFields.includes(stat) && typeof playerData[stat] === 'number' && playerData[stat] !== null) {
+                if (zScoreFields.includes(stat) && typeof playerData[stat] === 'number' && playerData[stat] !== null && !Number.isNaN(playerData[stat])) {
                     if (!statSums[stat]) statSums[stat] = 0;
                     if (!statSumsSquared[stat]) statSumsSquared[stat] = 0;
                     if (!statCounts[stat]) statCounts[stat] = 0;
@@ -2518,20 +2524,29 @@ function loadModelResults() {
         Object.keys(statSums).forEach((stat) => {
             statMeans[stat] = statSums[stat] / statCounts[stat];
             statStdDevs[stat] = Math.sqrt((statSumsSquared[stat] / statCounts[stat]) - Math.pow(statMeans[stat], 2));
+            if(stat == 'chAvg'){
+                console.log('sum: ', statSums[stat]);
+                console.log('count: ', statCounts[stat]);
+                console.log('stat: ', stat, 'mean : ', statMeans[stat], 'std dev: ', statStdDevs[stat]);
+            }
         });
 
         // Compute z-score for each data point
         dataTableData.forEach((playerData) => {
             Object.keys(playerData).forEach((stat) => {
                 // Check if the field is in the zScoreFields array and is a number
-                if (zScoreFields.includes(stat) && typeof playerData[stat] === 'number') {
-                    // Calculate z-score for the current stat
-                    let zScore = playerData[stat] !== null
-                        ? (playerData[stat] - statMeans[stat]) / statStdDevs[stat]
-                        : null;
-
-                    // Add z-score to playerData
-                    playerData[`${stat}_zScore`] = zScore;
+                if (zScoreFields.includes(stat)){
+                    if (typeof playerData[stat] === 'number' && !Number.isNaN(playerData[stat])) {
+                        // Calculate z-score for the current stat
+                        let zScore = playerData[stat] !== null
+                            ? (playerData[stat] - statMeans[stat]) / statStdDevs[stat]
+                            : null;
+    
+                        // Add z-score to playerData
+                        playerData[`${stat}_zScore`] = zScore;
+                    } else {
+                        playerData[`${stat}_zScore`] = null;
+                    }
                 }
             });
         });
