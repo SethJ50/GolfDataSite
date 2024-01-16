@@ -557,7 +557,8 @@ function loadCheatSheet() {
                     // Add columns for recent history based on tournamentAbbreviations
                     ...Object.keys(tournamentAbbreviations).map(abbreviation => ({
                         headerName: tournamentAbbreviations[abbreviation],
-                        field: abbreviation
+                        field: abbreviation,
+                        comparator: customComparator
                     })),
                 ],
             },
@@ -565,11 +566,11 @@ function loadCheatSheet() {
             {
                 headerName: 'Course History',
                 children: [
-                    { headerName: '-1', field: 'minus1' },
-                    { headerName: '-2', field: 'minus2' },
-                    { headerName: '-3', field: 'minus3' },
-                    { headerName: '-4', field: 'minus4' },
-                    { headerName: '-5', field: 'minus5' },
+                    { headerName: '-1', field: 'minus1', comparator: customComparator },
+                    { headerName: '-2', field: 'minus2', comparator: customComparator },
+                    { headerName: '-3', field: 'minus3', comparator: customComparator },
+                    { headerName: '-4', field: 'minus4', comparator: customComparator },
+                    { headerName: '-5', field: 'minus5', comparator: customComparator },
                     // Add other columns as needed
                 ],
             },
