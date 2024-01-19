@@ -38,7 +38,10 @@ function logSavedData() {
     console.log('in model data: ', inModelData);
     let chosenPlayers1 = localStorage.getItem('chosenPlayers');
     let excludedPlayers1 = localStorage.getItem('excludedPlayers');
-    if (JSON.parse(chosenPlayers1).length == 0 && JSON.parse(excludedPlayers1).length == 0){
+    if(chosenPlayers1 == null || excludedPlayers1 == null){
+        localStorage.setItem('selectedModelData', savedDataJSON);
+        console.log('set savedModelData to full set - chosen/excluded was null');
+    }else if (JSON.parse(chosenPlayers1).length == 0 && JSON.parse(excludedPlayers1).length == 0){
         localStorage.setItem('selectedModelData', savedDataJSON);
         console.log('set savedModelData to full set');
     } else {
