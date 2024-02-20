@@ -2156,6 +2156,7 @@ function loadModelResults() {
         return response.json();
     })
     .then((jsonData) =>{
+        // X - START
         console.log('jsonData: ', jsonData);
 
         // Ensure that all parts of the jsonData are there.
@@ -2367,37 +2368,38 @@ function loadModelResults() {
             // Check if player exists in pgatour
             if (pgatourData) {
                 // If player in pgatour data, add pga tour data
+                // FIXED BUG - checked for missing indv stats here...
                 let filteredPgatourData = {
-                    sgPuttPGA: Number(pgatourData.sgPutt.toFixed(2)),
-                    sgArgPGA: Number(pgatourData.sgArg.toFixed(2)),
-                    sgAppPGA: Number(pgatourData.sgApp.toFixed(2)),
-                    sgOttPGA: Number(pgatourData.sgOtt.toFixed(2)),
-                    sgT2GPGA: Number(pgatourData.sgT2G.toFixed(2)),
-                    sgTotPGA: Number(pgatourData.sgTot.toFixed(2)),
-                    drDist: Number(pgatourData.drDist.toFixed(2)),
-                    drAcc: Number(pgatourData.drAcc.toFixed(2)),
-                    gir: Number(pgatourData.gir.toFixed(2)),
-                    sandSave: Number(pgatourData.sandSave.toFixed(2)),
-                    scrambling: Number(pgatourData.scrambling.toFixed(2)),
-                    app50_75: Number(pgatourData.app50_75.toFixed(2)),
-                    app75_100: Number(pgatourData.app75_100.toFixed(2)),
-                    app100_125: Number(pgatourData.app100_125.toFixed(2)),
-                    app125_150: Number(pgatourData.app125_150.toFixed(2)),
-                    app150_175: Number(pgatourData.app150_175.toFixed(2)),
-                    app175_200: Number(pgatourData.app175_200.toFixed(2)),
-                    app200_up: Number(pgatourData.app200_up.toFixed(2)),
-                    bob: Number(pgatourData.bob.toFixed(2)),
-                    bogAvd: Number(pgatourData.bogAvd.toFixed(2)),
-                    par3Scoring: Number(pgatourData.par3Scoring.toFixed(2)),
-                    par4Scoring: Number(pgatourData.par4Scoring.toFixed(2)),
-                    par5Scoring: Number(pgatourData.par5Scoring.toFixed(2)),
-                    prox: Number(pgatourData.prox.toFixed(2)),
-                    roughProx: Number(pgatourData.roughProx.toFixed(2)),
-                    puttingBob: Number(pgatourData.puttingBob.toFixed(2)),
-                    threePuttAvd: Number(pgatourData.threePuttAvd.toFixed(2)),
-                    bonusPutt: Number(pgatourData.bonusPutt.toFixed(2)),
+                    sgPuttPGA: pgatourData.sgPutt !== null && pgatourData.sgPutt !== undefined ? Number(pgatourData.sgPutt.toFixed(2)) : null,
+                    sgArgPGA: pgatourData.sgArg !== null && pgatourData.sgArg !== undefined ? Number(pgatourData.sgArg.toFixed(2)) : null,
+                    sgAppPGA: pgatourData.sgApp !== null && pgatourData.sgApp !== undefined ? Number(pgatourData.sgApp.toFixed(2)) : null,
+                    sgOttPGA: pgatourData.sgOtt !== null && pgatourData.sgOtt !== undefined ? Number(pgatourData.sgOtt.toFixed(2)) : null,
+                    sgT2GPGA: pgatourData.sgT2G !== null && pgatourData.sgT2G !== undefined ? Number(pgatourData.sgT2G.toFixed(2)) : null,
+                    sgTotPGA: pgatourData.sgTot !== null && pgatourData.sgTot !== undefined ? Number(pgatourData.sgTot.toFixed(2)) : null,
+                    drDist: pgatourData.drDist !== null && pgatourData.drDist !== undefined ? Number(pgatourData.drDist.toFixed(2)) : null,
+                    drAcc: pgatourData.drAcc !== null && pgatourData.drAcc !== undefined ? Number(pgatourData.drAcc.toFixed(2)) : null,
+                    gir: pgatourData.gir !== null && pgatourData.gir !== undefined ? Number(pgatourData.gir.toFixed(2)) : null,
+                    sandSave: pgatourData.sandSave !== null && pgatourData.sandSave !== undefined ? Number(pgatourData.sandSave.toFixed(2)) : null,
+                    scrambling: pgatourData.scrambling !== null && pgatourData.scrambling !== undefined ? Number(pgatourData.scrambling.toFixed(2)) : null,
+                    app50_75: pgatourData.app50_75 !== null && pgatourData.app50_75 !== undefined ? Number(pgatourData.app50_75.toFixed(2)) : null,
+                    app75_100: pgatourData.app75_100 !== null && pgatourData.app75_100 !== undefined ? Number(pgatourData.app75_100.toFixed(2)) : null,
+                    app100_125: pgatourData.app100_125 !== null && pgatourData.app100_125 !== undefined ? Number(pgatourData.app100_125.toFixed(2)) : null,
+                    app125_150: pgatourData.app125_150 !== null && pgatourData.app125_150 !== undefined ? Number(pgatourData.app125_150.toFixed(2)) : null,
+                    app150_175: pgatourData.app150_175 !== null && pgatourData.app150_175 !== undefined ? Number(pgatourData.app150_175.toFixed(2)) : null,
+                    app175_200: pgatourData.app175_200 !== null && pgatourData.app175_200 !== undefined ? Number(pgatourData.app175_200.toFixed(2)) : null,
+                    app200_up: pgatourData.app200_up !== null && pgatourData.app200_up !== undefined ? Number(pgatourData.app200_up.toFixed(2)) : null,
+                    bob: pgatourData.bob !== null && pgatourData.bob !== undefined ? Number(pgatourData.bob.toFixed(2)) : null,
+                    bogAvd: pgatourData.bogAvd !== null && pgatourData.bogAvd !== undefined ? Number(pgatourData.bogAvd.toFixed(2)) : null,
+                    par3Scoring: pgatourData.par3Scoring !== null && pgatourData.par3Scoring !== undefined ? Number(pgatourData.par3Scoring.toFixed(2)) : null,
+                    par4Scoring: pgatourData.par4Scoring !== null && pgatourData.par4Scoring !== undefined ? Number(pgatourData.par4Scoring.toFixed(2)) : null,
+                    par5Scoring: pgatourData.par5Scoring !== null && pgatourData.par5Scoring !== undefined ? Number(pgatourData.par5Scoring.toFixed(2)) : null,
+                    prox: pgatourData.prox !== null && pgatourData.prox !== undefined ? Number(pgatourData.prox.toFixed(2)) : null,
+                    roughProx: pgatourData.roughProx !== null && pgatourData.roughProx !== undefined ? Number(pgatourData.roughProx.toFixed(2)) : null,
+                    puttingBob: pgatourData.puttingBob !== null && pgatourData.puttingBob !== undefined ? Number(pgatourData.puttingBob.toFixed(2)) : null,
+                    threePuttAvd: pgatourData.threePuttAvd !== null && pgatourData.threePuttAvd !== undefined ? Number(pgatourData.threePuttAvd.toFixed(2)) : null,
+                    bonusPutt: pgatourData.bonusPutt !== null && pgatourData.bonusPutt !== undefined ? Number(pgatourData.bonusPutt.toFixed(2)) : null,
                     // Add other fields as needed
-                };
+                };                
 
                 // Returns all of this data in cumulation as a list of dicts in dataTableData
                 return {
@@ -3071,6 +3073,7 @@ function loadModelResults() {
     })
     .catch((error) => {
         console.error('Error:', error.message);
+        console.trace();
     });
 }
 
