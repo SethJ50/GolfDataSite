@@ -1068,6 +1068,7 @@ function loadProfile(){
             onFirstDataRendered: function (params) {
                 console.log('grid is ready');
                 params.api.autoSizeAllColumns();
+                params.api.setColumnWidth('tournament', 240);
                 //setupColumnVisibilityDropdown(columnDefs);
             },
             getRowHeight: function(params) {
