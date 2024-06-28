@@ -19,7 +19,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error: '));
 // Converts names from ___ to fanduel format
 const TO_FD = {'Robert MacIntyre': 'Robert Macintyre', 'Nicolai Højgaard':'Nicolai Hojgaard', 'S.H. Kim': 'Seonghyeon Kim'};
 const FD_TO_PGA = {'Robert Macintyre' : 'Robert MacIntyre', 'Nicolai Hojgaard':'Nicolai Højgaard', 'Seonghyeon Kim':'S.H. Kim'};
-//const FD_TO_TOURNAMENT = {'Robert Macintyre' : 'Robert MacIntyre', 'Seonghyeon Kim':'S.H. Kim'};
+const FD_TO_TOURNAMENT = {'Robert Macintyre' : 'Robert MacIntyre', 'Seonghyeon Kim':'S.H. Kim'};
 
 var TournamentRowSchema = mongoose.Schema({
     player: String,
@@ -352,13 +352,38 @@ app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
     let p;
 
-    if (roundView == 'event'){
-        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': 'Event'}).exec();
-    } else if (roundView == 'all'){
+    //if (roundView == 'event'){
+    //    p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': 'Event'}).exec();
+    //} else if (roundView == 'all'){
         p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}]}).exec();
-    } else {
-        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': { $ne: 'Event' } }).exec();
-    }
+    //} else {
+    //    p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': { $ne: 'Event' } }).exec();
+    //}
+
+    if (roundView == 'event') {
+      p = TournamentRow.find({
+          $or: [
+              { 'player': { $regex: playerName, $options: 'i' } },
+              { 'player': { $regex: playerName2, $options: 'i' } }
+          ],
+          'Round': 'Event'
+      }).exec();
+  } else if (roundView == 'all') {
+      p = TournamentRow.find({
+          $or: [
+              { 'player': { $regex: playerName, $options: 'i' } },
+              { 'player': { $regex: playerName2, $options: 'i' } }
+          ]
+      }).exec();
+  } else {
+      p = TournamentRow.find({
+          $or: [
+              { 'player': { $regex: playerName, $options: 'i' } },
+              { 'player': { $regex: playerName2, $options: 'i' } }
+          ],
+          'Round': { $ne: 'Event' }
+      }).exec();
+  }
 
     p.then((document) => {
         res.json(document);
