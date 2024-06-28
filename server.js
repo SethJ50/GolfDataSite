@@ -352,38 +352,13 @@ app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
     let p;
 
-    //if (roundView == 'event'){
-    //    p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': 'Event'}).exec();
-    //} else if (roundView == 'all'){
+    if (roundView == 'event'){
+        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': 'Event'}).exec();
+    } else if (roundView == 'all'){
         p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}]}).exec();
-    //} else {
-    //    p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': { $ne: 'Event' } }).exec();
-    //}
-
-    if (roundView == 'event') {
-      p = TournamentRow.find({
-          $or: [
-              { 'player': { $regex: playerName, $options: 'i' } },
-              { 'player': { $regex: playerName2, $options: 'i' } }
-          ],
-          'Round': 'Event'
-      }).exec();
-  } else if (roundView == 'all') {
-      p = TournamentRow.find({
-          $or: [
-              { 'player': { $regex: playerName, $options: 'i' } },
-              { 'player': { $regex: playerName2, $options: 'i' } }
-          ]
-      }).exec();
-  } else {
-      p = TournamentRow.find({
-          $or: [
-              { 'player': { $regex: playerName, $options: 'i' } },
-              { 'player': { $regex: playerName2, $options: 'i' } }
-          ],
-          'Round': { $ne: 'Event' }
-      }).exec();
-  }
+    } else {
+        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': { $ne: 'Event' } }).exec();
+    }
 
     p.then((document) => {
         res.json(document);
