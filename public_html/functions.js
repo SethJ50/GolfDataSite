@@ -961,6 +961,8 @@ function loadProfile(){
 
     let url = '/get/golferProf/' + currGolfer.value + '/' + roundView.value;
 
+    console.log(currGolfer.value);
+
     let p = fetch(url);
     p.then((response) => {
         return response.json();

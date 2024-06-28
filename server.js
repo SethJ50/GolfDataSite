@@ -17,6 +17,25 @@ const mongoDBURL = 'mongodb://127.0.0.1/data_caddy';
 mongoose.connect(mongoDBURL, {useNewUrlParser: true});
 db.on('error', console.error.bind(console, 'MongoDB connection error: '));
 
+// Converts names from ___ to fanduel format
+const TO_FD = {
+  'robert macintyre': 'Robert Macintyre',
+  'nicolai højgaard': 'Nicolai Hojgaard',
+  'nicolai hojgaard': 'Nicolai Hojgaard',
+  's.h. kim': 'Seonghyeon Kim'
+};
+
+const FD_TO_PGA = {
+  'robert macintyre': 'Robert Macintyre',
+  'nicolai højgaard': 'Nicolai Hojgaard',
+  'seonghyeon kim': 'S.H. Kim'
+};
+
+const FD_TO_TOURNAMENT = {
+  'robert macintyre': 'Robert Macintyre',
+  'seonghyeon kim': 'S.H. Kim'
+};
+
 var TournamentRowSchema = mongoose.Schema({
     player: String,
     finish: Number,
@@ -338,21 +357,21 @@ app.post('/uploadCourseHistory', upload.single('file'), async (req, res) => {
       res.status(500).send('Internal Server Error');
     }
   });
-  
 
 app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
-    let playerName = req.params.PLAYER;
+    let playerName = FD_TO_TOURNAMENT[req.params.PLAYER.toLowerCase()] || req.params.PLAYER;
+    let playerName2 = req.params.PLAYER;
     let roundView = req.params.ROUND;
 
     let p;
 
     if (roundView == 'event'){
-        p = TournamentRow.find({'player':playerName, 'Round': 'Event'}).exec();
+        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': 'Event'}).exec();
     } else if (roundView == 'all'){
-        p = TournamentRow.find({'player':playerName}).exec();
+        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}]}).exec();
     } else {
-        p = TournamentRow.find({'player':playerName, 'Round': { $ne: 'Event' } }).exec();
+        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': { $ne: 'Event' } }).exec();
     }
 
     p.then((document) => {
@@ -386,10 +405,25 @@ app.get('/get/playerListGp/', (req, res) => {
 });
 
 app.get('/get/profOverview/:PLAYER', async (req, res) => {
-  let currPlayer = req.params.PLAYER;
 
-  const tournamentRowResults = await TournamentRow.find({'player': currPlayer, 'Round': { $ne: 'Event' }});
-  const pgatourResults = await pgatour.find({player: currPlayer});
+  let currPlayerTournament = FD_TO_TOURNAMENT[req.params.PLAYER] || req.params.PLAYER;
+  let currPlayerPga = FD_TO_PGA[req.params.PLAYER] || req.params.PLAYER
+
+  const tournamentRowResults = await TournamentRow.find({'player': currPlayerTournament, 'Round': { $ne: 'Event' }});
+
+  tournamentRowResults.forEach(result => {
+    if (TO_FD[result.player]) {
+      result.player = TO_FD[result.player];
+    }
+  });
+
+  const pgatourResults = await pgatour.find({player: currPlayerPga});
+
+  pgatourResults.forEach(result => {
+    if (TO_FD[result.player]) {
+      result.player = TO_FD[result.player];
+    }
+  });
 
   const combinedResults = {
     tournaments: tournamentRowResults,
@@ -410,11 +444,27 @@ app.get('/get/trendsSheet/', async (req, res) => {
       return;
     }
 
-    // Extract player names from salariesResults
-    const playerNames = salariesResults.map(result => result.player);
+    // Bring in names from salaries in lower case
+    const playerNames = salariesResults.map(result => result.player.toLowerCase());
+
+    // Convert player names to what is seen in tournament files
+    const convertedPlayerNames = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
 
     // Perform subsequent queries using the filtered player names
-    const tournamentRowResults = await TournamentRow.find({ player: { $in: playerNames }, 'Round': { $ne: 'Event' } });
+    //const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNames }, 'Round': { $ne: 'Event' } });
+    const tournamentRowResults = await TournamentRow.find({ 
+      player: { 
+          $in: convertedPlayerNames.map(name => new RegExp(`^${name}$`, 'i')) 
+      }, 
+      'Round': { $ne: 'Event' } 
+  });
+
+    // Convert player names in pgatourResults to the appropriate conversion if they are in NAME_CONV, otherwise keep them as is
+    tournamentRowResults.forEach(result => {
+      if (TO_FD[result.player.toLowerCase()]) {
+        result.player = TO_FD[result.player.toLowerCase()];
+      }
+    });
 
     // Combine the results into a single JSON object
     const combinedResults = {
@@ -442,10 +492,26 @@ app.get('/get/flagSheet/', async (req, res) => {
     }
 
     // Extract player names from salariesResults
-    const playerNames = salariesResults.map(result => result.player);
+    const playerNames = salariesResults.map(result => result.player.toLowerCase());
+
+    // Create a new player names list with converted names to pgaTour
+    const convertedPlayerNames = playerNames.map(name => FD_TO_PGA[name] || name);
 
     // Perform subsequent queries using the filtered player names
-    const pgatourResults = await pgatour.find({ player: { $in: playerNames } });
+    //const pgatourResults = await pgatour.find({ player: { $in: convertedPlayerNames } });
+
+    const pgatourResults = await pgatour.find({ 
+      player: { 
+          $in: convertedPlayerNames.map(name => new RegExp(`^${name}$`, 'i')) 
+      }});
+
+    // Convert player names in pgatourResults to the appropriate conversion if they are in NAME_CONV, otherwise keep them as is
+    pgatourResults.forEach(result => {
+      if (TO_FD[result.player.toLowerCase()]) {
+        result.player = TO_FD[result.player.toLowerCase()];
+      }
+    });
+
     // Combine the results into a single JSON object
     const combinedResults = {
       salaries: salariesResults,
@@ -474,10 +540,34 @@ app.get('/get/modelSheet/', async (req, res) => {
     // Extract player names from salariesResults
     const playerNames = salariesResults.map(result => result.player);
 
+    const convertedPlayerNamesPga = playerNames.map(name => FD_TO_PGA[name] || name);
+
+    const convertedPlayerNamesTournament = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
+
+
     // Perform subsequent queries using the filtered player names
-    const tournamentRowResults = await TournamentRow.find({ player: { $in: playerNames }, 'Round': { $ne: 'Event' } });
-    const pgatourResults = await pgatour.find({ player: { $in: playerNames } });
+    const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNamesTournament }, 'Round': { $ne: 'Event' } });
+    const pgatourResults = await pgatour.find({ player: { $in: convertedPlayerNamesPga } });
     const courseHistoryResults = await courseHistory.find({ player: { $in: playerNames } });
+
+    tournamentRowResults.forEach(result => {
+      if (TO_FD[result.player]) {
+        result.player = TO_FD[result.player];
+      }
+    });
+
+    pgatourResults.forEach(result => {
+      if (TO_FD[result.player]) {
+        result.player = TO_FD[result.player];
+      }
+    });
+
+    courseHistoryResults.forEach(result => {
+      if (TO_FD[result.player]) {
+        result.player = TO_FD[result.player];
+      }
+    });
+
 
     // Combine the results into a single JSON object
     const combinedResults = {
@@ -508,11 +598,36 @@ app.get('/get/cheatSheet/', async (req, res) => {
   
       // Extract player names from salariesResults
       const playerNames = salariesResults.map(result => result.player);
+
+      const convertedPlayerNamesPga = playerNames.map(name => FD_TO_PGA[name] || name);
+
+      const convertedPlayerNamesTournament = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
+
   
       // Perform subsequent queries using the filtered player names
-      const tournamentRowResults = await TournamentRow.find({ player: { $in: playerNames }, 'Round': { $ne: 'Event' } });
-      const pgatourResults = await pgatour.find({ player: { $in: playerNames } });
+      const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNamesTournament }, 'Round': { $ne: 'Event' } });
+
+      tournamentRowResults.forEach(result => {
+        if (TO_FD[result.player]) {
+          result.player = TO_FD[result.player];
+        }
+      });
+
+      const pgatourResults = await pgatour.find({ player: { $in: convertedPlayerNamesPga } });
+
+      pgatourResults.forEach(result => {
+        if (TO_FD[result.player]) {
+          result.player = TO_FD[result.player];
+        }
+      });
+
       const courseHistoryResults = await courseHistory.find({ player: { $in: playerNames } });
+
+      courseHistoryResults.forEach(result => {
+        if (TO_FD[result.player]) {
+          result.player = TO_FD[result.player];
+        }
+      });
   
       // Combine the results into a single JSON object
       const combinedResults = {
