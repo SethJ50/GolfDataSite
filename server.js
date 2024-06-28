@@ -342,11 +342,10 @@ app.post('/uploadCourseHistory', upload.single('file'), async (req, res) => {
       res.status(500).send('Internal Server Error');
     }
   });
-  
 
 app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
-    let playerName = FD_TO_TOURNAMENT[req.params.PLAYER] || req.params.PLAYER;
+    let playerName = FD_TO_TOURNAMENT[req.params.PLAYER.toLowerCase()] || req.params.PLAYER;
     let playerName2 = req.params.PLAYER;
     let roundView = req.params.ROUND;
 
