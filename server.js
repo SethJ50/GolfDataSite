@@ -350,6 +350,8 @@ app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
     let playerName2 = req.params.PLAYER;
     let roundView = req.params.ROUND;
 
+    console.log(`p1: ${playerName} p2: ${playerName2}`);
+
     let p;
 
     if (roundView == 'event'){
@@ -577,6 +579,7 @@ app.get('/get/cheatSheet/', async (req, res) => {
       const convertedPlayerNamesPga = playerNames.map(name => FD_TO_PGA[name] || name);
 
       const convertedPlayerNamesTournament = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
+
   
       // Perform subsequent queries using the filtered player names
       const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNamesTournament }, 'Round': { $ne: 'Event' } });
