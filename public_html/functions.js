@@ -966,6 +966,7 @@ function loadProfile(){
         return response.json();
     })
     .then((jsonData) => {
+        console.log(jsonData);
 
         jsonData.sort((a, b) => {
             // First, compare by date in descending order
