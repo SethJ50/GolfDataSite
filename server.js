@@ -19,7 +19,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error: '));
 // Converts names from ___ to fanduel format
 const TO_FD = {'Robert MacIntyre': 'Robert Macintyre', 'Nicolai Højgaard':'Nicolai Hojgaard', 'S.H. Kim': 'Seonghyeon Kim'};
 const FD_TO_PGA = {'Robert Macintyre' : 'Robert MacIntyre', 'Nicolai Hojgaard':'Nicolai Højgaard', 'Seonghyeon Kim':'S.H. Kim'};
-const FD_TO_TOURNAMENT = {'Robert Macintyre' : 'Robert MacIntyre', 'Seonghyeon Kim':'S.H. Kim'};
+//const FD_TO_TOURNAMENT = {'Robert Macintyre' : 'Robert MacIntyre', 'Seonghyeon Kim':'S.H. Kim'};
 
 var TournamentRowSchema = mongoose.Schema({
     player: String,
