@@ -19,21 +19,21 @@ db.on('error', console.error.bind(console, 'MongoDB connection error: '));
 
 // Converts names from ___ to fanduel format
 const TO_FD = {
-  'robert macintyre': 'Robert Macintyre',
-  'nicolai højgaard': 'Nicolai Hojgaard',
-  'nicolai hojgaard': 'Nicolai Hojgaard',
-  's.h. kim': 'Seonghyeon Kim'
+  'Robert MacIntyre': 'Robert Macintyre',
+  'Nicolai Højgaard': 'Nicolai Hojgaard',
+  'S.H. Kim': 'Seonghyeon Kim'
 };
 
 const FD_TO_PGA = {
-  'robert macintyre': 'Robert Macintyre',
-  'nicolai højgaard': 'Nicolai Hojgaard',
-  'seonghyeon kim': 'S.H. Kim'
+  'Robert Macintyre': 'Robert MacIntyre',
+  'Nicolai Højgaard': 'Nicolai Højgaard',
+  'Seonghyeon Kim': 'S.H. Kim'
 };
 
 const FD_TO_TOURNAMENT = {
-  'robert macintyre': 'Robert Macintyre',
-  'seonghyeon kim': 'S.H. Kim'
+  'Robert Macintyre': 'Robert MacIntyre',
+  'Seonghyeon Kim': 'S.H. Kim',
+  'Nicolai Højgaard': 'Nicolai Hojgaard'
 };
 
 var TournamentRowSchema = mongoose.Schema({
@@ -360,7 +360,7 @@ app.post('/uploadCourseHistory', upload.single('file'), async (req, res) => {
 
 app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
-    let playerName = FD_TO_TOURNAMENT[req.params.PLAYER.toLowerCase()] || req.params.PLAYER;
+    let playerName = FD_TO_TOURNAMENT[req.params.PLAYER] || req.params.PLAYER;
     let playerName2 = req.params.PLAYER;
     let roundView = req.params.ROUND;
 
@@ -407,7 +407,7 @@ app.get('/get/playerListGp/', (req, res) => {
 app.get('/get/profOverview/:PLAYER', async (req, res) => {
 
   let currPlayerTournament = FD_TO_TOURNAMENT[req.params.PLAYER] || req.params.PLAYER;
-  let currPlayerPga = FD_TO_PGA[req.params.PLAYER] || req.params.PLAYER
+  let currPlayerPga = FD_TO_PGA[req.params.PLAYER] || req.params.PLAYER;
 
   const tournamentRowResults = await TournamentRow.find({'player': currPlayerTournament, 'Round': { $ne: 'Event' }});
 
@@ -445,24 +445,18 @@ app.get('/get/trendsSheet/', async (req, res) => {
     }
 
     // Bring in names from salaries in lower case
-    const playerNames = salariesResults.map(result => result.player.toLowerCase());
+    const playerNames = salariesResults.map(result => result.player);
 
     // Convert player names to what is seen in tournament files
     const convertedPlayerNames = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
 
     // Perform subsequent queries using the filtered player names
-    //const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNames }, 'Round': { $ne: 'Event' } });
-    const tournamentRowResults = await TournamentRow.find({ 
-      player: { 
-          $in: convertedPlayerNames.map(name => new RegExp(`^${name}$`, 'i')) 
-      }, 
-      'Round': { $ne: 'Event' } 
-  });
+    const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNames }, 'Round': { $ne: 'Event' } });
 
     // Convert player names in pgatourResults to the appropriate conversion if they are in NAME_CONV, otherwise keep them as is
     tournamentRowResults.forEach(result => {
-      if (TO_FD[result.player.toLowerCase()]) {
-        result.player = TO_FD[result.player.toLowerCase()];
+      if (TO_FD[result.player]) {
+        result.player = TO_FD[result.player];
       }
     });
 
@@ -492,23 +486,18 @@ app.get('/get/flagSheet/', async (req, res) => {
     }
 
     // Extract player names from salariesResults
-    const playerNames = salariesResults.map(result => result.player.toLowerCase());
+    const playerNames = salariesResults.map(result => result.player);
 
     // Create a new player names list with converted names to pgaTour
     const convertedPlayerNames = playerNames.map(name => FD_TO_PGA[name] || name);
 
     // Perform subsequent queries using the filtered player names
-    //const pgatourResults = await pgatour.find({ player: { $in: convertedPlayerNames } });
-
-    const pgatourResults = await pgatour.find({ 
-      player: { 
-          $in: convertedPlayerNames.map(name => new RegExp(`^${name}$`, 'i')) 
-      }});
+    const pgatourResults = await pgatour.find({ player: { $in: convertedPlayerNames } });
 
     // Convert player names in pgatourResults to the appropriate conversion if they are in NAME_CONV, otherwise keep them as is
     pgatourResults.forEach(result => {
-      if (TO_FD[result.player.toLowerCase()]) {
-        result.player = TO_FD[result.player.toLowerCase()];
+      if (TO_FD[result.player]) {
+        result.player = TO_FD[result.player];
       }
     });
 
