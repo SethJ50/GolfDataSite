@@ -360,8 +360,9 @@ app.post('/uploadCourseHistory', upload.single('file'), async (req, res) => {
 
 app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
-   // let playerName = FD_TO_TOURNAMENT[req.params.PLAYER] || req.params.PLAYER;
-   // let playerName2 = req.params.PLAYER;
+    //let playerName = FD_TO_TOURNAMENT[req.params.PLAYER] || req.params.PLAYER;
+    let playerName = req.params.PLAYER;
+    let playerName2 = req.params.PLAYER;
     let roundView = req.params.ROUND;
 
     const debugInfo = req.params.PLAYER;
