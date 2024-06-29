@@ -969,13 +969,19 @@ function loadProfile(){
     })
     .then((jsonData) => {
 
-        jsonData.sort((a, b) => {
+        // Ensure jsonData.document is an array
+        let documentData = jsonData.document;
+
+        console.log('Debug Info: ', jsonData.debugInfo);
+
+        documentData.sort((a, b) => {
             // First, compare by date in descending order
             const dateComparison = new Date(b.dates) - new Date(a.dates);
             
             // If dates are equal, compare by round in descending order
             return dateComparison !== 0 ? dateComparison : b.Round - a.Round;
         });
+
 
         if(isDataTableInitialized){
             profileTbl.innerHTML = '';
@@ -1027,6 +1033,8 @@ function loadProfile(){
 
         const colorScales = {};
 
+        
+
         Object.keys(colMinMax).forEach(fieldName => {
             const { minValue, midValue, maxValue } = colMinMax[fieldName];
         
@@ -1065,7 +1073,7 @@ function loadProfile(){
                 ...column,
                 cellStyle: globalCellStyle,
             })),
-            rowData: jsonData,
+            rowData: documentData,
             suppressColumnVirtualisation: true,
             onFirstDataRendered: function (params) {
                 console.log('grid is ready');

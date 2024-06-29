@@ -364,7 +364,7 @@ app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
     let playerName2 = req.params.PLAYER;
     let roundView = req.params.ROUND;
 
-    console.log(`playerName: ${playerName} playerName2: ${playerName2}`);
+    const debugInfo = `playerName: ${playerName} playerName2: ${playerName2}`;
 
     let p;
 
@@ -377,7 +377,7 @@ app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
     }
 
     p.then((document) => {
-        res.json(document);
+        res.json({document, debugInfo});
     })
     .catch((error) => {
         res.send('there was an error');
