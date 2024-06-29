@@ -970,11 +970,11 @@ function loadProfile(){
     .then((jsonData) => {
 
         // Ensure jsonData.document is an array
-        //let documentData = jsonData.document;
+        let documentData = jsonData.document;
 
-        //console.log('Debug Info: ', jsonData.debugInfo);
+        console.log('Debug Info: ', jsonData.debugInfo);
 
-        jsonData.sort((a, b) => {
+        documentData.sort((a, b) => {
             // First, compare by date in descending order
             const dateComparison = new Date(b.dates) - new Date(a.dates);
             
@@ -1073,7 +1073,7 @@ function loadProfile(){
                 ...column,
                 cellStyle: globalCellStyle,
             })),
-            rowData: jsonData,
+            rowData: documentData,
             suppressColumnVirtualisation: true,
             onFirstDataRendered: function (params) {
                 console.log('grid is ready');
