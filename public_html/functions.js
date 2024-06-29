@@ -969,6 +969,8 @@ function loadProfile(){
     })
     .then((jsonData) => {
 
+        console.log("json data", jsonData);
+
         // Ensure jsonData.document is an array
         let documentData = jsonData.document;
 
