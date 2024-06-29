@@ -26,7 +26,7 @@ const TO_FD = {
 
 const FD_TO_PGA = {
   'Robert Macintyre': 'Robert MacIntyre',
-  'Nicolai Højgaard': 'Nicolai Højgaard',
+  'Nicolai Hojgaard': 'Nicolai Højgaard',
   'Seonghyeon Kim': 'S.H. Kim'
 };
 
