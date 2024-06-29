@@ -364,6 +364,8 @@ app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
     let playerName2 = req.params.PLAYER;
     let roundView = req.params.ROUND;
 
+    console.log(`playerName: ${playerName} playerName2: ${playerName2}`);
+
     let p;
 
     if (roundView == 'event'){
