@@ -381,7 +381,7 @@ app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
     let roundView = req.params.ROUND;
     let p;
 
-    const debugInfo = "hello world";
+    //const debugInfo = "hello world";
 
     if (roundView == 'event'){
         p = TournamentRow.find({'player':playerName, 'Round': 'Event'}).exec();
@@ -392,7 +392,7 @@ app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
     }
 
     p.then((document) => {
-        res.json({document, debugInfo});
+        res.json(document);
     })
     .catch((error) => {
         res.send('there was an error');
