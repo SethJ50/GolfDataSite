@@ -360,35 +360,20 @@ app.post('/uploadCourseHistory', upload.single('file'), async (req, res) => {
 
 app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
-    //let playerName = FD_TO_TOURNAMENT[req.params.PLAYER] || req.params.PLAYER;
-    // let playerName = req.params.PLAYER;
-    // let playerName2 = req.params.PLAYER;
-    // let roundView = req.params.ROUND;
-
-    // const debugInfo = req.params.PLAYER;
-
-    // let p;
-
-    // if (roundView == 'event'){
-    //     p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': 'Event'}).exec();
-    // } else if (roundView == 'all'){
-    //     p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}]}).exec();
-    // } else {
-    //     p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': { $ne: 'Event' } }).exec();
-    // }
-
-    let playerName = req.params.PLAYER;
+    let playerName = FD_TO_TOURNAMENT[req.params.PLAYER] || req.params.PLAYER;
+    let playerName2 = req.params.PLAYER;
     let roundView = req.params.ROUND;
+
+    const debugInfo = `playerName: ${playerName} playerName2: ${playerName2}`;
+
     let p;
 
-    const debugInfo = "hello world";
-
     if (roundView == 'event'){
-        p = TournamentRow.find({'player':playerName, 'Round': 'Event'}).exec();
+        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': 'Event'}).exec();
     } else if (roundView == 'all'){
-        p = TournamentRow.find({'player':playerName}).exec();
+        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}]}).exec();
     } else {
-        p = TournamentRow.find({'player':playerName, 'Round': { $ne: 'Event' } }).exec();
+        p = TournamentRow.find({$or: [{'player': playerName}, {'player': playerName2}], 'Round': { $ne: 'Event' } }).exec();
     }
 
     p.then((document) => {
