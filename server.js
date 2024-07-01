@@ -21,19 +21,22 @@ db.on('error', console.error.bind(console, 'MongoDB connection error: '));
 const TO_FD = {
   'Robert MacIntyre': 'Robert Macintyre',
   'Nicolai Højgaard': 'Nicolai Hojgaard',
-  'S.H. Kim': 'Seonghyeon Kim'
+  'S.H. Kim': 'Seonghyeon Kim',
+  'Thorbjørn Olesen' : 'Thorbjorn Olesen'
 };
 
 const FD_TO_PGA = {
   'Robert Macintyre': 'Robert MacIntyre',
   'Nicolai Hojgaard': 'Nicolai Højgaard',
-  'Seonghyeon Kim': 'S.H. Kim'
+  'Seonghyeon Kim': 'S.H. Kim',
+  'Thorbjorn Olesen': 'Thorbjørn Olesen'
 };
 
 const FD_TO_TOURNAMENT = {
   'Robert Macintyre': 'Robert MacIntyre',
   'Seonghyeon Kim': 'S.H. Kim',
-  'Nicolai Højgaard': 'Nicolai Hojgaard'
+  'Nicolai Højgaard': 'Nicolai Hojgaard',
+  'Thorbjørn Olesen' : 'Thorbjorn Olesen'
 };
 
 var TournamentRowSchema = mongoose.Schema({
