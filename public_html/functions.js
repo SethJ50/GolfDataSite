@@ -1810,6 +1810,88 @@ function loadTrendsSheet() {
                 }
         };
 
+        function placePlot() {
+            /*
+                This function develops and places scatter quadrant plot for 
+                trends data.
+            */
+
+
+            let playerNames = dataTableData.map(d => d.player);
+            let sgPutting = dataTableData.map(d => d.sgPutt);
+            let sgApproach = dataTableData.map(d => d.sgApp);
+
+            function improveTextPosition(xValues) {
+                /*
+                    Randomizes textposition to reduce overlap.
+                */
+
+                let positions = ['top center', 'bottom center', 'middle left', 'middle right']; // Add more positions as needed
+                return xValues.map((value, index) => positions[index % positions.length]);
+            }
+
+            // Combine distances with player names
+            let playersWithDistances = dataTableData.map((d) => ({
+                player: d.player,
+                sgPutting: d.sgPutting,
+                sgApproach: d.sgApproach,
+                distance: Math.sqrt(d.sgPutt * d.sgPutt + d.sgApp * d.sgApp)
+            }));
+
+            // Sort players by distance in descending order
+            playersWithDistances.sort((a, b) => b.distance - a.distance);
+
+            // Select the top 10-15 players based on distance
+            let topPlayers = playersWithDistances.slice(0, 20);
+
+            // Extract the sgPutting, sgApproach, and player names for the top players
+            let topPlayerNames = topPlayers.map(d => d.player);
+
+            // Data and data info.
+            let trace = {
+                x: sgPutting,
+                y: sgApproach,
+                mode: 'markers+text',
+                type: 'scatter',
+                text: playerNames.map(name => topPlayerNames.includes(name) ? name : ''),
+                textposition: improveTextPosition(sgPutting),
+                hovertext: playerNames,
+                hoverinfo: 'text',
+                hovertemplate: 
+                    '%{customdata}<br>' +
+                    'SG Putt: %{x}<br>' +
+                    'SG App: %{y}<br><extra></extra>',
+                customdata: playerNames,
+                marker: {
+                    size: 5,
+                    color: 'blue',
+                }
+            }
+
+            // Layout information for the plot
+            let layout = {
+                title: { text: 'SG: Putt vs. SG: App',
+                },
+                xaxis: { title: 'SG Putting',
+                         range: [Math.min(...sgPutting) - 0.1, Math.max(...sgPutting) + 0.1],
+                 },
+                yaxis: { title: 'SG Approach',
+                         range: [Math.min(...sgApproach) - 0.1, Math.max(...sgApproach) + 0.1],
+                 },
+                margin: {
+                    l: 50,
+                    r: 50,
+                    b: 50,
+                    t: 50,
+                    pad: 10
+                }, 
+                hovermode: 'closest',
+            };
+
+            //Plotly.newPlot('quadPlot', [trace, fitLine], layout);
+            Plotly.newPlot('quadPlot', [trace], layout);
+        }
+
         function initializeCheatSheet() {
             /*
                 clears trend sheet if already initialized
@@ -1844,6 +1926,7 @@ function loadTrendsSheet() {
     
             // Create the grid using createGrid
             gridApiTrends = agGrid.createGrid(document.querySelector('#trendSheet'), gridOptions);
+            placePlot();
             isTrendSheetInitialized = true;
         };
 
