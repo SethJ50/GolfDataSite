@@ -32,6 +32,10 @@ function optimizerSettings() {
     window.location.href = './optimizerSettings.html';
 }
 
+function floorCeiling() {
+    window.location.href = './floorCeiling.html';
+}
+
 function logSavedData() {
     const savedDataJSON = localStorage.getItem('modelData');
     let inModelData = savedDataJSON ? JSON.parse(savedDataJSON) : [];
@@ -1357,6 +1361,276 @@ function loadPlayerListGp(){
     .catch((error) => {
         console.error('Error:', error.message);
     });
+}
+
+let isFloorCeilingInitialized = false;
+let gridApiFloorCeiling;
+
+function loadFloorCeilingSheet() {
+    let baseRounds = document.getElementById('baseRdsInp');
+    let sheet = document.getElementById('floorCeilSheet');
+
+    let url = '/get/floorCeilSheet/';
+
+    let p = fetch(url);
+    p.then((response) => {
+        return response.json();
+    })
+    .then((jsonData) => {
+        console.log(jsonData);
+
+        if (!jsonData.salaries || !jsonData.tournamentRow){
+            console.log('Invalid data format, expected "salaries" and "tournamentRow".');
+            return;
+        }
+
+        let dataTableData = jsonData.salaries.map((salary) => {
+            let player = salary.player;
+            let fdSalary = salary.fdSalary;
+            let dkSalary = salary.dkSalary;
+
+            // This should get the last (baseRounds) rounds for each player
+            let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
+                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+                .slice(0, baseRounds.value);
+
+            sg0Plus = null;
+            sg1Plus = null;
+            sg2Plus = null;
+            sg3Plus = null;
+            sg4Plus = null;
+            sg5Plus = null;
+            totRounds = playerRounds.length;
+
+            if (playerRounds.length > 0){
+                tot0Plus = 0;
+                tot1Plus = 0;
+                tot2Plus = 0;
+                tot3Plus = 0;
+                tot4Plus = 0;
+                tot5Plus = 0;
+
+                playerRounds.forEach((round) => {
+                    if (round.sgTot >= 0) {
+                        tot0Plus += 1;
+                    }
+
+                    if (round.sgTot >= 1) {
+                        tot1Plus += 1;
+                    }
+
+                    if (round.sgTot >= 2) {
+                        tot2Plus += 1;
+                    }
+
+                    if (round.sgTot >= 3) {
+                        tot3Plus += 1;
+                    }
+
+                    if (round.sgTot >= 4) {
+                        tot4Plus += 1;
+                    }
+
+                    if (round.sgTot >= 5) {
+                        tot5Plus += 1;
+                    }
+                })
+
+                sg0Plus = Number(tot0Plus / totRounds).toFixed(2);
+                sg1Plus = Number(tot1Plus / totRounds).toFixed(2);
+                sg2Plus = Number(tot2Plus / totRounds).toFixed(2);
+                sg3Plus = Number(tot3Plus / totRounds).toFixed(2);
+                sg4Plus = Number(tot4Plus / totRounds).toFixed(2);
+                sg5Plus = Number(tot5Plus / totRounds).toFixed(2);
+            };
+
+            let finalData = {
+                player,
+                fdSalary,
+                dkSalary,
+                sg0Plus,
+                sg1Plus,
+                sg2Plus,
+                sg3Plus,
+                sg4Plus,
+                sg5Plus,
+                totRounds
+            }
+
+            return finalData;
+        }).filter(Boolean);
+
+        zeros = [];
+        ones = [];
+        twos = [];
+        threes = [];
+        fours = [];
+        fives = [];
+
+        dataTableData.forEach((player) => {
+
+            if (player.sg0Plus != null) {
+                zeros.push(player.sg0Plus);
+            }
+
+            if (player.sg1Plus != null) {
+                ones.push(player.sg1Plus);
+            }
+
+            if (player.sg2Plus != null) {
+                twos.push(player.sg2Plus);
+            }
+
+            if (player.sg3Plus != null) {
+                threes.push(player.sg3Plus);
+            }
+
+            if (player.sg4Plus != null) {
+                fours.push(player.sg4Plus);
+            }
+
+            if (player.sg5Plus != null) {
+                fives.push(player.sg5Plus);
+            }
+        });
+
+        function getMedian(arr) {
+            arr.sort((a, b) => a - b); // Sort the array in ascending order
+            let mid = Math.floor(arr.length / 2);
+        
+            if (arr.length % 2 === 0) {
+                // If even, return the average of the two middle numbers
+                return (arr[mid - 1] + arr[mid]) / 2;
+            } else {
+                // If odd, return the middle number
+                return arr[mid];
+            }
+        }
+
+        let minMax0 = {minValue: Math.min(...zeros), midValue: getMedian(zeros), maxValue: Math.max(...zeros)};
+        let minMax1 = {minValue: Math.min(...ones), midValue: getMedian(ones), maxValue: Math.max(...ones)};
+        let minMax2 = {minValue: Math.min(...twos), midValue: getMedian(twos), maxValue: Math.max(...twos)};
+        let minMax3 = {minValue: Math.min(...threes), midValue: getMedian(threes), maxValue: Math.max(...threes)};
+        let minMax4 = {minValue: Math.min(...fours), midValue: getMedian(fours), maxValue: Math.max(...fours)};
+        let minMax5 = {minValue: Math.min(...fives), midValue: getMedian(fives), maxValue: Math.max(...fives)};
+
+        const colMinMax = {
+            'sg0Plus': minMax0,
+            'sg1Plus': minMax1,
+            'sg2Plus': minMax2,
+            'sg3Plus': minMax3,
+            'sg4Plus': minMax4,
+            'sg5Plus': minMax5,
+        };
+
+        const colorScales = {};
+
+        Object.keys(colMinMax).forEach(fieldName => {
+            const { minValue, midValue, maxValue } = colMinMax[fieldName];
+        
+            const colorScale = d3.scaleLinear()
+                .domain([minValue, midValue, maxValue]);
+        
+            colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
+        
+            colorScales[fieldName] = colorScale;
+        });
+
+        const columnsWithColorScale = ['sg0Plus', 'sg1Plus', 'sg2Plus', 'sg3Plus',
+                                        'sg4Plus', 'sg5Plus'];
+
+        function globalCellStyle(params){
+            const fieldName = params.colDef.field;
+            const numericValue = params.value;
+
+            // Set background color to white for null values
+            if (numericValue === null) {
+                return { backgroundColor: '#FFFFFF' };
+            }
+        
+            // Check if the column is in the list and the value is numeric before applying the color scale
+            if (columnsWithColorScale.includes(fieldName) && !isNaN(numericValue) && isFinite(numericValue)) {
+                const cellColor = colorScales[fieldName](numericValue);
+                return { backgroundColor: cellColor };
+            }
+        
+            // Return default style if the column is not in the list or the value is not numeric
+            return {};
+        }
+
+        let columnDefs = [
+            {headerName: 'Player', field: 'player'},
+            {headerName: 'FD Salary', field: 'fdSalary'},
+            {headerName: 'DK Salary', field: 'dkSalary'},
+            {headerName: 'SG: 0+', field: 'sg0Plus'},
+            {headerName: 'SG: 1+', field: 'sg1Plus'},
+            {headerName: 'SG: 2+', field: 'sg2Plus'},
+            {headerName: 'SG: 3+', field: 'sg3Plus'},
+            {headerName: 'SG: 4+', field: 'sg4Plus'},
+            {headerName: 'SG: 5+', field: 'sg5Plus'},
+            {headerName: 'Tot Rds', field: 'totRounds'},
+        ];
+
+        function clearFloorCeilSheetContent() {
+            /*
+                Clears the content of the floor ceil sheet.
+            */
+                const floorCeilSheet = document.getElementById('floorCeilSheet');
+                if (floorCeilSheet) {
+                    floorCeilSheet.innerHTML = ''; // Clear content
+                }
+        };
+
+        function initializeFloorCeilSheet() {
+            /*
+                clears floor ceil sheet if already initialized
+
+                builds up grid options - specifies column defs, row data,...
+                
+                creates the grid and puts it in #cheatSheet
+            */
+            if (isFloorCeilingInitialized) {
+                clearFloorCeilSheetContent();
+            }
+    
+            // setup grid options
+            const gridOptions = {
+                columnDefs: columnDefs.map(column => ({
+                    ...column,
+                    cellStyle: globalCellStyle,
+                })),
+                rowData: dataTableData,
+                suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
+                onFirstDataRendered: function (params) {
+                    console.log('grid is ready');
+                    params.api.autoSizeAllColumns();
+                },
+                getRowHeight: function(params) {
+                    // return the desired row height in pixels
+                    return 25; // adjust this value based on your preference
+                },
+                headerHeight: 30,
+            };
+    
+            // Create the grid using createGrid
+            gridApiFloorCeiling = agGrid.createGrid(document.querySelector('#floorCeilSheet'), gridOptions);
+            isFloorCeilingInitialized = true;
+        };
+
+        initializeFloorCeilSheet();
+
+        console.log("data table data", dataTableData);
+
+    })
+}
+
+function onFilterTextBoxChangedFloorCeil() {
+    // the function for the search box which filters the table 
+    // based on 'filter-text-box' for gridApi grid
+    gridApiFloorCeiling.setGridOption(
+      'quickFilterText',
+      document.getElementById('filter-text-box-floor-ceil').value
+    );
 }
 
 let isTrendSheetInitialized = false;

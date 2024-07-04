@@ -445,6 +445,46 @@ app.get('/get/profOverview/:PLAYER', async (req, res) => {
   res.json(combinedResults);
 });
 
+app.get('/get/floorCeilSheet/', async (req, res) => {
+  try {
+    const salariesResults = await salaries.find({});
+
+    if (salariesResults.length == 0) {
+      res.json([]);
+      return;
+    }
+
+    // get all player names from the salaries results
+    const playerNames = salariesResults.map(result => result.player);
+
+    // convert FD names to tournament names for searching in tournament rows
+    const convertedPlayerNames = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
+
+    // find all tournament rows where the player is in convertedPlayerNames (ones in curr tourney) and round isn't event
+    const tournamentRowResults = await TournamentRow.find({player: {$in: convertedPlayerNames }, 'Round': {$ne: 'Event'}});
+
+    // convert tournament row names to fanduel conventions if necessary
+    tournamentRowResults.forEach(result => {
+      if (TO_FD[result.player]) {
+        result.player = TO_FD[result.player];
+      }
+    });
+
+    // Combine salary results and tournament rows together to be sent back to client
+    const combinedResults = {
+      salaries: salariesResults,
+      tournamentRow: tournamentRowResults,
+    };
+
+    // Send the combined results as JSON
+    res.json(combinedResults);
+
+  } catch (error) {
+    console.error('Error retrieving data:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/get/trendsSheet/', async (req, res) => {
   try {
     // Perform salariesResults query first

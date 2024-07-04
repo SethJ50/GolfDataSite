@@ -501,6 +501,14 @@ div.dt-button-collection {
     height: 700px;
 }
 
+#floorCeilSheet {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 900px;
+    height: 700px;
+}
+
 #filterContainerTR {
     display: flex;
     position: relative;

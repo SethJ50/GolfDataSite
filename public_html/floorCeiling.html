@@ -4,8 +4,6 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://fonts.googleapis.com/css2?family=Lato:wght@900&display=swap" rel="stylesheet">
-        <!-- Include an emoji font (e.g., Twemoji) in your HTML -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/twemoji@13.2.2/2/twemoji-awesome.css" />
         <title>DataCaddie</title>
 
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
@@ -13,11 +11,9 @@
         <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
         <script src="https://d3js.org/d3.v5.min.js"></script>
 
-        
-
         <link rel="stylesheet" type="text/css" href="css/style.css"> <!-- Your custom stylesheet -->
     </head>
-    <body onload="loadFlagSheet();">
+    <body onload="loadFloorCeilingSheet();"> 
         <div id="headerBar">
             <a href="#" class="navText" id="navTitle" onclick="home();">DataCaddie</a>
             <a href="#" class="navText" onclick="home();">Home</a>
@@ -30,21 +26,21 @@
             <a href="#" class="navText" onclick="uploadPage();">Upload Data</a>
         </div>
         <div id="mainBody">
-            <div id="flagDiv">
-                <div id="filterContainerFL">
-                    <div id="columnVisibilityDropdownFL">
-                        <button id="colVisButFL" onclick="toggleColumnVisibility()">Column Visibility:</button>
-                        <div id="checkboxContainerFL" style="height: 0; overflow: hidden;"></div>
-                        <button onclick="applyColumnVisibility();" id="applyColVisFL" style="display: none;">Apply</button>
-                    </div>
-                    <div id="searchAreaFL">
-                        <div id="searchInnerAreaFL">
+            <div id="trendsDiv">
+                <div id="filterContainerTR">
+                    <div id="searchAreaTR">
+                        <div id="searchInnerAreaTR">
                             <div>Search:</div>
-                            <input type="text" id="filter-text-box-flag" placeholder="Filter..." oninput="onFilterTextBoxChangedFlag();">
+                            <input type="text" id="filter-text-box-floor-ceil" placeholder="Filter..." oninput="onFilterTextBoxChangedFloorCeil();">
+                        </div>
+
+                        <div id="baseRdsDiv">
+                            <div>Base Round Size:</div>
+                            <input type="text" id="baseRdsInp" value="100" onchange="onFilterTextBoxChangedFloorCeil(); loadFloorCeilingSheet();">
                         </div>
                     </div>
                 </div>
-                <div id="flagSheet" class="ag-theme-quartz">
+                <div id="floorCeilSheet" class="ag-theme-quartz">
 
                 </div>
             </div>
