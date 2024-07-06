@@ -150,6 +150,14 @@ var courseHistorySchema = mongoose.Schema({
 
 var courseHistory = mongoose.model('courseHistory', courseHistorySchema);
 
+var fieldStrengthSchema = mongoose.Schema({
+  tournament: String,
+  year: Number,
+  strength: Number,
+});
+
+var fieldStrength = mongoose.model('fieldStrength', fieldStrengthSchema);
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -360,6 +368,33 @@ app.post('/uploadCourseHistory', upload.single('file'), async (req, res) => {
       res.status(500).send('Internal Server Error');
     }
   });
+
+app.post('/uploadFieldStrength', upload.single('file'), async (req, res) => {
+  try {
+    // Clear existing entries
+    await fieldStrength.deleteMany({});
+
+    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    for (const row of data) {
+      const tournament = row.tournament;
+      const year = row.year;
+      const strength = row.strength;
+
+      await fieldStrength.create({
+        tournament, year, strength
+      });
+    }
+
+    res.status(200).send('File uploaded successfully.');
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
 
 app.get('/get/golferProf/:PLAYER/:ROUND', (req, res) => {
 
@@ -590,6 +625,7 @@ app.get('/get/modelSheet/', async (req, res) => {
     const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNamesTournament }, 'Round': { $ne: 'Event' } });
     const pgatourResults = await pgatour.find({ player: { $in: convertedPlayerNamesPga } });
     const courseHistoryResults = await courseHistory.find({ player: { $in: playerNames } });
+    const fieldStrengthResults = await fieldStrength.find({});
 
     tournamentRowResults.forEach(result => {
       if (TO_FD[result.player]) {
@@ -616,6 +652,7 @@ app.get('/get/modelSheet/', async (req, res) => {
       tournamentRow: tournamentRowResults,
       pgatour: pgatourResults,
       courseHistory: courseHistoryResults,
+      fieldStrength: fieldStrengthResults,
     };
 
     // Send the combined results as JSON

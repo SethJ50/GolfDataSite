@@ -705,6 +705,11 @@ div.dt-button-collection {
     height: fit-content;
 }
 
+#fieldAndCourse {
+    text-align: center;
+    height: fit-content;
+}
+
 #modelInputButtons {
     text-align: center;
     height: fit-content;

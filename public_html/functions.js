@@ -2516,6 +2516,9 @@ function loadModelResults() {
     let app175_200 = document.getElementById('app175_200').value;
     let puttingBob = document.getElementById('puttingBob').value;
     let threePuttAvd = document.getElementById('threePuttAvd').value;
+    let easyField = document.getElementById('easyField').value;
+    let mediumField = document.getElementById('mediumField').value;
+    let hardField = document.getElementById('hardField').value;
     let courseHistoryInput = document.getElementById('courseHistory').value;
 
 
@@ -2530,10 +2533,12 @@ function loadModelResults() {
         console.log('jsonData: ', jsonData);
 
         // Ensure that all parts of the jsonData are there.
-        if (!jsonData.salaries || !jsonData.pgatour || !jsonData.courseHistory || !jsonData.tournamentRow) {
-            console.log('Invalid data format. Expected "salaries", "pgatour", "courseHistory", and "tournamentRow" properties.');
+        if (!jsonData.salaries || !jsonData.pgatour || !jsonData.courseHistory || !jsonData.tournamentRow || !jsonData.fieldStrength) {
+            console.log('Invalid data format. Expected "salaries", "pgatour", "courseHistory","tournamentRow", and "fieldStrength" properties.');
             return;
         }
+
+        console.log('field strength', jsonData.fieldStrength);
 
         /*
             EXTRACT DATA FOR DATATABLE:
@@ -2562,8 +2567,6 @@ function loadModelResults() {
                 const courseHistoryKeys = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];
                 courseHistoryData = Object.fromEntries(courseHistoryKeys.map(key => [key, null]));
             }
-
-
 
             //12, 24, 36, 50
 
@@ -2735,6 +2738,71 @@ function loadModelResults() {
                 return finishData;
             }, {});
 
+            /*
+                Step 6: Figure out average SG on easyField, mediumField, hard field for player...
+            */
+           let fieldStrengthData;
+           let playerTournamentData = jsonData.tournamentRow.filter((round) => round.player === player);
+
+           let sgEasyTotal = 0;
+           let sgEasyNum = 0;
+           let sgEasyAvg;
+           let sgMedTotal = 0;
+           let sgMedNum = 0;
+           let sgMedAvg;
+           let sgHardTotal = 0;
+           let sgHardNum = 0;
+           let sgHardAvg;
+
+           for(let i = 0; i < playerTournamentData.length; i++){
+                let currRow = playerTournamentData[i];
+                let currTournament = currRow.tournament;
+                let currSgTot = currRow.sgTot;
+
+                let sofTournament = jsonData.fieldStrength.filter((tourneyData) => tourneyData.tournament === currTournament);
+                if(sofTournament == null){
+                    console.log("Couldnt find tournament: ", currTournament);
+                }
+
+                let sof = sofTournament[0].strength;
+
+                if(sof <= -0.15){
+                    sgEasyTotal += currSgTot;
+                    sgEasyNum += 1;
+
+                    // Can use this to test validity
+                    //if(player == 'Lucas Glover'){
+                    //    console.log('tournament: ', currTournament, ' sof: ', sof, ' sgTot: ', currSgTot);
+                    //}
+                } else if(sof >= 0.7) {
+                    sgHardTotal += currSgTot;
+                    sgHardNum += 1;
+                } else {
+                    sgMedTotal += currSgTot;
+                    sgMedNum += 1;
+                }
+           }
+
+           if(sgEasyNum == 0){
+            sgEasyAvg = null;
+           } else {
+            sgEasyAvg = Number((sgEasyTotal/sgEasyNum).toFixed(2));
+           }
+
+           if(sgMedNum == 0){
+            sgMedAvg = null;
+           } else {
+            sgMedAvg = Number((sgMedTotal/sgMedNum).toFixed(2));
+           }
+
+           if(sgHardNum == 0){
+            sgHardAvg = null;
+           } else {
+            sgHardAvg = Number((sgHardTotal/sgHardNum).toFixed(2));
+           }
+
+           fieldStrengthData = {'sgEasy': sgEasyAvg, 'sgMed': sgMedAvg, 'sgHard': sgHardAvg};
+
             // Check if player exists in pgatour
             if (pgatourData) {
                 // If player in pgatour data, add pga tour data
@@ -2788,6 +2856,7 @@ function loadModelResults() {
                     }, {}),
                     ...recentFinishData, // Include finish data for recent tournaments
                     tournamentAbbreviations, // Include tournament abbreviations
+                    ...fieldStrengthData,
                 };
             } else {
                 // Set pgatour data for the player as null because player doesn't have data.
@@ -2840,6 +2909,7 @@ function loadModelResults() {
                     }, {}),
                     ...recentFinishData, // Include finish data for recent tournaments
                     tournamentAbbreviations, // Include tournament abbreviations
+                    ...fieldStrengthData,
                 };
             }
         }).filter(Boolean); // Remove null entries
@@ -2876,7 +2946,8 @@ function loadModelResults() {
             'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75',
             'app75_100', 'app100_125', 'app125_150', 'app150_175', 'app175_200',
             'app200_up', 'bob', 'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring',
-            'prox', 'roughProx', 'puttingBob', 'threePuttAvd', 'bonusPutt', 'chAvg', 'fdSalary', 'dkSalary'
+            'prox', 'roughProx', 'puttingBob', 'threePuttAvd', 'bonusPutt', 'chAvg', 'fdSalary', 'dkSalary',
+            'sgEasy', 'sgMed', 'sgHard'
         ];
 
         // Calculate mean and standard deviation for each stat
@@ -3015,6 +3086,9 @@ function loadModelResults() {
             'app175_200': app175_200,
             'puttingBob': puttingBob,
             'threePuttAvd': threePuttAvd,
+            'sgEasy': easyField,
+            'sgMed': mediumField,
+            'sgHard': hardField,
             'chAvg': courseHistoryInput
         };
 
@@ -3024,8 +3098,9 @@ function loadModelResults() {
         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
         'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd', 'chAvg'];
 
-        let testPlayer = 'Padraig Harrington';
-        console.log('Player: ', testPlayer);
+        let testPlayer = 'Lucas Glover';
+        //let testPlayerData = dataTableData.filter((round) => round.player === testPlayer);
+        //console.log('Player: ', testPlayerData);
         
         dataTableData.forEach((playerData) =>{
             let ratingSum = 0;
@@ -3209,12 +3284,17 @@ function loadModelResults() {
             { headerName: 'Putt. BoB %', field: 'puttingBob', hide: true },
             { headerName: '3-Putt Avd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
             { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
+            { headerName: 'SG: EasyField', field: 'sgEasy', hide: true},
+            { headerName: 'SG: MedField', field: 'sgMed', hide: true},
+            { headerName: 'SG: HardField', field: 'sgHard', hide: true},
             { headerName: 'Course History', field: 'chAvg', hide: true, comparator: customComparator },
         ];
 
         // Function to determine if a column should not be hidden
         function shouldNotHideColumn(key, weightDict) {
             const value = weightDict[key];
+
+
 
             // Check if the value is a number
             if (value !== '' && value !== undefined) {
@@ -3328,7 +3408,7 @@ function loadModelResults() {
                                         'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75', 'app75_100',
                                         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bob',
                                         'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
-                                        'puttingBob', 'threePuttAvd', 'bonusPutt', 'rating', 'chAvg'];
+                                        'puttingBob', 'threePuttAvd', 'bonusPutt', 'rating', 'chAvg', 'sgEasy', 'sgMed', 'sgHard'];
         
         function globalCellStyle(params) {
             const fieldName = params.colDef.field;
@@ -3411,8 +3491,10 @@ function loadModelResults() {
                 gridOptionsModel.api.setColumnDefs(gridOptionsModel.columnDefs);
             }                      
         
-            const gridDiv = document.querySelector('#modelSheet');
-            gridApiModel = new agGrid.Grid(gridDiv, gridOptionsModel); // Use new agGrid.Grid constructor
+            //const gridDiv = document.querySelector('#modelSheet');
+            //gridApiModel = new agGrid.Grid(gridDiv, gridOptionsModel).gridOptions.api; // Use new agGrid.Grid constructor
+            clearCheatSheetContent();
+            gridApiModel = new agGrid.createGrid(document.querySelector('#modelSheet'), gridOptionsModel);
             updateColumnVisibility();
         
             isModelSheetInitialized = true;
@@ -3450,8 +3532,13 @@ function loadModelResults() {
 function onFilterTextBoxChangedModel() {
     // the function for the search box which filters the table 
     // based on 'filter-text-box' for gridOptionsModel
-    const filterText = document.getElementById('filter-text-box-model').value;
-    gridOptionsModel.api.setQuickFilter(filterText);
+    //const filterText = document.getElementById('filter-text-box-model').value;
+    //gridOptionsModel.api.setQuickFilter(filterText);
+
+    gridApiModel.setGridOption(
+        'quickFilterText',
+        document.getElementById('filter-text-box-model').value
+      );
 }
 
 function onModelInputChange() {
@@ -3519,6 +3606,9 @@ function onModelInputChange() {
     let app175_200 = document.getElementById('app175_200').value;
     let puttingBob = document.getElementById('puttingBob').value;
     let threePuttAvd = document.getElementById('threePuttAvd').value;
+    let easyField = document.getElementById('easyField').value;
+    let mediumField = document.getElementById('mediumField').value;
+    let strongField = document.getElementById('hardField').value;
     let courseHistoryInput = document.getElementById('courseHistory').value;
 
     const inputElements = [
@@ -3529,7 +3619,7 @@ function onModelInputChange() {
         sgPutt50input, sgApp50input, sgT2G50input, sgArg50input, sgOtt50input, sgTot50input,
         drDist, bob, sandSave, par3scoring, par5scoring, prox, app50_75, app100_125, app150_175,
         app200_up, bonusPutt, drAcc, bogAvd, scrambling, par4scoring, gir, roughProx, app75_100,
-        app125_150, app175_200, puttingBob, threePuttAvd, courseHistoryInput
+        app125_150, app175_200, puttingBob, threePuttAvd, easyField, mediumField, strongField, courseHistoryInput
     ];
 
     // Sum of all stats
