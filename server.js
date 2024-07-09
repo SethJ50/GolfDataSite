@@ -22,21 +22,30 @@ const TO_FD = {
   'Robert MacIntyre': 'Robert Macintyre',
   'Nicolai Højgaard': 'Nicolai Hojgaard',
   'S.H. Kim': 'Seonghyeon Kim',
-  'Thorbjørn Olesen' : 'Thorbjorn Olesen'
+  'Thorbjørn Olesen' : 'Thorbjorn Olesen',
+  'Jordan Smith':'Jordan L. Smith',
+  'Rasmus Højgaard': 'Rasmus Hojgaard',
+  'Ludvig Åberg': 'Ludvig Aberg',
 };
 
 const FD_TO_PGA = {
   'Robert Macintyre': 'Robert MacIntyre',
   'Nicolai Hojgaard': 'Nicolai Højgaard',
   'Seonghyeon Kim': 'S.H. Kim',
-  'Thorbjorn Olesen': 'Thorbjørn Olesen'
+  'Thorbjorn Olesen': 'Thorbjørn Olesen',
+  'Jordan L. Smith': 'Jordan Smith',
+  'Rasmus Hojgaard': 'Rasmus Højgaard',
+  'Ludvig Aberg': 'Ludvig Åberg',
 };
 
 const FD_TO_TOURNAMENT = {
   'Robert Macintyre': 'Robert MacIntyre',
   'Seonghyeon Kim': 'S.H. Kim',
   'Nicolai Højgaard': 'Nicolai Hojgaard',
-  'Thorbjørn Olesen' : 'Thorbjorn Olesen'
+  'Thorbjørn Olesen' : 'Thorbjorn Olesen',
+  'Jordan L. Smith': 'Jordan Smith',
+  'Rasmus Hojgaard': 'Rasmus Højgaard',
+  'Ludvig Aberg': 'Ludvig Åberg',
 };
 
 var TournamentRowSchema = mongoose.Schema({
@@ -454,9 +463,10 @@ app.get('/get/playerListGp/', (req, res) => {
 app.get('/get/profOverview/:PLAYER', async (req, res) => {
 
   let currPlayerTournament = FD_TO_TOURNAMENT[req.params.PLAYER] || req.params.PLAYER;
+  let playerName2 = req.params.PLAYER;
   let currPlayerPga = FD_TO_PGA[req.params.PLAYER] || req.params.PLAYER;
 
-  const tournamentRowResults = await TournamentRow.find({'player': currPlayerTournament, 'Round': { $ne: 'Event' }});
+  const tournamentRowResults = await TournamentRow.find({$or: [{'player': currPlayerTournament}, {'player': playerName2}], 'Round': { $ne: 'Event' }});
 
   tournamentRowResults.forEach(result => {
     if (TO_FD[result.player]) {
@@ -496,7 +506,7 @@ app.get('/get/floorCeilSheet/', async (req, res) => {
     const convertedPlayerNames = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
 
     // find all tournament rows where the player is in convertedPlayerNames (ones in curr tourney) and round isn't event
-    const tournamentRowResults = await TournamentRow.find({player: {$in: convertedPlayerNames }, 'Round': {$ne: 'Event'}});
+    const tournamentRowResults = await TournamentRow.find({$or: [{player: {$in: convertedPlayerNames}}, {player: {$in: playerNames}}], 'Round': {$ne: 'Event'}});
 
     // convert tournament row names to fanduel conventions if necessary
     tournamentRowResults.forEach(result => {
@@ -538,7 +548,7 @@ app.get('/get/trendsSheet/', async (req, res) => {
     const convertedPlayerNames = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
 
     // Perform subsequent queries using the filtered player names
-    const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNames }, 'Round': { $ne: 'Event' } });
+    const tournamentRowResults = await TournamentRow.find({$or: [{player: {$in: convertedPlayerNames}}, {player: {$in: playerNames}}], 'Round': {$ne: 'Event'}});
 
     // Convert player names in pgatourResults to the appropriate conversion if they are in NAME_CONV, otherwise keep them as is
     tournamentRowResults.forEach(result => {
@@ -622,7 +632,7 @@ app.get('/get/modelSheet/', async (req, res) => {
 
 
     // Perform subsequent queries using the filtered player names
-    const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNamesTournament }, 'Round': { $ne: 'Event' } });
+    const tournamentRowResults = await TournamentRow.find({$or: [{player: {$in: convertedPlayerNamesTournament}}, {player: {$in: playerNames}}], 'Round': {$ne: 'Event'}});
     const pgatourResults = await pgatour.find({ player: { $in: convertedPlayerNamesPga } });
     const courseHistoryResults = await courseHistory.find({ player: { $in: playerNames } });
     const fieldStrengthResults = await fieldStrength.find({});
@@ -683,7 +693,7 @@ app.get('/get/cheatSheet/', async (req, res) => {
 
   
       // Perform subsequent queries using the filtered player names
-      const tournamentRowResults = await TournamentRow.find({ player: { $in: convertedPlayerNamesTournament }, 'Round': { $ne: 'Event' } });
+      const tournamentRowResults = await TournamentRow.find({$or: [{player: {$in: convertedPlayerNamesTournament}}, {player: {$in: playerNames}}], 'Round': {$ne: 'Event'}});
 
       tournamentRowResults.forEach(result => {
         if (TO_FD[result.player]) {
