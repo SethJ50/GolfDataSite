@@ -287,10 +287,25 @@ function loadCheatSheet() {
             let sortedTournamentRow = jsonData.tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
 
             // Step 2: Identify the 10 most recent tournaments
-            recentTournaments = Array.from(new Set(sortedTournamentRow.map(entry => entry.tournament))).slice(0, 10);
+            //recentTournaments = Array.from(new Set(sortedTournamentRow.map(entry => entry.tournament))).slice(0, 10);
+
+            let recentTournaments = [];
+            let uniqueTournaments = new Set();
+
+            for (let entry of sortedTournamentRow) {
+                let tournamentDateKey = `${entry.tournament}-${entry.dates}`;
+                if (!uniqueTournaments.has(tournamentDateKey)) {
+                    uniqueTournaments.add(tournamentDateKey);
+                    recentTournaments.push({ tournament: entry.tournament, dates: entry.dates });
+                }
+                if (recentTournaments.length >= 10) {
+                    break;
+                }
+            }
 
             // Step 3: Create Abbreviations for Tournament Names
-            tournamentAbbreviations = recentTournaments.reduce((abbreviations, tournament, index) => {
+            tournamentAbbreviations = recentTournaments.reduce((abbreviations, tournamentEntry, index) => {
+                let tournament = tournamentEntry.tournament;
                 // Split the tournament name into words
                 let words = tournament.split(' ');
 
@@ -327,9 +342,31 @@ function loadCheatSheet() {
 
                 If entry was found, return the finish from the entry, otherwise return null.
             */
-            let recentHistory = recentTournaments.map(tournament => {
-                let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
-                return entry ? entry.finish : null;
+
+            let recentHistory = recentTournaments.map(tournamentEntry => {
+                let entry;
+                for (let i = 0; i < sortedTournamentRow.length; i++) {
+                    entryPlayer = sortedTournamentRow[i].player;
+                    entryTourney = sortedTournamentRow[i].tournament;
+                    entryDates = sortedTournamentRow[i].dates;
+
+                    tourney = tournamentEntry.tournament;
+                    tourneyDates = tournamentEntry.dates;
+
+                    if (sortedTournamentRow[i].player === player &&
+                        sortedTournamentRow[i].tournament === tournamentEntry.tournament &&
+                        sortedTournamentRow[i].dates === tournamentEntry.dates) {
+                        entry = sortedTournamentRow[i];
+
+                        break;
+                    }
+                }
+
+                if(entry == null){
+                    return null;
+                } else {
+                    return entry.finish;
+                }
             });
 
             // If recentHistory does not have 10 entries, fill it with null.
@@ -353,7 +390,8 @@ function loadCheatSheet() {
                 adds to 'finishData' the finish if an entry is found, otherwise null
                 returns this 'finishData'
             */
-            let recentFinishData = recentTournaments.reduce((finishData, tournament, index) => {
+            let recentFinishData = recentTournaments.reduce((finishData, tournamentEntry, index) => {
+                let tournament = tournamentEntry.tournament;
                 let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
                 let abbreviation = tournamentAbbreviations[`recent${index + 1}`]; // Get the abbreviation for the current tournament
                 finishData[abbreviation] = entry ? entry.finish : null; // Use abbreviation as column name
@@ -493,6 +531,8 @@ function loadCheatSheet() {
             return 0; // If values are equal
           }
 
+        console.log('abbrev: ', dataTableData.tournamentAbbreviations);
+
         // Create column definitions
         let columnDefs = [
             // Player Info grouping
@@ -582,6 +622,8 @@ function loadCheatSheet() {
                 ],
             },
         ];
+
+        console.log('after col defs', tournamentAbbreviations);
 
         // Calculate min, mid, and max values for each column
         const columnMinMaxValues = columnDefs.reduce((acc, column) => {
