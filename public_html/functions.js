@@ -1436,21 +1436,21 @@ function loadFloorCeilingSheet() {
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
                 .slice(0, baseRounds.value);
 
-            sg0Plus = null;
-            sg1Plus = null;
-            sg2Plus = null;
-            sg3Plus = null;
-            sg4Plus = null;
-            sg5Plus = null;
+            sg0Plus = Number(0.00);
+            sg1Plus = Number(0.00);
+            sg2Plus = Number(0.00);
+            sg3Plus = Number(0.00);
+            sg4Plus = Number(0.00);
+            sg5Plus = Number(0.00);
             totRounds = playerRounds.length;
 
             if (playerRounds.length > 0){
-                tot0Plus = 0;
-                tot1Plus = 0;
-                tot2Plus = 0;
-                tot3Plus = 0;
-                tot4Plus = 0;
-                tot5Plus = 0;
+                tot0Plus = Number(0.00);
+                tot1Plus = Number(0.00);
+                tot2Plus = Number(0.00);
+                tot3Plus = Number(0.00);
+                tot4Plus = Number(0.00);
+                tot5Plus = Number(0.00);
 
                 playerRounds.forEach((round) => {
                     if (round.sgTot >= 0) {
@@ -1537,7 +1537,12 @@ function loadFloorCeilingSheet() {
         });
 
         function getMedian(arr) {
-            arr.sort((a, b) => a - b); // Sort the array in ascending order
+            // Convert every element to a double
+            arr = arr.map(element => parseFloat(element));
+        
+            // Sort the array in ascending order
+            arr.sort((a, b) => a - b);
+            
             let mid = Math.floor(arr.length / 2);
         
             if (arr.length % 2 === 0) {
