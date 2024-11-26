@@ -1,5 +1,5 @@
-//const { isNull } = require("lodash");
 
+// Page Changing functions
 function home() {
     window.location.href = './index.html';
 }
@@ -36,6 +36,14 @@ function floorCeiling() {
     window.location.href = './floorCeiling.html';
 }
 
+/*
+    logSavedData() -- Using localStorage variable that carries data from a user,
+        checks local storage to see if it has data - specifically data "Choose Players",
+        which is the chosen players for an optimizer's player pool, and "Exclude Players",
+        which is a group of players excluded from the optimizer
+
+    Called by: optimizerSettings.html
+*/
 function logSavedData() {
     const savedDataJSON = localStorage.getItem('modelData');
     let inModelData = savedDataJSON ? JSON.parse(savedDataJSON) : [];
@@ -53,9 +61,9 @@ function logSavedData() {
     }
 
     // Dynamically populate the "Choose Players" dropdown with player names
+    //      (For choosing set of players for player pool)
     var selectDropdown = document.getElementById('choosePlayerBox');
     var htmlString = "";
-
     inModelData.forEach(function(data) {
         var playerName = data.player;
         var option = document.createElement('option');
@@ -78,12 +86,15 @@ function logSavedData() {
     $(selectDropdown).trigger('chosen:updated');
     $(excludeDropdown).trigger('chosen:updated');
 
+    // NOTE: localStorage saves data from previous optimizer run...
+    // We check local storage and populate selections if there is saved data there
+
     // Check for selected data in local storage
     const selectedModelDataJSON = localStorage.getItem('chosenPlayers');
     if (selectedModelDataJSON) {
         var selectedModelData = JSON.parse(selectedModelDataJSON);
 
-        // Iterate through the options and select excluded players in "Exclude Players" dropdown
+        // Iterate through the options and select chosen players in "Choose Players" dropdown
         for (var i = 0; i < selectDropdown.options.length; i++) {
             var playerName = selectDropdown.options[i].value;
             if (selectedModelData.includes(playerName)) {
@@ -128,6 +139,12 @@ function logSavedData() {
     });
 }
 
+/*
+    updateSelectedData(inModelData, savedDataJSON)
+        Gets list of all players specifically chosen for optimizer player pool, as well as
+        those specified to be excluded, and filters the data for the optimizer (inModelData)
+        to address these specifications
+*/
 function updateSelectedData(inModelData, savedDataJSON) {
     console.log('update selected data called');
     var selectDropdown = document.getElementById('choosePlayerBox');
@@ -139,7 +156,7 @@ function updateSelectedData(inModelData, savedDataJSON) {
     // Get excluded players from "Exclude Players" dropdown
     var excludedPlayers = Array.from(excludeDropdown.selectedOptions).map(option => option.value);
 
-    // Exclude players selected in both "Choose Players" and "Exclude Players"
+    // If player is both in player pool and excluded, exclude the player
     excludedPlayers.forEach(function(player) {
         var index = selectedPlayers.indexOf(player);
         if (index !== -1) {
@@ -163,8 +180,8 @@ function updateSelectedData(inModelData, savedDataJSON) {
         }
 
         // Save excluded players to local storage
-
         localStorage.setItem('selectedModelData', JSON.stringify(selectedData));
+
         console.log('Selected model data: ', selectedData);
     } else {
         console.log('No players selected. Using all saved model data.');
@@ -173,7 +190,11 @@ function updateSelectedData(inModelData, savedDataJSON) {
     }
 }
 
-
+/*
+    goOptimizerResults()
+        Grabs the number of lineups to optimize, and sends the
+        page to optimizer results page.
+*/
 function goOptimizerResults() {
     let numLineups = document.getElementById('numLineups').value;
 
@@ -182,7 +203,11 @@ function goOptimizerResults() {
     window.location.href = './optimizerResults.html';
 }
 
-
+/*
+    applyClassesBasedOnValue()
+        Some sort of helper function that adds a 'class' to elements based on there value relative to cutoffs,
+        probably for color filtering
+*/
 function applyClassesBasedOnValue(element, numericValue, lowestCutoff, lowCutoff, mediumCutoff, highCutoff, higherCutoff, highestCutoff) {
     if (!isNaN(numericValue)) {
         if (numericValue < lowestCutoff) {
@@ -261,10 +286,11 @@ function loadCheatSheet() {
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
                 .slice(0, lastNRounds.value); // Grab at most the specified number of rounds
 
-            // Calculate the average of specific columns for the player's rounds
+            // Initialize storage, grab Round sample size of interest
             let avgRoundData = {};
             avgRoundData['numRounds'] = playerRounds.length;
 
+            // Calculate the average of specific columns for the player's rounds
             if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
                 let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
                 columnsToAverage.forEach((col) => {
@@ -1014,6 +1040,7 @@ function loadProfile(){
         return response.json();
     })
     .then((jsonData) => {
+        // It seems most filtering done on server side...
 
         console.log("json data", jsonData);
 
@@ -1022,6 +1049,7 @@ function loadProfile(){
 
         console.log('Debug Info: ', jsonData.debugInfo);
 
+        // Sort player's rounds to show most recent at top
         documentData.sort((a, b) => {
             // First, compare by date in descending order
             const dateComparison = new Date(b.dates) - new Date(a.dates);
@@ -1030,11 +1058,12 @@ function loadProfile(){
             return dateComparison !== 0 ? dateComparison : b.Round - a.Round;
         });
 
-
+        // Clear html if table was initialized
         if(isDataTableInitialized){
             profileTbl.innerHTML = '';
         }
-
+        
+        // Define table's columns
         const columnDefs = [
             { headerName: 'Date', field: 'dates' },
             { headerName: 'Finish', field: 'finish' },
@@ -1048,6 +1077,7 @@ function loadProfile(){
             { headerName: 'SG: TOT', field: 'sgTot', valueFormatter: roundToTwoDecimals},
             ];
         
+        // Function to round some columns to 2 decimals
         function roundToTwoDecimals(params) {
             // Check if the value is a number before rounding
             if (typeof params.value === 'number') {
@@ -1057,6 +1087,7 @@ function loadProfile(){
             return params.value;
         }
         
+        // Define set values for color scales
         let indMinMax;
         let t2gMinMax;
         let totMinMax;
@@ -1070,6 +1101,7 @@ function loadProfile(){
             totMinMax = {minValue: -12, midValue: 0, maxValue: 15};
         }
         
+        // Declare which color scale values each field has
         const colMinMax = {
             'sgPutt' : indMinMax,
             'sgArg' : indMinMax,
@@ -1079,10 +1111,8 @@ function loadProfile(){
             'sgTot' : totMinMax,
         }
 
+        // Define actual cell color scales
         const colorScales = {};
-
-        
-
         Object.keys(colMinMax).forEach(fieldName => {
             const { minValue, midValue, maxValue } = colMinMax[fieldName];
         
@@ -1094,9 +1124,11 @@ function loadProfile(){
             colorScales[fieldName] = colorScale;
         });
 
+        // Specify columns with a color scale
         const columnsWithColorScale = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt',
                                         'sgT2G', 'sgTot'];
 
+        // Setup overall cell styles
         function globalCellStyle(params){
             const fieldName = params.colDef.field;
             const numericValue = params.value;
@@ -1116,6 +1148,7 @@ function loadProfile(){
             return {};
         }
 
+        // Finalize grid options for ag-grid
         const gridOptions = {
             columnDefs: columnDefs.map(column => ({
                 ...column,
@@ -1138,7 +1171,8 @@ function loadProfile(){
                 return { borderBottom: '1px solid #ccc' };
             },
         }
-
+        
+        // Create Grid
         profGridApi = agGrid.createGrid(document.querySelector('#golferProfTable'), gridOptions);
         isDataTableInitialized = true; // Set the flag to indicate DataTable is now initialized
     })
@@ -1173,9 +1207,9 @@ function loadProfOverview(){
 
         let playerRounds = jsonData.tournaments.sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round).slice(0, lastN);
 
+        // Develop average SG categories over lastN rounds
         let avgRoundData = {};
-
-        if (playerRounds.length > 0) { // Check if there are rounds for calculation
+        if (playerRounds.length > 0) { // Check if player has SG Data rounds
             let columnsToAverage = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'sgTot'];
 
             columnsToAverage.forEach((col) => {
@@ -1193,11 +1227,9 @@ function loadProfOverview(){
             });
         }
 
-
+        // Set pgatourData 'dict' to hold pgatour stats if exist
         let pgatour = jsonData.pgatour[0];
-
         let pgatourData = null;
-
         if (pgatour){
             pgatourData = {
                 sgPutt: pgatour.sgPutt !== null && pgatour.sgPutt !== undefined ? Number(pgatour.sgPutt.toFixed(2)) : null,
@@ -1264,6 +1296,7 @@ function loadProfOverview(){
         // Start building the HTML string for the table
         let tableHTML = '';
 
+        // Map behind the scenes name to front end name
         const statMappings = {
             sgPutt: 'SG: Putt',
             sgArg: 'SG: Arg',
@@ -1302,6 +1335,7 @@ function loadProfOverview(){
 
         let noPgaStats = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'sgTot'];
 
+        // Funct to get color based on value
         function getColorFromScale(value) {
             const scale = d3.scaleLinear()
                 .domain([0, 75, 150])
@@ -1310,6 +1344,7 @@ function loadProfOverview(){
             return scale(value);
         }
 
+        // Second funct to get color based on value
         function getColorFromScale2(value, stat){
             let dom;
             if(stat == 'sgPutt' | stat == 'sgArg' | stat == 'sgApp' | stat == 'sgOtt'){
@@ -1328,7 +1363,8 @@ function loadProfOverview(){
             return scale(value);
         }
 
-        if (pgatourData == null){
+        if (pgatourData == null){ // Player doesn't have PgaTour data
+            // Create table with just sgAverages
             for( let statInd in noPgaStats){
                 let stat = noPgaStats[statInd];
                 // Add a new row for each stat
@@ -1342,6 +1378,7 @@ function loadProfOverview(){
                 tableHTML += '</tr>';
             }
         } else {
+            // Create table with SG averages and PgaTourStats
             for (let stat in pgatourData) {
                 // Check if the property is a valid stat (not a method, etc.) and does not end with 'R'
                 if (pgatourData.hasOwnProperty(stat) && !stat.endsWith('R')) {
@@ -1370,6 +1407,7 @@ function loadProfOverview(){
     })
 }
 
+// For list of players in Golfer Profile page
 function loadPlayerListGp(){
     let playerDropdown = document.getElementById('playerNameProf');
 
@@ -1385,7 +1423,8 @@ function loadPlayerListGp(){
         let htmlString = '';
 
         //console.log('playerList: ', jsonData);
-
+        
+        // Add all players to an html
         for (let i=0; i<jsonData.length; i++){
             let object = jsonData[i];
             if(i == 0){
@@ -1395,8 +1434,10 @@ function loadPlayerListGp(){
             }
         }
 
+        // add html of players to dropdown
         playerDropdown.innerHTML = htmlString;
 
+        // reload profile and profile overview
         loadProfile();
         loadProfOverview();
     })
@@ -1421,11 +1462,13 @@ function loadFloorCeilingSheet() {
     .then((jsonData) => {
         console.log(jsonData);
 
+        // Ensure server sent the correct data
         if (!jsonData.salaries || !jsonData.tournamentRow){
             console.log('Invalid data format, expected "salaries" and "tournamentRow".');
             return;
         }
 
+        // Loop through salary's rows (effectively loop through player)
         let dataTableData = jsonData.salaries.map((salary) => {
             let player = salary.player;
             let fdSalary = salary.fdSalary;
@@ -1436,6 +1479,7 @@ function loadFloorCeilingSheet() {
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
                 .slice(0, baseRounds.value);
 
+            // Set aside space for percentage of rds gaining this many strokes
             sg0Plus = Number(0.00);
             sg1Plus = Number(0.00);
             sg2Plus = Number(0.00);
@@ -1444,6 +1488,7 @@ function loadFloorCeilingSheet() {
             sg5Plus = Number(0.00);
             totRounds = playerRounds.length;
 
+            // Develop percents of rounds gaining certain number strokes
             if (playerRounds.length > 0){
                 tot0Plus = Number(0.00);
                 tot1Plus = Number(0.00);
@@ -1478,6 +1523,7 @@ function loadFloorCeilingSheet() {
                     }
                 })
 
+                // Populate sgXPlus with percent of rounds gaining more than X strokes
                 sg0Plus = Number(tot0Plus / totRounds).toFixed(2);
                 sg1Plus = Number(tot1Plus / totRounds).toFixed(2);
                 sg2Plus = Number(tot2Plus / totRounds).toFixed(2);
@@ -1486,6 +1532,7 @@ function loadFloorCeilingSheet() {
                 sg5Plus = Number(tot5Plus / totRounds).toFixed(2);
             };
 
+            // Set final data 'dict'
             let finalData = {
                 player,
                 fdSalary,
@@ -1502,13 +1549,15 @@ function loadFloorCeilingSheet() {
             return finalData;
         }).filter(Boolean);
 
+        // Start to develop color scales for these values
+
+        // make list of percentages for each column
         zeros = [];
         ones = [];
         twos = [];
         threes = [];
         fours = [];
         fives = [];
-
         dataTableData.forEach((player) => {
 
             if (player.sg0Plus != null) {
@@ -1536,6 +1585,7 @@ function loadFloorCeilingSheet() {
             }
         });
 
+        // Function to get the median of an array
         function getMedian(arr) {
             // Convert every element to a double
             arr = arr.map(element => parseFloat(element));
@@ -1554,6 +1604,7 @@ function loadFloorCeilingSheet() {
             }
         }
 
+        // Dicts that have min, mid, and max value for each column
         let minMax0 = {minValue: Math.min(...zeros), midValue: getMedian(zeros), maxValue: Math.max(...zeros)};
         let minMax1 = {minValue: Math.min(...ones), midValue: getMedian(ones), maxValue: Math.max(...ones)};
         let minMax2 = {minValue: Math.min(...twos), midValue: getMedian(twos), maxValue: Math.max(...twos)};
@@ -1561,6 +1612,7 @@ function loadFloorCeilingSheet() {
         let minMax4 = {minValue: Math.min(...fours), midValue: getMedian(fours), maxValue: Math.max(...fours)};
         let minMax5 = {minValue: Math.min(...fives), midValue: getMedian(fives), maxValue: Math.max(...fives)};
 
+        // Assign column name to its set of minMidMax
         const colMinMax = {
             'sg0Plus': minMax0,
             'sg1Plus': minMax1,
@@ -1570,8 +1622,8 @@ function loadFloorCeilingSheet() {
             'sg5Plus': minMax5,
         };
 
+        // Develop color scales themselves for each column
         const colorScales = {};
-
         Object.keys(colMinMax).forEach(fieldName => {
             const { minValue, midValue, maxValue } = colMinMax[fieldName];
         
@@ -1583,9 +1635,11 @@ function loadFloorCeilingSheet() {
             colorScales[fieldName] = colorScale;
         });
 
+        // Specify columns with color scale
         const columnsWithColorScale = ['sg0Plus', 'sg1Plus', 'sg2Plus', 'sg3Plus',
                                         'sg4Plus', 'sg5Plus'];
 
+        // Set global cell style (includes color scale specification)
         function globalCellStyle(params){
             const fieldName = params.colDef.field;
             const numericValue = params.value;
@@ -1605,6 +1659,7 @@ function loadFloorCeilingSheet() {
             return {};
         }
 
+        // Define col defs for table
         let columnDefs = [
             {headerName: 'Player', field: 'player'},
             {headerName: 'FD Salary', field: 'fdSalary'},
@@ -1618,6 +1673,7 @@ function loadFloorCeilingSheet() {
             {headerName: 'Tot Rds', field: 'totRounds'},
         ];
 
+        // Function to clear the sheet before initializing
         function clearFloorCeilSheetContent() {
             /*
                 Clears the content of the floor ceil sheet.
@@ -1628,6 +1684,7 @@ function loadFloorCeilingSheet() {
                 }
         };
 
+        // Function to initialize the sheet
         function initializeFloorCeilSheet() {
             /*
                 clears floor ceil sheet if already initialized
@@ -1664,6 +1721,7 @@ function loadFloorCeilingSheet() {
             isFloorCeilingInitialized = true;
         };
 
+        // make call to initialize the sheet
         initializeFloorCeilSheet();
 
         console.log("data table data", dataTableData);
@@ -1697,24 +1755,26 @@ function loadTrendsSheet() {
     .then((jsonData) =>{
         console.log(jsonData);
 
+        // Ensure sever sent correct data
         if (!jsonData.salaries || !jsonData.tournamentRow){
             console.log('Invalid data format, expected "salaries" and "tournamentRow".');
             return;
         }
 
+        // Loop through each salary row (each player effectively)
         let dataTableData = jsonData.salaries.map((salary) => {
             let player = salary.player;
             let fdSalary = salary.fdSalary;
             let dkSalary = salary.dkSalary;
 
-            // SG: Recent Rounds Avg
+            // SG: RECENT Rounds Avg (to compare to base)
+            // Sort players rounds in desc order, grab only N most recent rounds
             let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
                 .slice(0, recentRounds.value); // Grab at most the specified number of rounds
 
-            // Calculate the average of specific columns for the player's rounds
+            // Calculate averages for lastN rounds for each SG category
             let avgRoundData = {};
-
             if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
                 let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
                 columnsToAverage.forEach((col) => {
@@ -1728,15 +1788,16 @@ function loadTrendsSheet() {
                 });
             }
 
-            // SG: Base Rounds Avg
+
+            // SG: BASE Rounds Avg (evaluated as player's baseline)
+            // Sort players rounds in desc order, grab only M most recent rounds
             let playerBaseRounds = jsonData.tournamentRow.filter((round) => round.player === player)
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
                 .slice(0, baseRounds.value); // Grab at most the specified number of rounds
 
-            // Calculate the average of specific columns for the player's rounds
+            // Calculate the baseline average for player's SG categories
             let avgRoundBaseData = {};
             avgRoundBaseData['baseRds'] = playerBaseRounds.length;
-
             if (playerBaseRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
                 let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
                 columnsToAverage.forEach((col) => {
@@ -1750,8 +1811,8 @@ function loadTrendsSheet() {
                 });
             }
 
+            // Setup data structure of trends data
             let trendsData;
-
             if(playerRounds.length != 0){
                 console.log('here');
                 trendsData = {
@@ -1770,7 +1831,7 @@ function loadTrendsSheet() {
                     ).toFixed(2)),
                     'baseRds':avgRoundBaseData.baseRds
                     };
-            }else {
+            } else {
                 trendsData = {
                     player,
                     fdSalary,
@@ -1789,6 +1850,7 @@ function loadTrendsSheet() {
 
         console.log(dataTableData);
 
+        // Define col defs for table
         let columnDefs = [
             {headerName: 'Player', field: 'player'},
             {headerName: 'FD Salary', field: 'fdSalary'},
@@ -1801,9 +1863,11 @@ function loadTrendsSheet() {
             {headerName: 'Base Rds', field: 'baseRds'},
         ];
 
+        // Hard code minMidMax for color scales
         let minMax = {minValue: -2, midValue: 0, maxValue: 2};
         let minMaxHeat = {minValue: -3.5, midValue: 0, maxValue: 3.5};
 
+        // Associate colNames to their minMidMax
         const colMinMax = {
             'sgPutt': minMax,
             'sgArg': minMax,
@@ -1812,8 +1876,8 @@ function loadTrendsSheet() {
             'sgHeat': minMaxHeat,
         };
 
+        // Develop the actual color scales for each column name
         const colorScales = {};
-
         Object.keys(colMinMax).forEach(fieldName => {
             const { minValue, midValue, maxValue } = colMinMax[fieldName];
         
@@ -1825,9 +1889,11 @@ function loadTrendsSheet() {
             colorScales[fieldName] = colorScale;
         });
 
+        // Specify columns with a color scale
         const columnsWithColorScale = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt',
                                         'sgHeat'];
 
+        // Set global cell style for table (includes color scales)
         function globalCellStyle(params){
             const fieldName = params.colDef.field;
             const numericValue = params.value;
@@ -1847,37 +1913,30 @@ function loadTrendsSheet() {
             return {};
         }
 
+        // Clears content of trends sheet
         function clearCheatSheetContent() {
-            /*
-                Clears the content of the cheatSheet.
-            */
                 const trendSheet = document.getElementById('trendSheet');
                 if (trendSheet) {
                     trendSheet.innerHTML = ''; // Clear content
                 }
         };
 
+        // Develops / places scatter quadrant plot for trend data
         function placePlot() {
-            /*
-                This function develops and places scatter quadrant plot for 
-                trends data.
-            */
-
-
+            // creates arrays of all of these categories
             let playerNames = dataTableData.map(d => d.player);
             let sgPutting = dataTableData.map(d => d.sgPutt);
             let sgApproach = dataTableData.map(d => d.sgApp);
 
+            // Randomizes textposition to reduce overlap
             function improveTextPosition(xValues) {
-                /*
-                    Randomizes textposition to reduce overlap.
-                */
-
                 let positions = ['top center', 'bottom center', 'middle left', 'middle right']; // Add more positions as needed
                 return xValues.map((value, index) => positions[index % positions.length]);
             }
 
-            // Combine distances with player names
+            // Create data structure with distance category
+            //      Distance is distance from center of the plot to indicate
+            //      which players to label with their names
             let playersWithDistances = dataTableData.map((d) => ({
                 player: d.player,
                 sgPutting: d.sgPutting,
@@ -1888,13 +1947,13 @@ function loadTrendsSheet() {
             // Sort players by distance in descending order
             playersWithDistances.sort((a, b) => b.distance - a.distance);
 
-            // Select the top 10-15 players based on distance
+            // Select the top 20 players based on distance
             let topPlayers = playersWithDistances.slice(0, 20);
 
             // Extract the sgPutting, sgApproach, and player names for the top players
             let topPlayerNames = topPlayers.map(d => d.player);
 
-            // Data and data info.
+            // Data and data info for plot
             let trace = {
                 x: sgPutting,
                 y: sgApproach,
@@ -1939,14 +1998,8 @@ function loadTrendsSheet() {
             Plotly.newPlot('quadPlot', [trace], layout);
         }
 
+        // Initializes Cheat Sheet and plot
         function initializeCheatSheet() {
-            /*
-                clears trend sheet if already initialized
-
-                builds up grid options - specifies column defs, row data,...
-                
-                creates the grid and puts it in #cheatSheet
-            */
             if (isTrendSheetInitialized) {
                 clearCheatSheetContent();
             }
@@ -1984,9 +2037,8 @@ function loadTrendsSheet() {
     });
 }
 
+// Filters trends table
 function onFilterTextBoxChangedTrend() {
-    // the function for the search box which filters the table 
-    // based on 'filter-text-box' for gridApi grid
     gridApiTrends.setGridOption(
       'quickFilterText',
       document.getElementById('filter-text-box-trend').value
@@ -2006,18 +2058,20 @@ function loadFlagSheet(){
     .then((jsonData) =>{
         console.log(jsonData);
 
+        // Ensure correct data was sent
         if(!jsonData.salaries || !jsonData.pgatour){
             console.log('Invalid data format. Expected "salaries", "pgatour"');
             return;
         }
 
+        // For each salary row (effectively each player)
         let dataTableData = jsonData.salaries.map((salary) => {
             let player = salary.player;
             let fdSalary = salary.fdSalary;
             let dkSalary = salary.dkSalary;
 
             // SG: PGATOUR.COM
-            // Find a matching player in pgatour
+            // Grab player's pgatour data
             let pgatourData = jsonData.pgatour.find((pgatour) => pgatour.player === player);
 
             if (pgatourData) {
@@ -2105,6 +2159,7 @@ function loadFlagSheet(){
             }
         }).filter(Boolean);
 
+        // Custom comparator for column sorting
         function customComparator(valueA, valueB) {
             if (valueA === null && valueB === null) {
               return 0; // If both values are null, consider them equal
@@ -2128,6 +2183,7 @@ function loadFlagSheet(){
             return 0; // If values are equal
           }
 
+        // Create column definitions for table
         let columnDefs = [
             // Player Info grouping
             {
@@ -2251,7 +2307,7 @@ function loadFlagSheet(){
             return `<span title="${value}">${emoji} ${value}</span>`;
         }
 
-
+        // For each column, calculate quantiles, apply emoji / text to cells
         columnDefs.forEach((group) => {
             if (group.children) {
                 group.children.forEach((column) => {
@@ -2270,25 +2326,16 @@ function loadFlagSheet(){
         });
         
           
-
+        // Clear content of flag sheet
         function clearCheatSheetContent() {
-            /*
-                Clears the content of the cheatSheet.
-            */
             const cheatSheet = document.getElementById('flagSheet');
             if (cheatSheet) {
                 cheatSheet.innerHTML = ''; // Clear content
             }
         };
 
+        // Initialize flag sheet
         function initializeCheatSheet() {
-            /*
-                clears cheat sheet if already initialized
-
-                builds up grid options - specifies column defs, row data,...
-                
-                creates the grid and puts it in #cheatSheet
-            */
             if (isFlagSheetInitialized) {
                 clearCheatSheetContent();
             }
@@ -2317,6 +2364,7 @@ function loadFlagSheet(){
             isFlagSheetInitialized = true;
         }
 
+        // Function that builds up column visibility dropdown in HTML
         function setupColumnVisibilityDropdown(columnDefs) {
             // Handles the setup of the column visibility dropdown
             const checkboxContainer = document.getElementById('checkboxContainerFL'); // container of the checkboxes
@@ -2398,6 +2446,7 @@ function loadFlagSheet(){
             }
         }
 
+        // Function that sets clicked columns to visible
         window.applyColumnVisibility = function () {
             // called on click of apply col vis, sets checked cols to visible!
             console.log('applying col vis');
@@ -2442,8 +2491,8 @@ function loadFlagSheet(){
             }
         };
 
+        // Function to toggle visibility of checkbox container
         window.toggleColumnVisibility = function () {
-            // toggles visibility of the checkbox container
             const checkboxContainer = document.getElementById('checkboxContainerFL');
             const applyButton = document.getElementById('applyColVisFL');
 
@@ -2457,9 +2506,7 @@ function loadFlagSheet(){
             }
         };
 
-        /*
-            For hovering the entire row - considering we have pinned rows...
-        */
+        // Function for highlighting hovered rows
         document.addEventListener('DOMContentLoaded', function () {
             const cheatSheet = document.getElementById('cheatSheet');
             
@@ -2500,6 +2547,9 @@ let gridOptionsModel;
 let savedData;
 
 function loadModelResults() {
+
+    // Grab all custom model inputs:
+
     // PGA Tour SG Stats
     let sgPuttPGAinput = document.getElementById('sgPuttPGAinput').value;
     let sgAppPGAinput = document.getElementById('sgAppPGAinput').value;
@@ -2587,35 +2637,28 @@ function loadModelResults() {
 
         console.log('field strength', jsonData.fieldStrength);
 
-        /*
-            EXTRACT DATA FOR DATATABLE:
-
-            - jsonData.salaries.map iterates over each element in salaries array.
-
-            - for each element, provided function inside map is executed
-
-            - (salary) is the individual row from salaries
-        */
+        // For each salary row (essentially for each player)
         let dataTableData = jsonData.salaries.map((salary) => {
             let player = salary.player;
             let fdSalary = salary.fdSalary;
             let dkSalary = salary.dkSalary;
 
             // SG: PGATOUR.COM
-            // Find a matching player in pgatour
+            // Grab player's pgatour data
             let pgatourData = jsonData.pgatour.find((pgatour) => pgatour.player === player);
 
             // COURSE HISTORY
-            // Find matching player in courseHistory
+            // Grab player's course history
             let courseHistoryData = jsonData.courseHistory.find((courseHistory) => courseHistory.player === player);
 
-            // If no player is found in course history, default all course history.
+            // If no player is found in course history, default all course history to null
             if (!courseHistoryData) {
                 const courseHistoryKeys = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];
                 courseHistoryData = Object.fromEntries(courseHistoryKeys.map(key => [key, null]));
             }
 
-            //12, 24, 36, 50
+
+            // Calculate averages for all sg categories for num round buckets!
 
             // SG: LAST 12 ROUNDS
             // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
@@ -2705,7 +2748,8 @@ function loadModelResults() {
                 });
             }
 
-            // RECENT HISTORY
+            // RECENT HISTORY - get most recent 10 rounds for Player
+            //    TODO - I don't think I need abbreviation stuff here...
             // Step 1: Sort tournamentRow Data in descending order by 'dates'
             let sortedTournamentRow = jsonData.tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
 
@@ -2785,9 +2829,7 @@ function loadModelResults() {
                 return finishData;
             }, {});
 
-            /*
-                Step 6: Figure out average SG on easyField, mediumField, hard field for player...
-            */
+           // Step 6: Figure out average SG on easyField, mediumField, hard field for player...
            let fieldStrengthData;
            let playerTournamentData = jsonData.tournamentRow.filter((round) => round.player === player);
 
@@ -2816,11 +2858,6 @@ function loadModelResults() {
                 if(sof <= -0.15){
                     sgEasyTotal += currSgTot;
                     sgEasyNum += 1;
-
-                    // Can use this to test validity
-                    //if(player == 'Lucas Glover'){
-                    //    console.log('tournament: ', currTournament, ' sof: ', sof, ' sgTot: ', currSgTot);
-                    //}
                 } else if(sof >= 0.7) {
                     sgHardTotal += currSgTot;
                     sgHardNum += 1;
@@ -2961,6 +2998,7 @@ function loadModelResults() {
             }
         }).filter(Boolean); // Remove null entries
 
+        // Calculate average course history to quantify course history in model
         dataTableData.forEach(playerData => {
             // Extract the relevant stats for chAvg calculation
             let statsToAverage = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];
@@ -3002,7 +3040,7 @@ function loadModelResults() {
         let statSumsSquared = {};
         let statCounts = {};
 
-        // Iterate through data to calculate sums and counts
+        // Iterate through data to calculate sums and counts to use for mean and stdev calc
         dataTableData.forEach((playerData) => {
             Object.keys(playerData).forEach((stat) => {
                 // Check if the field is in the zScoreFields array
@@ -3018,10 +3056,9 @@ function loadModelResults() {
             });
         });
 
-        // Calculate mean and standard deviation
+        // Calculate mean and standard deviation for each stat
         let statMeans = {};
         let statStdDevs = {};
-
         Object.keys(statSums).forEach((stat) => {
             statMeans[stat] = statSums[stat] / statCounts[stat];
             statStdDevs[stat] = Math.sqrt((statSumsSquared[stat] / statCounts[stat]) - Math.pow(statMeans[stat], 2));
@@ -3052,6 +3089,7 @@ function loadModelResults() {
             });
         });
 
+        // Function to calc normal cdf??
         function normalCDF(mean, sigma, to) {
             var z = (to-mean)/Math.sqrt(2*sigma*sigma);
             var t = 1/(1+0.3275911*Math.abs(z));
@@ -3069,6 +3107,7 @@ function loadModelResults() {
             return (1/2)*(1+sign*erf);
         }
 
+        // Dictionary of custom model weights
         let weightDict = {
             // PGA Tour SG Stats
             'sgPuttPGA': sgPuttPGAinput,
@@ -3141,6 +3180,7 @@ function loadModelResults() {
 
         console.log('weightDict: ', weightDict);
 
+        // Stats to reverse sign of for analysis
         const reverseStats = ['app50_75','app75_100',
         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
         'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd', 'chAvg'];
@@ -3153,6 +3193,8 @@ function loadModelResults() {
             let ratingSum = 0;
             let weightSum = 0;
 
+            // For each stat, add to weighted average (weighted sum) and keep track of weight used
+            //      Weight will not be used completely if player has empty stat for one with a weight on it
             let statLog = {};
             for (let key in weightDict){
                 let zScore = playerData[`${key}_zScore`];
@@ -3176,6 +3218,7 @@ function loadModelResults() {
                 }
             }
 
+            // For players missing data for stats, add weighted average based on their salary
             let fullModel = true;
             if(weightSum !== 100){
                 fullModel = false;
@@ -3198,7 +3241,7 @@ function loadModelResults() {
             // Calculate weighted average rating
             let rating = weightSum !== 0 ? ratingSum / weightSum : null;
 
-            // Calculate the percentile using the CDF of the standard normal distribution
+            // Calculate the percentile of the outcome weighted average using normal CDF
             let percentile;
             if (fullModel == false){
                 percentile = rating !== null ? Number((Number((normalCDF(0, 1, rating) * 100).toFixed(2)) - 10).toFixed(2)) : null; // IMPORTANT, can change value of 5 here
@@ -3228,8 +3271,8 @@ function loadModelResults() {
 
         console.log('data table data: ', dataTableData);
 
+        // Save current model data to local storage for optimizer
         let savePlatform = document.getElementById('platform').value;
-        // Save current model data for optimizer
         savedData = dataTableData.map(playerData => ({
             player: playerData.player,
             fdSalary: playerData.fdSalary,
@@ -3237,11 +3280,10 @@ function loadModelResults() {
             rating: playerData.rating,
             platform: savePlatform
         }));
-
         localStorage.setItem('modelData', JSON.stringify(savedData));
-    
         console.log('Data saved:', savedData);
 
+        // Custom column value comparator
         function customComparator(valueA, valueB) {
             if (valueA === null && valueB === null) {
               return 0; // If both values are null, consider them equal
@@ -3341,8 +3383,6 @@ function loadModelResults() {
         function shouldNotHideColumn(key, weightDict) {
             const value = weightDict[key];
 
-
-
             // Check if the value is a number
             if (value !== '' && value !== undefined) {
                 console.log('key: ', key, ' value: ', value);
@@ -3352,7 +3392,7 @@ function loadModelResults() {
             return false; // Hide for other cases
         }
 
-        // Apply the function to the columnDefs array
+        // Set columns to be hidden if they should be based on above function
         columnDefs.forEach((column) => {
             if (column.field && shouldNotHideColumn(column.field, weightDict)) {
                 column.hide = false;
@@ -3457,6 +3497,7 @@ function loadModelResults() {
                                         'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
                                         'puttingBob', 'threePuttAvd', 'bonusPutt', 'rating', 'chAvg', 'sgEasy', 'sgMed', 'sgHard'];
         
+        // Define global cell style (with color scale)
         function globalCellStyle(params) {
             const fieldName = params.colDef.field;
             const numericValue = params.value;
@@ -3476,6 +3517,7 @@ function loadModelResults() {
             return {};
         }
 
+        // Clear model results content
         function clearCheatSheetContent() {
             /*
                 Clears the content of the cheatSheet.
@@ -3486,6 +3528,7 @@ function loadModelResults() {
             }
         }
 
+        // Initialize model results sheet
         function initializeCheatSheet() {
             if (isModelSheetInitialized) {
                 clearCheatSheetContent();
@@ -3514,6 +3557,7 @@ function loadModelResults() {
                 headerHeight: 30,
             };
         
+            // Update column visibility based on platform
             function updateColumnVisibility() {
                 let selectedPlatform = document.getElementById('platform').value;
             
@@ -3547,9 +3591,7 @@ function loadModelResults() {
             isModelSheetInitialized = true;
         }
 
-        /*
-            For hovering the entire row - considering we have pinned rows...
-        */
+        // Row hovering shadow function
         document.addEventListener('DOMContentLoaded', function () {
             const cheatSheet = document.getElementById('modelSheet');
             
@@ -3576,6 +3618,7 @@ function loadModelResults() {
     });
 }
 
+// Filter the model results
 function onFilterTextBoxChangedModel() {
     // the function for the search box which filters the table 
     // based on 'filter-text-box' for gridOptionsModel
@@ -3591,6 +3634,7 @@ function onFilterTextBoxChangedModel() {
 function onModelInputChange() {
     let currentSum = document.getElementById('currSumModel');
 
+    // GET all model inputs
     let sgPuttPGAinput = document.getElementById('sgPuttPGAinput').value;
     let sgAppPGAinput = document.getElementById('sgAppPGAinput').value;
     let sgT2GPGAinput = document.getElementById('sgT2GPGAinput').value;
@@ -3697,9 +3741,10 @@ function loadOptimizedLineups() {
     let numLineups;
     let modelData;
 
+    // get model data from local storage
     const savedDataJSONModel = localStorage.getItem('selectedModelData');
     const savedDataJSONNum = localStorage.getItem('numLineups');
-
+    // ensure we have saved model data
     if (savedDataJSONModel) {
         modelData = JSON.parse(savedDataJSONModel);
         console.log('model data: ', modelData);
@@ -3708,6 +3753,7 @@ function loadOptimizedLineups() {
         return;
     }
 
+    // get num lineups to make
     if (savedDataJSONNum) {
         numLineups = parseInt(savedDataJSONNum);
         console.log('numLineups: ', numLineups);
@@ -3716,8 +3762,10 @@ function loadOptimizedLineups() {
         return;
     }
 
+    // sort model data in desc order by rating
     modelData.sort((a, b) => b.rating - a.rating);
 
+    // Recursively generates optimal linepu
     function generateOptimalLineup(modelData, currentIndex, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating, platform) {
         // Base case: if the lineup has 6 players, update the best lineup if needed
         if (currentLineup.length === 6) {
@@ -3768,6 +3816,7 @@ function loadOptimizedLineups() {
         }
     }    
 
+    // x choose y function
     function choose(x, y) {
         if (y < 0 || y > x) {
             return 0;
@@ -3781,12 +3830,20 @@ function loadOptimizedLineups() {
         return Math.round(result);
     }
     
+    // Generate all optimal lineups
     function generateOptimalLineups(modelData, numLineups) {
+        // sort data in desc order
         const sortedModelData = modelData.sort((a, b) => b.rating - a.rating);
+
+        // only use top 40 players (complexity)
         let sortedModelDataSlice = sortedModelData.slice(0, 40);
+
+        // grab betting platform
         let platform = sortedModelDataSlice[0].platform;
         console.log('sorted model data sliced: ', sortedModelDataSlice, ' length: ', sortedModelDataSlice.length);
         const allLineups = [];
+
+        // Ensure player pool allows enough players to make this many lineups
         let numChoose = choose(sortedModelDataSlice.length, 6);
         let numGen = numLineups;
         if (numChoose < numLineups) {
@@ -3807,6 +3864,8 @@ function loadOptimizedLineups() {
         // Generate the specified number of lineups
         for (let i = 0; i < numGen; i++) {
             const bestLineup = { players: [], totalRating: 0, totalSalary: 0 };
+
+            // Each iteration, change target rating so we continue to get next best lineup
             const targetRating = i === 0 ? 601 : (allLineups[allLineups.length - 1].totalRating - 0.01);
     
             generateOptimalLineup(sortedModelDataSlice, 0, [], 0, bestLineup, targetRating, 0, platform);
@@ -3881,6 +3940,7 @@ function loadOptimizedLineups() {
         // ... (other players)
     ];    
     
+    // Call to generate optimal lineups
     const n = numLineups; // Specify the number of lineups to generate
     const allLineups = generateOptimalLineups(modelData, n);
 
@@ -3914,7 +3974,7 @@ function loadOptimizedLineups() {
         return playerPercentages;
     }
 
-    // Function to populate DataTable
+    // Function to populate DataTable with ownership percentages
     function populateDataTable(playerPercentages) {
 
         const table = $('#playerTable').DataTable({
