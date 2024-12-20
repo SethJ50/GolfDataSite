@@ -234,6 +234,68 @@ let tournamentAbbreviations;
 let recentTournaments;
 let gridApi;
 
+// Calculates average SG category for last numRounds for each player
+function calcSgAverages(jsonData, numRounds) {
+    console.log('Called calcSgAverages');
+
+    let dataTableData = jsonData.salaries.map((salary) => {
+        let player = salary.player;
+
+        // SG: LAST N ROUNDS
+        // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
+        let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
+            .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+            .slice(0, numRounds); // Grab at most the specified number of rounds
+
+        // Initialize storage, grab Round sample size of interest
+        let avgRoundData = {};
+        avgRoundData['numRounds'] = playerRounds.length;
+        console.log('num player rounds ' + playerRounds.length);
+
+        // Calculate the average of specific columns for the player's rounds
+        if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
+            let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+            columnsToAverage.forEach((col) => {
+                let averageValue = playerRounds.reduce((sum, round) => sum + round[col], 0) / playerRounds.length;
+                if( averageValue == null){
+                    avgRoundData[col] = null;
+                } else{
+                    avgRoundData[col] = Number(averageValue.toFixed(2));
+                }
+            });
+        } else { // Set values to null if no rounds are found
+            let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+            columnsToAverage.forEach((col) => {
+                avgRoundData[col] = null;
+            });
+        }
+
+        return {
+            player,
+            ...avgRoundData
+        };
+    }).filter(Boolean);
+
+    return dataTableData;
+}
+
+// Makes the headers for column definition of recent history
+function makeRecHistHd(tournamentAbbreviations, customComparator) {
+    const headers = [];
+    const abbreviationKeys = Object.keys(tournamentAbbreviations);
+
+    for (let i = 0; i < abbreviationKeys.length; i++) {
+        const abbreviation = abbreviationKeys[i];
+        headers.push({
+            headerName: tournamentAbbreviations[abbreviation],
+            field: abbreviation,
+            comparator: customComparator
+        });
+    }
+
+    return headers;
+}
+
 function loadCheatSheet() {
     let lastNRounds = document.getElementById('lastNRounds');
 
@@ -252,6 +314,15 @@ function loadCheatSheet() {
             return;
         }
 
+        // Calculate sg last N round avgs for each player
+        let sgLastNRounds = calcSgAverages(jsonData, lastNRounds.value);
+
+        // Store sg last round avgs in dict with player name keys
+        let sgAveragesMap = {};
+        for (let i = 0; i < sgLastNRounds.length; i++) {
+            sgAveragesMap[sgLastNRounds[i].player] = sgLastNRounds[i];
+        }
+
         /*
             EXTRACT DATA FOR DATATABLE:
 
@@ -261,60 +332,33 @@ function loadCheatSheet() {
 
             - (salary) is the individual row from salaries
         */
-        let dataTableData = jsonData.salaries.map((salary) => {
-            let player = salary.player;
-            let fdSalary = salary.fdSalary;
-            let dkSalary = salary.dkSalary;
+
+        let dataTableData = [];
+
+        for(let i = 0; i < jsonData.salaries.length; i++) {
+            const salary = jsonData.salaries[i];
+            const player = salary.player;
+            const fdSalary = salary.fdSalary;
+            const dkSalary = salary.dkSalary;
 
             // SG: PGATOUR.COM
             // Find a matching player in pgatour
             let pgatourData = jsonData.pgatour.find((pgatour) => pgatour.player === player);
 
             // COURSE HISTORY
-            // Find matching player in courseHistory
-            let courseHistoryData = jsonData.courseHistory.find((courseHistory) => courseHistory.player === player);
+            // Find matching player in courseHistory : set all fields to null if unfound
+            let courseHistoryData = jsonData.courseHistory.find(course => course.player === player) || 
+                        { minus1: null, minus2: null, minus3: null, minus4: null, minus5: null };
 
-            // If no player is found in course history, default all course history.
-            if (!courseHistoryData) {
-                const courseHistoryKeys = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];
-                courseHistoryData = Object.fromEntries(courseHistoryKeys.map(key => [key, null]));
-            }
-
-            // SG: LAST N ROUNDS
-            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
-            let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
-                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, lastNRounds.value); // Grab at most the specified number of rounds
-
-            // Initialize storage, grab Round sample size of interest
-            let avgRoundData = {};
-            avgRoundData['numRounds'] = playerRounds.length;
-
-            // Calculate the average of specific columns for the player's rounds
-            if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    let averageValue = playerRounds.reduce((sum, round) => sum + round[col], 0) / playerRounds.length;
-                    if( averageValue == null){
-                        avgRoundData[col] = null;
-                    } else{
-                        avgRoundData[col] = Number(averageValue.toFixed(2));
-                    }
-                });
-            } else { // Set values to null if no rounds are found
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    avgRoundData[col] = null;
-                });
-            }
-
+            // SG AVERAGES
+            // Set SG Last N Rounds data for player
+            let avgRoundData = sgAveragesMap[player] || {};
+            
             // RECENT HISTORY
             // Step 1: Sort tournamentRow Data in descending order by 'dates'
             let sortedTournamentRow = jsonData.tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
 
             // Step 2: Identify the 10 most recent tournaments
-            //recentTournaments = Array.from(new Set(sortedTournamentRow.map(entry => entry.tournament))).slice(0, 10);
-
             let recentTournaments = [];
             let uniqueTournaments = new Set();
 
@@ -343,7 +387,12 @@ function loadCheatSheet() {
                 let abbreviation = words[0].substring(0, 3);
             
                 // Add the first letter of the remaining words, up to a total of 5 letters
-                abbreviation += words.slice(1).map(word => word[0]).join('').substring(0, 2);
+                for (let j = 1; j < words.length; j++) {
+                    abbreviation += words[j][0];
+                    if (abbreviation.length >= 5) {
+                        break;
+                    }
+                }
             
                 abbreviations[`recent${index + 1}`] = abbreviation.toUpperCase(); // Adjust the abbreviation logic as needed
             
@@ -368,32 +417,28 @@ function loadCheatSheet() {
 
                 If entry was found, return the finish from the entry, otherwise return null.
             */
-
-            let recentHistory = recentTournaments.map(tournamentEntry => {
-                let entry;
-                for (let i = 0; i < sortedTournamentRow.length; i++) {
-                    entryPlayer = sortedTournamentRow[i].player;
-                    entryTourney = sortedTournamentRow[i].tournament;
-                    entryDates = sortedTournamentRow[i].dates;
-
-                    tourney = tournamentEntry.tournament;
-                    tourneyDates = tournamentEntry.dates;
-
-                    if (sortedTournamentRow[i].player === player &&
-                        sortedTournamentRow[i].tournament === tournamentEntry.tournament &&
-                        sortedTournamentRow[i].dates === tournamentEntry.dates) {
-                        entry = sortedTournamentRow[i];
-
+            let recentHistory = [];
+            for (let i = 0; i < recentTournaments.length; i++) {
+                let tournamentEntry = recentTournaments[i];
+                let entry = null;
+            
+                for (let j = 0; j < sortedTournamentRow.length; j++) {
+                    let entryPlayer = sortedTournamentRow[j].player;
+                    let entryTourney = sortedTournamentRow[j].tournament;
+                    let entryDates = sortedTournamentRow[j].dates;
+            
+                    if (entryPlayer === player && entryTourney === tournamentEntry.tournament && entryDates === tournamentEntry.dates) {
+                        entry = sortedTournamentRow[j];
                         break;
                     }
                 }
-
-                if(entry == null){
-                    return null;
+            
+                if (entry == null) {
+                    recentHistory.push(null);
                 } else {
-                    return entry.finish;
+                    recentHistory.push(entry.finish);
                 }
-            });
+            }
 
             // If recentHistory does not have 10 entries, fill it with null.
             while (recentHistory.length < 10) {
@@ -416,124 +461,84 @@ function loadCheatSheet() {
                 adds to 'finishData' the finish if an entry is found, otherwise null
                 returns this 'finishData'
             */
-            let recentFinishData = recentTournaments.reduce((finishData, tournamentEntry, index) => {
-                let tournament = tournamentEntry.tournament;
-                let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
-                let abbreviation = tournamentAbbreviations[`recent${index + 1}`]; // Get the abbreviation for the current tournament
-                finishData[abbreviation] = entry ? entry.finish : null; // Use abbreviation as column name
+            // let recentFinishData = {};
+            // for (let i = 0; i < recentTournaments.length; i++) {
+            //     let tournamentEntry = recentTournaments[i];
+            //     let abbreviation = tournamentAbbreviations[`recent${i + 1}`]; // Get the abbreviation for the current tournament
+            //     let entry = null;
+            
+            //     for (let j = 0; j < sortedTournamentRow.length; j++) {
+            //         if (sortedTournamentRow[j].player === player && sortedTournamentRow[j].tournament === tournamentEntry.tournament) {
+            //             entry = sortedTournamentRow[j];
+            //             break;
+            //         }
+            //     }
+            
+            //     recentFinishData[abbreviation] = entry ? entry.finish : null;
+            
+            //     if (!entry) {
+            //         recentHistory[i] = null;
+            //     }
+            // }
 
-                // Set null if the player has no data for the current tournament
-                if (!entry) {
-                    recentHistory[index] = null;
-                }
+            console.log(recentHistory);
 
-                return finishData;
-            }, {});
-
-            // Check if player exists in pgatour
-            if (pgatourData) {
-                // If player in pgatour data, add pga tour data
-                let filteredPgatourData = {
-                    sgPuttPGA: pgatourData.sgPutt !== null && pgatourData.sgPutt !== undefined ? Number(pgatourData.sgPutt.toFixed(2)) : null,
-                    sgArgPGA: pgatourData.sgArg !== null && pgatourData.sgArg !== undefined ? Number(pgatourData.sgArg.toFixed(2)) : null,
-                    sgAppPGA: pgatourData.sgApp !== null && pgatourData.sgApp !== undefined ? Number(pgatourData.sgApp.toFixed(2)) : null,
-                    sgOttPGA: pgatourData.sgOtt !== null && pgatourData.sgOtt !== undefined ? Number(pgatourData.sgOtt.toFixed(2)) : null,
-                    sgT2GPGA: pgatourData.sgT2G !== null && pgatourData.sgT2G !== undefined ? Number(pgatourData.sgT2G.toFixed(2)) : null,
-                    sgTotPGA: pgatourData.sgTot !== null && pgatourData.sgTot !== undefined ? Number(pgatourData.sgTot.toFixed(2)) : null,
-                    drDist: pgatourData.drDist !== null && pgatourData.drDist !== undefined ? Number(pgatourData.drDist.toFixed(2)) : null,
-                    drAcc: pgatourData.drAcc !== null && pgatourData.drAcc !== undefined ? Number(pgatourData.drAcc.toFixed(2)) : null,
-                    gir: pgatourData.gir !== null && pgatourData.gir !== undefined ? Number(pgatourData.gir.toFixed(2)) : null,
-                    sandSave: pgatourData.sandSave !== null && pgatourData.sandSave !== undefined ? Number(pgatourData.sandSave.toFixed(2)) : null,
-                    scrambling: pgatourData.scrambling !== null && pgatourData.scrambling !== undefined ? Number(pgatourData.scrambling.toFixed(2)) : null,
-                    app50_75: pgatourData.app50_75 !== null && pgatourData.app50_75 !== undefined ? Number(pgatourData.app50_75.toFixed(2)) : null,
-                    app75_100: pgatourData.app75_100 !== null && pgatourData.app75_100 !== undefined ? Number(pgatourData.app75_100.toFixed(2)) : null,
-                    app100_125: pgatourData.app100_125 !== null && pgatourData.app100_125 !== undefined ? Number(pgatourData.app100_125.toFixed(2)) : null,
-                    app125_150: pgatourData.app125_150 !== null && pgatourData.app125_150 !== undefined ? Number(pgatourData.app125_150.toFixed(2)) : null,
-                    app150_175: pgatourData.app150_175 !== null && pgatourData.app150_175 !== undefined ? Number(pgatourData.app150_175.toFixed(2)) : null,
-                    app175_200: pgatourData.app175_200 !== null && pgatourData.app175_200 !== undefined ? Number(pgatourData.app175_200.toFixed(2)) : null,
-                    app200_up: pgatourData.app200_up !== null && pgatourData.app200_up !== undefined ? Number(pgatourData.app200_up.toFixed(2)) : null,
-                    bob: pgatourData.bob !== null && pgatourData.bob !== undefined ? Number(pgatourData.bob.toFixed(2)) : null,
-                    bogAvd: pgatourData.bogAvd !== null && pgatourData.bogAvd !== undefined ? Number(pgatourData.bogAvd.toFixed(2)) : null,
-                    par3Scoring: pgatourData.par3Scoring !== null && pgatourData.par3Scoring !== undefined ? Number(pgatourData.par3Scoring.toFixed(2)) : null,
-                    par4Scoring: pgatourData.par4Scoring !== null && pgatourData.par4Scoring !== undefined ? Number(pgatourData.par4Scoring.toFixed(2)) : null,
-                    par5Scoring: pgatourData.par5Scoring !== null && pgatourData.par5Scoring !== undefined ? Number(pgatourData.par5Scoring.toFixed(2)) : null,
-                    prox: pgatourData.prox !== null && pgatourData.prox !== undefined ? Number(pgatourData.prox.toFixed(2)) : null,
-                    roughProx: pgatourData.roughProx !== null && pgatourData.roughProx !== undefined ? Number(pgatourData.roughProx.toFixed(2)) : null,
-                    puttingBob: pgatourData.puttingBob !== null && pgatourData.puttingBob !== undefined ? Number(pgatourData.puttingBob.toFixed(2)) : null,
-                    threePuttAvd: pgatourData.threePuttAvd !== null && pgatourData.threePuttAvd !== undefined ? Number(pgatourData.threePuttAvd.toFixed(2)) : null,
-                    bonusPutt: pgatourData.bonusPutt !== null && pgatourData.bonusPutt !== undefined ? Number(pgatourData.bonusPutt.toFixed(2)) : null,
-                    // Add other fields as needed
-                };
-
-                // Returns all of this data in cumulation as a list of dicts in dataTableData
-                return {
-                    player,
-                    fdSalary,
-                    dkSalary,
-                    ...filteredPgatourData,
-                    ...courseHistoryData, // Include course history data
-                    ...avgRoundData, // Include average round data
-                    ...recentHistory.reduce((result, finish, index) => {
-                        result[`recent${index + 1}`] = finish;
-                        return result;
-                    }, {}),
-                    ...recentFinishData, // Include finish data for recent tournaments
-                    tournamentAbbreviations, // Include tournament abbreviations
-                };
-            } else {
-                // Set pgatour data for the player as null because player doesn't have data.
-                let filteredPgatourData = {
-                    sgPuttPGA: null,
-                    sgArgPGA: null,
-                    sgAppPGA: null,
-                    sgOttPGA: null,
-                    sgT2GPGA: null,
-                    sgTotPGA: null,
-                    drDist: null,
-                    drAcc: null,
-                    gir: null,
-                    sandSave: null,
-                    scrambling: null,
-                    app50_75: null,
-                    app75_100: null,
-                    app100_125: null,
-                    app125_150: null,
-                    app150_175: null,
-                    app175_200: null,
-                    app200_up: null,
-                    bob: null,
-                    bogAvd: null,
-                    par3Scoring: null,
-                    par4Scoring: null,
-                    par5Scoring: null,
-                    prox: null,
-                    roughProx: null,
-                    puttingBob: null,
-                    threePuttAvd: null,
-                    bonusPutt: null,
-                    // Add other fields as needed
-                };
-
-                // Returns all of this data in cumulation as a list of dicts in dataTableData
-                return {
-                    player,
-                    fdSalary,
-                    dkSalary,
-                    ...filteredPgatourData,
-                    ...courseHistoryData, // Include course history data
-                    ...avgRoundData, // Include average round data
-                    ...recentHistory.reduce((result, finish, index) => {
-                        result[`recent${index + 1}`] = finish;
-                        return result;
-                    }, {}),
-                    ...recentFinishData, // Include finish data for recent tournaments
-                    tournamentAbbreviations, // Include tournament abbreviations
-                };
+            function formatData(value) {
+                // Returns null or the stat value
+                return value !== null && value !== undefined ? Number(value.toFixed(2)) : null;
             }
-        }).filter(Boolean); // Remove null entries
 
-        // -- Begin building up the ag-grid table
+            function generateFilteredData(source, keys) {
+                // Generates a dictionary of PGATOUR statistics for player
+                const data = {};
 
+                const sgKeys = ["sgPutt", "sgArg", "sgApp", "sgOtt", "sgT2G", "sgTot"];
+                for(let i = 0; i < keys.length; i++) {
+                    let key;
+                    if(sgKeys.includes(keys[i])) {
+                        key = keys[i] + "PGA";
+                    } else {
+                        key = keys[i];
+                    }
+                    data[key] = source ? formatData(source[keys[i]]) : null;
+                }
+                return data;
+            }
+
+            const keys = [
+                "sgPutt", "sgArg", "sgApp", "sgOtt", "sgT2G", "sgTot",
+                "drDist", "drAcc", "gir", "sandSave", "scrambling",
+                "app50_75", "app75_100", "app100_125", "app125_150",
+                "app150_175", "app175_200", "app200_up", "bob", "bogAvd",
+                "par3Scoring", "par4Scoring", "par5Scoring", "prox",
+                "roughProx", "puttingBob", "threePuttAvd", "bonusPutt"
+            ];
+
+            let filteredPgatourData = generateFilteredData(pgatourData || null, keys);
+
+            const rowData = {
+                player,
+                fdSalary,
+                dkSalary,
+                ...filteredPgatourData,
+                ...courseHistoryData, // Include course history data
+                ...(avgRoundData || {}), // Include average round data if it exists
+                ...recentHistory.reduce((result, finish, index) => {
+                    result[`recent${index + 1}`] = finish;
+                    return result;
+                }, {}),
+                //...recentFinishData, // Include finish data for recent tournaments
+                tournamentAbbreviations, // Include tournament abbreviations
+            };
+
+            console.log(rowData);
+
+            if(rowData) {
+                dataTableData.push(rowData);
+            }
+        }
+
+        // BUILD AG-GRID Table
         function customComparator(valueA, valueB) {
             if (valueA === null && valueB === null) {
               return 0; // If both values are null, consider them equal
@@ -557,7 +562,7 @@ function loadCheatSheet() {
             return 0; // If values are equal
           }
 
-        console.log('abbrev: ', dataTableData.tournamentAbbreviations);
+        const recHistHeaders = makeRecHistHd(tournamentAbbreviations, customComparator);
 
         // Create column definitions
         let columnDefs = [
@@ -574,7 +579,7 @@ function loadCheatSheet() {
             {
                 headerName: 'SG LastNRounds',
                 children: [
-                    { headerName: 'SG: Putt', field: 'sgPutt' },
+                    { headerName: 'SG: Putt', field: 'sgPutt'},
                     { headerName: 'SG: Arg', field: 'sgArg' },
                     { headerName: 'SG: App', field: 'sgApp' },
                     { headerName: 'SG: Ott', field: 'sgOtt'},
@@ -602,24 +607,24 @@ function loadCheatSheet() {
                     { headerName: 'Dr. Dist.', field: 'drDist', hide: true },
                     { headerName: 'Dr. Acc.', field: 'drAcc', hide: true },
                     { headerName: 'GIR %', field: 'gir', hide: true },
-                    { headerName: 'Sand Save %', field: 'sandSave', hide: true },
-                    { headerName: 'Scrambling %', field: 'scrambling', hide: true },
-                    { headerName: 'App. 50-75', field: 'app50_75', hide: true, comparator: customComparator },
-                    { headerName: 'App. 75-100', field: 'app75_100', hide: true, comparator: customComparator },
-                    { headerName: 'App. 100-125', field: 'app100_125', hide: true, comparator: customComparator },
-                    { headerName: 'App. 125-150', field: 'app125_150', hide: true, comparator: customComparator },
-                    { headerName: 'App. 150-175', field: 'app150_175', hide: true, comparator: customComparator },
-                    { headerName: 'App. 175-200', field: 'app175_200', hide: true, comparator: customComparator },
-                    { headerName: 'App. 200+', field: 'app200_up', hide: true, comparator: customComparator },
+                    { headerName: 'SndSave%', field: 'sandSave', hide: true },
+                    { headerName: 'Scrmbl%', field: 'scrambling', hide: true },
+                    { headerName: 'Ap50-75', field: 'app50_75', hide: true, comparator: customComparator },
+                    { headerName: 'Ap75-100', field: 'app75_100', hide: true, comparator: customComparator },
+                    { headerName: 'Ap100-125', field: 'app100_125', hide: true, comparator: customComparator },
+                    { headerName: 'Ap125-150', field: 'app125_150', hide: true, comparator: customComparator },
+                    { headerName: 'Ap150-175', field: 'app150_175', hide: true, comparator: customComparator },
+                    { headerName: 'Ap175-200', field: 'app175_200', hide: true, comparator: customComparator },
+                    { headerName: 'Ap200+', field: 'app200_up', hide: true, comparator: customComparator },
                     { headerName: 'BoB %', field: 'bob', hide: true },
-                    { headerName: 'Bogey Avd.', field: 'bogAvd', hide: true, comparator: customComparator },
-                    { headerName: 'Par 3s Avg', field: 'par3Scoring', hide: true, comparator: customComparator },
-                    { headerName: 'Par 4s Avg', field: 'par4Scoring', hide: true, comparator: customComparator },
-                    { headerName: 'Par 5s Avg', field: 'par5Scoring', hide: true, comparator: customComparator },
+                    { headerName: 'Bog Avd.', field: 'bogAvd', hide: true, comparator: customComparator },
+                    { headerName: 'Par3Avg', field: 'par3Scoring', hide: true, comparator: customComparator },
+                    { headerName: 'Par4Avg', field: 'par4Scoring', hide: true, comparator: customComparator },
+                    { headerName: 'Par5Avg', field: 'par5Scoring', hide: true, comparator: customComparator },
                     { headerName: 'Prox.', field: 'prox', hide: true, comparator: customComparator },
-                    { headerName: 'Rough Prox.', field: 'roughProx', hide: true, comparator: customComparator },
-                    { headerName: 'Putt. BoB %', field: 'puttingBob', hide: true },
-                    { headerName: '3-Putt Avd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
+                    { headerName: 'RoughProx.', field: 'roughProx', hide: true, comparator: customComparator },
+                    { headerName: 'PuttBoB%', field: 'puttingBob', hide: true },
+                    { headerName: '3-PuttAvd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
                     { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
                 ],
             },
@@ -628,11 +633,7 @@ function loadCheatSheet() {
                 headerName: 'Recent History',
                 children: [
                     // Add columns for recent history based on tournamentAbbreviations
-                    ...Object.keys(tournamentAbbreviations).map(abbreviation => ({
-                        headerName: tournamentAbbreviations[abbreviation],
-                        field: abbreviation,
-                        comparator: customComparator
-                    })),
+                    ...recHistHeaders
                 ],
             },
             // Course History grouping
@@ -648,8 +649,6 @@ function loadCheatSheet() {
                 ],
             },
         ];
-
-        console.log('after col defs', tournamentAbbreviations);
 
         // Calculate min, mid, and max values for each column
         const columnMinMaxValues = columnDefs.reduce((acc, column) => {
@@ -789,6 +788,28 @@ function loadCheatSheet() {
             if (isCheatSheetInitialized) {
                 clearCheatSheetContent();
             }
+
+            // Sets custom column widths
+            function getColumnWidth(field) {
+                salary = ['fdSalary', 'dkSalary'];
+
+                recentHist = ['recent1', 'recent2', 'recent3', 'recent4', 'recent5',
+                    'recent6', 'recent7', 'recent8', 'recent9', 'recent10'];
+                
+                courseHist = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];    
+                
+                if(field == 'player'){
+                    return 180;
+                } else if(salary.includes(field)) {
+                    return 78;
+                } else if(recentHist.includes(field)) {
+                    return 65;
+                } else if(courseHist.includes(field)) {
+                    return 55;
+                } else { // DEFAULT
+                    return 65;
+                }
+            }
     
             // setup grid options
             const gridOptions = {
@@ -798,32 +819,13 @@ function loadCheatSheet() {
                     children: column.children ? column.children.map(child => ({
                         ...child,
                         cellStyle: globalCellStyle,
+                        width: getColumnWidth(child.field)
                     })) : undefined,
                 })),
                 rowData: dataTableData,
                 suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
-                    params.api.autoSizeAllColumns();
-                    params.api.setColumnWidth('player', 150);
-                    params.api.setColumnWidth('fdSalary', 73);
-                    params.api.setColumnWidth('dkSalary', 73);
-                    params.api.setColumnWidth('numRounds', 45);
-                    params.api.setColumnWidth('recent1', 58);
-                    params.api.setColumnWidth('recent2', 58);
-                    params.api.setColumnWidth('recent3', 58);
-                    params.api.setColumnWidth('recent4', 58);
-                    params.api.setColumnWidth('recent5', 58);
-                    params.api.setColumnWidth('recent6', 58);
-                    params.api.setColumnWidth('recent7', 58);
-                    params.api.setColumnWidth('recent8', 58);
-                    params.api.setColumnWidth('recent9', 58);
-                    params.api.setColumnWidth('recent10', 58);
-                    params.api.setColumnWidth('minus1', 40);
-                    params.api.setColumnWidth('minus2', 40);
-                    params.api.setColumnWidth('minus3', 40);
-                    params.api.setColumnWidth('minus4', 40);
-                    params.api.setColumnWidth('minus5', 40);
                     setupColumnVisibilityDropdown(columnDefs);
                 },
                 getRowHeight: function(params) {
@@ -950,7 +952,7 @@ function loadCheatSheet() {
             gridApi.setGridOption('columnDefs', gridApi.getColumnDefs());
         
             // Auto-size all columns
-            gridApi.autoSizeAllColumns();
+            //gridApi.autoSizeAllColumns();
         
             // Hide the "Apply" button after applying column visibility changes
             if (applyButton) {
