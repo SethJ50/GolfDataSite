@@ -235,48 +235,37 @@ let recentTournaments;
 let gridApi;
 
 // Calculates average SG category for last numRounds for each player
-function calcSgAverages(jsonData, numRounds) {
-    console.log('Called calcSgAverages');
+function calcSgAverages(jsonData, numRounds, player) {
 
-    let dataTableData = jsonData.salaries.map((salary) => {
-        let player = salary.player;
+    // SG: LAST N ROUNDS
+    // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
+    let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
+        .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+        .slice(0, numRounds); // Grab at most the specified number of rounds
 
-        // SG: LAST N ROUNDS
-        // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
-        let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
-            .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-            .slice(0, numRounds); // Grab at most the specified number of rounds
+    // Initialize storage, grab Round sample size of interest
+    let avgRoundData = {};
+    avgRoundData['numRounds'] = playerRounds.length;
 
-        // Initialize storage, grab Round sample size of interest
-        let avgRoundData = {};
-        avgRoundData['numRounds'] = playerRounds.length;
-        console.log('num player rounds ' + playerRounds.length);
-
-        // Calculate the average of specific columns for the player's rounds
-        if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
-            let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-            columnsToAverage.forEach((col) => {
-                let averageValue = playerRounds.reduce((sum, round) => sum + round[col], 0) / playerRounds.length;
-                if( averageValue == null){
-                    avgRoundData[col] = null;
-                } else{
-                    avgRoundData[col] = Number(averageValue.toFixed(2));
-                }
-            });
-        } else { // Set values to null if no rounds are found
-            let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-            columnsToAverage.forEach((col) => {
+    // Calculate the average of specific columns for the player's rounds
+    if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
+        let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+        columnsToAverage.forEach((col) => {
+            let averageValue = playerRounds.reduce((sum, round) => sum + round[col], 0) / playerRounds.length;
+            if( averageValue == null){
                 avgRoundData[col] = null;
-            });
-        }
+            } else{
+                avgRoundData[col] = Number(averageValue.toFixed(2));
+            }
+        });
+    } else { // Set values to null if no rounds are found
+        let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+        columnsToAverage.forEach((col) => {
+            avgRoundData[col] = null;
+        });
+    }
 
-        return {
-            player,
-            ...avgRoundData
-        };
-    }).filter(Boolean);
-
-    return dataTableData;
+    return avgRoundData;
 }
 
 // Makes the headers for column definition of recent history
@@ -296,6 +285,113 @@ function makeRecHistHd(tournamentAbbreviations, customComparator) {
     return headers;
 }
 
+// Creates dict of tournament abbreviations for last 10 tournaments
+function makeTournAbbrv(jsonData) {
+
+    // Sort tournamentRow data in descending order by dates
+    let sortedTournamentRow = jsonData.tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
+
+    // Identify the 10 most recent tournaments
+    let recentTournaments = [];
+    let uniqueTournaments = new Set();
+    for (let entry of sortedTournamentRow) {
+        let tournamentDateKey = `${entry.tournament}-${entry.dates}`;
+        if (!uniqueTournaments.has(tournamentDateKey)) {
+            uniqueTournaments.add(tournamentDateKey);
+            recentTournaments.push({ tournament: entry.tournament, dates: entry.dates });
+        }
+        if (recentTournaments.length >= 10) {
+            break;
+        }
+    }
+
+    // Build Abbreviations for each tournament
+    let tournamentAbbreviations = {};
+    for (let i = 0; i < recentTournaments.length; i++) {
+        let tournament = recentTournaments[i].tournament;
+        let words = tournament.split(' ');
+
+        if (words[0] === 'The') {
+            words = words.slice(1);
+        }
+
+        // Build the abbreviation
+        let abbreviation = words[0].substring(0, 3);
+        for (let j = 1; j < words.length; j++) {
+            abbreviation += words[j][0];
+            if (abbreviation.length >= 5) {
+                break;
+            }
+        }
+
+        tournamentAbbreviations[`recent${i + 1}`] = abbreviation.toUpperCase();
+    }
+
+    // Ensure tournamentAbbreviations is of length 10
+    let index = 1;
+    while (Object.keys(tournamentAbbreviations).length < 10) {
+        let currentKey = `recent${index}`;
+        if (!tournamentAbbreviations[currentKey]) {
+            tournamentAbbreviations[currentKey] = `Default${index}`;
+        }
+        index++;
+    }
+
+    return tournamentAbbreviations;
+}
+
+// Creates array of 10 recent finishes of player
+function getRecentHistory(tournamentRow, player) {
+    // Step 1: Sort tournamentRow Data in descending order by 'dates'
+    let sortedTournamentRow = tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
+
+    // Step 2: Identify the 10 most recent tournaments
+    let recentTournaments = [];
+    let uniqueTournaments = new Set();
+    for (let entry of sortedTournamentRow) {
+        let tournamentDateKey = `${entry.tournament}-${entry.dates}`;
+        if (!uniqueTournaments.has(tournamentDateKey)) {
+            uniqueTournaments.add(tournamentDateKey);
+            recentTournaments.push({ tournament: entry.tournament, dates: entry.dates });
+        }
+        if (recentTournaments.length >= 10) {
+            break;
+        }
+    }
+
+    // Step 3: Compile Recent History Data for Player
+        // For each of recent tournaments, search for player in that tournament
+    let recentHistory = [];
+    for (let i = 0; i < recentTournaments.length; i++) {
+        let tournamentEntry = recentTournaments[i];
+        let entry = null;
+    
+        for (let j = 0; j < sortedTournamentRow.length; j++) {
+            let entryPlayer = sortedTournamentRow[j].player;
+            let entryTourney = sortedTournamentRow[j].tournament;
+            let entryDates = sortedTournamentRow[j].dates;
+    
+            if (entryPlayer === player && entryTourney === tournamentEntry.tournament && entryDates === tournamentEntry.dates) {
+                entry = sortedTournamentRow[j];
+                break;
+            }
+        }
+    
+        if (entry == null) {
+            recentHistory.push(null);
+        } else {
+            recentHistory.push(entry.finish);
+        }
+    }
+
+    // If recentHistory does not have 10 entries, fill it with null.
+    while (recentHistory.length < 10) {
+        recentHistory.push(null);
+    }
+
+    return recentHistory;
+}
+
 function loadCheatSheet() {
     let lastNRounds = document.getElementById('lastNRounds');
 
@@ -313,28 +409,12 @@ function loadCheatSheet() {
             console.log('Invalid data format. Expected "salaries", "pgatour", "courseHistory", and "tournamentRow" properties.');
             return;
         }
+        
+        // Create tournament abbreviations for last 10 tournaments
+        let tournamentAbbreviations = makeTournAbbrv(jsonData);
 
-        // Calculate sg last N round avgs for each player
-        let sgLastNRounds = calcSgAverages(jsonData, lastNRounds.value);
-
-        // Store sg last round avgs in dict with player name keys
-        let sgAveragesMap = {};
-        for (let i = 0; i < sgLastNRounds.length; i++) {
-            sgAveragesMap[sgLastNRounds[i].player] = sgLastNRounds[i];
-        }
-
-        /*
-            EXTRACT DATA FOR DATATABLE:
-
-            - jsonData.salaries.map iterates over each element in salaries array.
-
-            - for each element, provided function inside map is executed
-
-            - (salary) is the individual row from salaries
-        */
-
+        // Create data table data
         let dataTableData = [];
-
         for(let i = 0; i < jsonData.salaries.length; i++) {
             const salary = jsonData.salaries[i];
             const player = salary.player;
@@ -352,136 +432,10 @@ function loadCheatSheet() {
 
             // SG AVERAGES
             // Set SG Last N Rounds data for player
-            let avgRoundData = sgAveragesMap[player] || {};
-            
+            let avgRoundData = calcSgAverages(jsonData, lastNRounds.value, player);
+
             // RECENT HISTORY
-            // Step 1: Sort tournamentRow Data in descending order by 'dates'
-            let sortedTournamentRow = jsonData.tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
-
-            // Step 2: Identify the 10 most recent tournaments
-            let recentTournaments = [];
-            let uniqueTournaments = new Set();
-
-            for (let entry of sortedTournamentRow) {
-                let tournamentDateKey = `${entry.tournament}-${entry.dates}`;
-                if (!uniqueTournaments.has(tournamentDateKey)) {
-                    uniqueTournaments.add(tournamentDateKey);
-                    recentTournaments.push({ tournament: entry.tournament, dates: entry.dates });
-                }
-                if (recentTournaments.length >= 10) {
-                    break;
-                }
-            }
-
-            // Step 3: Create Abbreviations for Tournament Names
-            tournamentAbbreviations = recentTournaments.reduce((abbreviations, tournamentEntry, index) => {
-                let tournament = tournamentEntry.tournament;
-                // Split the tournament name into words
-                let words = tournament.split(' ');
-
-                if(words[0] == 'The'){
-                    words = words.slice(1);
-                }
-            
-                // Take the first 3 letters of the first word
-                let abbreviation = words[0].substring(0, 3);
-            
-                // Add the first letter of the remaining words, up to a total of 5 letters
-                for (let j = 1; j < words.length; j++) {
-                    abbreviation += words[j][0];
-                    if (abbreviation.length >= 5) {
-                        break;
-                    }
-                }
-            
-                abbreviations[`recent${index + 1}`] = abbreviation.toUpperCase(); // Adjust the abbreviation logic as needed
-            
-                return abbreviations;
-            }, {});
-
-            // Ensure tournamentAbbreviations is of length 10
-            for (let index = 1; Object.keys(tournamentAbbreviations).length < 10; index++) {
-                let defaultAbbreviation = `Default${index}`;
-                let currentKey = `recent${index}`;
-
-                // Add default names only if the key doesn't already exist
-                if (!tournamentAbbreviations[currentKey]) {
-                    tournamentAbbreviations[currentKey] = defaultAbbreviation;
-                }
-            }
-
-            // Step 4: Compile Recent History Data for Player
-            /*
-                For each recent tournament, search thru sortedTournamentRow, find all entries where the entry has the
-                current player and the tournament is the current tournament.
-
-                If entry was found, return the finish from the entry, otherwise return null.
-            */
-            let recentHistory = [];
-            for (let i = 0; i < recentTournaments.length; i++) {
-                let tournamentEntry = recentTournaments[i];
-                let entry = null;
-            
-                for (let j = 0; j < sortedTournamentRow.length; j++) {
-                    let entryPlayer = sortedTournamentRow[j].player;
-                    let entryTourney = sortedTournamentRow[j].tournament;
-                    let entryDates = sortedTournamentRow[j].dates;
-            
-                    if (entryPlayer === player && entryTourney === tournamentEntry.tournament && entryDates === tournamentEntry.dates) {
-                        entry = sortedTournamentRow[j];
-                        break;
-                    }
-                }
-            
-                if (entry == null) {
-                    recentHistory.push(null);
-                } else {
-                    recentHistory.push(entry.finish);
-                }
-            }
-
-            // If recentHistory does not have 10 entries, fill it with null.
-            while (recentHistory.length < 10) {
-                recentHistory.push(null);
-            }
-
-            /*
-                Step 5: Generate Finish Data for Recent Tournaments with Abbreviations
-
-                reduce iterates over each 'tournament' in recent tournaments
-
-                'finishData' is what 'accumulates' or gains data over iteration
-
-                'tournament' is the current element in the array
-
-                'index' is the current index in the array
-
-                Finds a tournament in sorted tournament matching current tournament and player
-                Gets the abbreviation for this tournament
-                adds to 'finishData' the finish if an entry is found, otherwise null
-                returns this 'finishData'
-            */
-            // let recentFinishData = {};
-            // for (let i = 0; i < recentTournaments.length; i++) {
-            //     let tournamentEntry = recentTournaments[i];
-            //     let abbreviation = tournamentAbbreviations[`recent${i + 1}`]; // Get the abbreviation for the current tournament
-            //     let entry = null;
-            
-            //     for (let j = 0; j < sortedTournamentRow.length; j++) {
-            //         if (sortedTournamentRow[j].player === player && sortedTournamentRow[j].tournament === tournamentEntry.tournament) {
-            //             entry = sortedTournamentRow[j];
-            //             break;
-            //         }
-            //     }
-            
-            //     recentFinishData[abbreviation] = entry ? entry.finish : null;
-            
-            //     if (!entry) {
-            //         recentHistory[i] = null;
-            //     }
-            // }
-
-            console.log(recentHistory);
+            let recentHistory = getRecentHistory(jsonData.tournamentRow, player);
 
             function formatData(value) {
                 // Returns null or the stat value
@@ -527,18 +481,16 @@ function loadCheatSheet() {
                     result[`recent${index + 1}`] = finish;
                     return result;
                 }, {}),
-                //...recentFinishData, // Include finish data for recent tournaments
                 tournamentAbbreviations, // Include tournament abbreviations
             };
-
-            console.log(rowData);
 
             if(rowData) {
                 dataTableData.push(rowData);
             }
         }
 
-        // BUILD AG-GRID Table
+        // BUILD AG-GRID TABLE
+        // Custom Comparator function
         function customComparator(valueA, valueB) {
             if (valueA === null && valueB === null) {
               return 0; // If both values are null, consider them equal
@@ -562,6 +514,7 @@ function loadCheatSheet() {
             return 0; // If values are equal
           }
 
+        // Make headers for recent history columns
         const recHistHeaders = makeRecHistHd(tournamentAbbreviations, customComparator);
 
         // Create column definitions
@@ -651,10 +604,14 @@ function loadCheatSheet() {
         ];
 
         // Calculate min, mid, and max values for each column
-        const columnMinMaxValues = columnDefs.reduce((acc, column) => {
+        const columnMinMaxValues = {};
+        for (let i = 0; i < columnDefs.length; i++) {
+            const column = columnDefs[i];
+
             if (column.children) {
                 // If it's a column group, iterate over its children
-                column.children.forEach(childColumn => {
+                for (let j = 0; j < column.children.length; j++) {
+                    const childColumn = column.children[j];
                     const fieldName = childColumn.field;
                     const values = dataTableData.map(row => row[fieldName]);
                     const sortedValues = [...values].sort((a, b) => a - b);
@@ -668,8 +625,8 @@ function loadCheatSheet() {
                         ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
                         : sortedValues[midIndex];
 
-                    acc[fieldName] = { minValue, midValue, maxValue };
-                });
+                    columnMinMaxValues[fieldName] = { minValue, midValue, maxValue };
+                }
             } else {
                 // If it's an individual column
                 const fieldName = column.field;
@@ -680,17 +637,14 @@ function loadCheatSheet() {
                 const minValue = filteredValues.length > 0 ? Math.min(...filteredValues) : 0;
                 const maxValue = Math.max(...values);
 
-
                 const midIndex = Math.floor(sortedValues.length / 2);
                 const midValue = sortedValues.length % 2 === 0
                     ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
                     : sortedValues[midIndex];
 
-                acc[fieldName] = { minValue, midValue, maxValue };
+                columnMinMaxValues[fieldName] = { minValue, midValue, maxValue };
             }
-
-            return acc;
-        }, {});
+        }
 
         // List of columns where you want to reverse the color scale
         const columnsWithReversedColorScale = ['app50_75','app75_100',
@@ -698,46 +652,45 @@ function loadCheatSheet() {
         'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd'];
 
         // Define the color scale for each column based on the calculated values
-        const colorScales = columnDefs.reduce((acc, column) => {
+        const colorScales = {};
+        for (let i = 0; i < columnDefs.length; i++) {
+            const column = columnDefs[i];
+
             if (column.children) {
                 // If it's a column group, iterate over its children
-                column.children.forEach(childColumn => {
+                for (let j = 0; j < column.children.length; j++) {
+                    const childColumn = column.children[j];
                     const fieldName = childColumn.field;
                     const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
-        
+
                     const colorScale = d3.scaleLinear()
                         .domain([minValue, midValue, maxValue]);
-        
+
                     if (columnsWithReversedColorScale.includes(fieldName)) {
-                        console.log('Reversed ', fieldName);
                         colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
                     } else {
                         colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
                     }
-        
-                    acc[fieldName] = colorScale;
-                });
+
+                    colorScales[fieldName] = colorScale;
+                }
             } else {
                 // If it's an individual column
                 const fieldName = column.field;
                 const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
-        
+
                 const colorScale = d3.scaleLinear()
                     .domain([minValue, midValue, maxValue]);
-        
+
                 if (columnsWithReversedColorScale.includes(fieldName)) {
-                    console.log('Reversed ', fieldName);
                     colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
                 } else {
                     colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
                 }
-        
-                acc[fieldName] = colorScale;
+
+                colorScales[fieldName] = colorScale;
             }
-        
-            return acc;
-        }, {});
-        
+        }
 
         // List of columns for which to apply the color scale
         const columnsWithColorScale = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot',
@@ -747,6 +700,7 @@ function loadCheatSheet() {
                                         'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
                                         'puttingBob', 'threePuttAvd', 'bonusPutt'];
         
+        // Sets styling & coloring for cheat sheet cells
         function globalCellStyle(params) {
             const fieldName = params.colDef.field;
             const numericValue = params.value;
@@ -766,6 +720,7 @@ function loadCheatSheet() {
             return {};
         }
 
+        // Clear content of cheat sheet
         function clearCheatSheetContent() {
             /*
                 Clears the content of the cheatSheet.
@@ -842,8 +797,8 @@ function loadCheatSheet() {
             isCheatSheetInitialized = true;
         }
 
+        // Sets up the HTML behind column visibility dropdown
         function setupColumnVisibilityDropdown(columnDefs) {
-            // Handles the setup of the column visibility dropdown
             const checkboxContainer = document.getElementById('checkboxContainer'); // container of the checkboxes
         
             if (!checkboxContainer) {
@@ -922,11 +877,9 @@ function loadCheatSheet() {
                 console.error('Invalid or empty columnDefs array');
             }
         }
-        
 
+        // Sets checked columns to zero when 'apply' is pressed
         window.applyColumnVisibility = function () {
-            // called on click of apply col vis, sets checked cols to visible!
-        
             const checkboxes = document.querySelectorAll('#checkboxContainer input');
             const applyButton = document.getElementById('applyColVisCS');
         
@@ -951,9 +904,6 @@ function loadCheatSheet() {
             // Set the new columnDefs using setGridOption
             gridApi.setGridOption('columnDefs', gridApi.getColumnDefs());
         
-            // Auto-size all columns
-            //gridApi.autoSizeAllColumns();
-        
             // Hide the "Apply" button after applying column visibility changes
             if (applyButton) {
                 applyButton.style.display = 'none';
@@ -966,12 +916,9 @@ function loadCheatSheet() {
                 checkboxContainer.style.overflowY = 'hidden';
             }
         };
-        
-        
-        
 
+        // Toggles visibility of the box containing the checkboxes & cols
         window.toggleColumnVisibility = function () {
-            // toggles visibility of the checkbox container
             const checkboxContainer = document.getElementById('checkboxContainer');
             const applyButton = document.getElementById('applyColVisCS');
 
@@ -985,9 +932,7 @@ function loadCheatSheet() {
             }
         };
 
-        /*
-            For hovering the entire row - considering we have pinned rows...
-        */
+        // For hovering the entire row - considering we have pinned rows...
         document.addEventListener('DOMContentLoaded', function () {
             const cheatSheet = document.getElementById('cheatSheet');
           
@@ -1007,16 +952,14 @@ function loadCheatSheet() {
           });
 
         initializeCheatSheet();
-
     })
     .catch((error) => {
         console.error('Error:', error.message);
     });
 }
 
+// Cheat Sheet Search Box onChange Function
 function onFilterTextBoxChanged() {
-    // the function for the search box which filters the table 
-    // based on 'filter-text-box' for gridApi grid
     gridApi.setGridOption(
       'quickFilterText',
       document.getElementById('filter-text-box').value
@@ -1042,14 +985,9 @@ function loadProfile(){
         return response.json();
     })
     .then((jsonData) => {
-        // It seems most filtering done on server side...
-
-        console.log("json data", jsonData);
 
         // Ensure jsonData.document is an array
         let documentData = jsonData.document;
-
-        console.log('Debug Info: ', jsonData.debugInfo);
 
         // Sort player's rounds to show most recent at top
         documentData.sort((a, b) => {
@@ -1067,9 +1005,9 @@ function loadProfile(){
         
         // Define table's columns
         const columnDefs = [
-            { headerName: 'Date', field: 'dates' },
+            { headerName: 'Date', field: 'dates', width: 60},
             { headerName: 'Finish', field: 'finish' },
-            { headerName: 'Tournament', field: 'tournament' },
+            { headerName: 'Tournament', field: 'tournament', width: 240},
             { headerName: 'Round', field: 'Round' },
             { headerName: 'SG: Putt', field: 'sgPutt', valueFormatter: roundToTwoDecimals},
             { headerName: 'SG: Arg', field: 'sgArg', valueFormatter: roundToTwoDecimals},
@@ -1115,16 +1053,18 @@ function loadProfile(){
 
         // Define actual cell color scales
         const colorScales = {};
-        Object.keys(colMinMax).forEach(fieldName => {
+        const fieldNames = Object.keys(colMinMax);
+        for (let i = 0; i < fieldNames.length; i++) {
+            const fieldName = fieldNames[i];
             const { minValue, midValue, maxValue } = colMinMax[fieldName];
-        
+
             const colorScale = d3.scaleLinear()
                 .domain([minValue, midValue, maxValue]);
-        
+
             colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
-        
+
             colorScales[fieldName] = colorScale;
-        });
+        }
 
         // Specify columns with a color scale
         const columnsWithColorScale = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt',
@@ -1150,19 +1090,35 @@ function loadProfile(){
             return {};
         }
 
+        function getColumnWidth(field) {
+            sg = ['sgPutt', 'sgArg', 'sgApp', 'sgT2G', 'sgOtt', 'sgTot'];
+
+            if(field == 'dates') {
+                return 110;
+            } else if(field == 'finish') {
+                return 60;
+            } else if(field == 'tournament') {
+                return 280;
+            } else if(field == 'Round') {
+                return 60;
+            } else if(sg.includes(field)) {
+                return 65;
+            } else {
+                return 65;                
+            }
+        }
+
         // Finalize grid options for ag-grid
         const gridOptions = {
             columnDefs: columnDefs.map(column => ({
                 ...column,
                 cellStyle: globalCellStyle,
+                width: getColumnWidth(column.field)
             })),
             rowData: documentData,
             suppressColumnVirtualisation: true,
             onFirstDataRendered: function (params) {
                 console.log('grid is ready');
-                params.api.autoSizeAllColumns();
-                params.api.setColumnWidth('tournament', 240);
-                //setupColumnVisibilityDropdown(columnDefs);
             },
             getRowHeight: function(params) {
                 // return the desired row height in pixels
@@ -1183,6 +1139,7 @@ function loadProfile(){
     });
 }
 
+// Golfer Profile Search Box onChange
 function onFilterTextBoxChangedGp() {
     // the function for the search box which filters the table 
     // based on 'filter-text-box-Gp' for gridApi grid
@@ -1190,9 +1147,13 @@ function onFilterTextBoxChangedGp() {
       'quickFilterText',
       document.getElementById('filter-text-box-GP').value
     );
+
+    loadProfOverview();
 }
 
+let ovrProfGridApi;
 
+// For overall stats on golfer profile page
 function loadProfOverview(){
     let profOvrTbl = document.getElementById("overallStatsProfile");
     let currGolfer = document.getElementById('playerNameProf');
@@ -1229,113 +1190,47 @@ function loadProfOverview(){
             });
         }
 
+        // Make data into number unless it is null
+        function formatData(value, source, isRank) {
+            if (source && source[value] !== null && source[value] !== undefined) {
+                if (isRank == 0) {  // For non-rank stats
+                    return Number(source[value].toFixed(2));
+                } else {  // For rank stats
+                    let val = value + "Rank";
+                    return Number(source[val].toFixed(0));
+                }
+            }
+            return null;  // Return null if value is null or undefined
+        }
+        
+        // Function to generate data object with formatted values
+        function generateData(source, stats) {
+            const data = {};
+        
+            // Loop through the stats array and format both stat and rank values
+            for (let i = 0; i < stats.length; i++) {
+                let keyStat = stats[i];
+                let keyRank = keyStat + "R";  // The rank version of the stat
+        
+                // Format and assign values to the data object
+                data[keyStat] = source ? formatData(keyStat, source, 0) : null;  // Format regular stat
+                data[keyRank] = source ? formatData(keyStat, source, 1) : null;  // Format rank stat
+            }
+        
+            return data;  // Return the generated data object
+        }
+        
+        // Example stats list
+        const stats = [
+            'sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'sgTot', 'drDist', 'drAcc',
+            'gir', 'sandSave', 'scrambling', 'app50_75', 'app75_100', 'app100_125', 'app125_150',
+            'app175_200', 'app200_up', 'bob', 'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring',
+            'prox', 'roughProx', 'puttingBob', 'threePuttAvd', 'bonusPutt'
+        ];
+
         // Set pgatourData 'dict' to hold pgatour stats if exist
         let pgatour = jsonData.pgatour[0];
-        let pgatourData = null;
-        if (pgatour){
-            pgatourData = {
-                sgPutt: pgatour.sgPutt !== null && pgatour.sgPutt !== undefined ? Number(pgatour.sgPutt.toFixed(2)) : null,
-                sgPuttR: pgatour.sgPuttRank !== null && pgatour.sgPuttRank !== undefined ? Number(pgatour.sgPuttRank.toFixed(0)) : null,
-                sgArg: pgatour.sgArg !== null && pgatour.sgArg !== undefined ? Number(pgatour.sgArg.toFixed(2)) : null,
-                sgArgR: pgatour.sgArgRank !== null && pgatour.sgArgRank !== undefined ? Number(pgatour.sgArgRank.toFixed(0)) : null,
-                sgApp: pgatour.sgApp !== null && pgatour.sgApp !== undefined ? Number(pgatour.sgApp.toFixed(2)) : null,
-                sgAppR: pgatour.sgAppRank !== null && pgatour.sgAppRank !== undefined ? Number(pgatour.sgAppRank.toFixed(0)) : null,
-                sgOtt: pgatour.sgOtt !== null && pgatour.sgOtt !== undefined ? Number(pgatour.sgOtt.toFixed(2)) : null,
-                sgOttR: pgatour.sgOttRank !== null && pgatour.sgOttRank !== undefined ? Number(pgatour.sgOttRank.toFixed(0)) : null,
-                sgT2G: pgatour.sgT2G !== null && pgatour.sgT2G !== undefined ? Number(pgatour.sgT2G.toFixed(2)) : null,
-                sgT2GR: pgatour.sgT2GRank !== null && pgatour.sgT2GRank !== undefined ? Number(pgatour.sgT2GRank.toFixed(0)) : null,
-                sgTot: pgatour.sgTot !== null && pgatour.sgTot !== undefined ? Number(pgatour.sgTot.toFixed(2)) : null,
-                sgTotR: pgatour.sgTotRank !== null && pgatour.sgTotRank !== undefined ? Number(pgatour.sgTotRank.toFixed(0)) : null,
-                drDist: pgatour.drDist !== null && pgatour.drDist !== undefined ? Number(pgatour.drDist.toFixed(1)) : null,
-                drDistR: pgatour.drDistRank !== null && pgatour.drDistRank !== undefined ? Number(pgatour.drDistRank.toFixed(0)) : null,
-                drAcc: pgatour.drAcc !== null && pgatour.drAcc !== undefined ? Number(pgatour.drAcc.toFixed(2)) : null,
-                drAccR: pgatour.drAccRank !== null && pgatour.drAccRank !== undefined ? Number(pgatour.drAccRank.toFixed(0)) : null,
-                gir: pgatour.gir !== null && pgatour.gir !== undefined ? Number(pgatour.gir.toFixed(2)) : null,
-                girR: pgatour.girRank !== null && pgatour.girRank !== undefined ? Number(pgatour.girRank.toFixed(0)) : null,
-                sandSave: pgatour.sandSave !== null && pgatour.sandSave !== undefined ? Number(pgatour.sandSave.toFixed(2)) : null,
-                sandSaveR: pgatour.sandSaveRank !== null && pgatour.sandSaveRank !== undefined ? Number(pgatour.sandSaveRank.toFixed(0)) : null,
-                scrambling: pgatour.scrambling !== null && pgatour.scrambling !== undefined ? Number(pgatour.scrambling.toFixed(2)) : null,
-                scramblingR: pgatour.scramblingRank !== null && pgatour.scramblingRank !== undefined ? Number(pgatour.scramblingRank.toFixed(0)) : null,
-                app50_75: pgatour.app50_75 !== null && pgatour.app50_75 !== undefined ? Number(pgatour.app50_75.toFixed(0)) : null,
-                app50_75R: pgatour.app50_75Rank !== null && pgatour.app50_75Rank !== undefined ? Number(pgatour.app50_75Rank.toFixed(0)) : null,
-                app75_100: pgatour.app75_100 !== null && pgatour.app75_100 !== undefined ? Number(pgatour.app75_100.toFixed(0)) : null,
-                app75_100R: pgatour.app75_100Rank !== null && pgatour.app75_100Rank !== undefined ? Number(pgatour.app75_100Rank.toFixed(0)) : null,
-                app100_125: pgatour.app100_125 !== null && pgatour.app100_125 !== undefined ? Number(pgatour.app100_125.toFixed(0)) : null,
-                app100_125R: pgatour.app100_125Rank !== null && pgatour.app100_125Rank !== undefined ? Number(pgatour.app100_125Rank.toFixed(0)) : null,
-                app125_150: pgatour.app125_150 !== null && pgatour.app125_150 !== undefined ? Number(pgatour.app125_150.toFixed(0)) : null,
-                app125_150R: pgatour.app125_150Rank !== null && pgatour.app125_150Rank !== undefined ? Number(pgatour.app125_150Rank.toFixed(0)) : null,
-                app150_175: pgatour.app150_175 !== null && pgatour.app150_175 !== undefined ? Number(pgatour.app150_175.toFixed(0)) : null,
-                app150_175R: pgatour.app150_175Rank !== null && pgatour.app150_175Rank !== undefined ? Number(pgatour.app150_175Rank.toFixed(0)) : null,
-                app175_200: pgatour.app175_200 !== null && pgatour.app175_200 !== undefined ? Number(pgatour.app175_200.toFixed(0)) : null,
-                app175_200R: pgatour.app175_200Rank !== null && pgatour.app175_200Rank !== undefined ? Number(pgatour.app175_200Rank.toFixed(0)) : null,
-                app200_up: pgatour.app200_up !== null && pgatour.app200_up !== undefined ? Number(pgatour.app200_up.toFixed(0)) : null,
-                app200_upR: pgatour.app200_upRank !== null && pgatour.app200_upRank !== undefined ? Number(pgatour.app200_upRank.toFixed(0)) : null,
-                bob: pgatour.bob !== null && pgatour.bob !== undefined ? Number(pgatour.bob.toFixed(2)) : null,
-                bobR: pgatour.bobRank !== null && pgatour.bobRank !== undefined ? Number(pgatour.bobRank.toFixed(0)) : null,
-                bogAvd: pgatour.bogAvd !== null && pgatour.bogAvd !== undefined ? Number(pgatour.bogAvd.toFixed(2)) : null,
-                bogAvdR: pgatour.bogAvdRank !== null && pgatour.bogAvdRank !== undefined ? Number(pgatour.bogAvdRank.toFixed(0)) : null,
-                par3Scoring: pgatour.par3Scoring !== null && pgatour.par3Scoring !== undefined ? Number(pgatour.par3Scoring.toFixed(2)) : null,
-                par3ScoringR: pgatour.par3ScoringRank !== null && pgatour.par3ScoringRank !== undefined ? Number(pgatour.par3ScoringRank.toFixed(0)) : null,
-                par4Scoring: pgatour.par4Scoring !== null && pgatour.par4Scoring !== undefined ? Number(pgatour.par4Scoring.toFixed(2)) : null,
-                par4ScoringR: pgatour.par4ScoringRank !== null && pgatour.par4ScoringRank !== undefined ? Number(pgatour.par4ScoringRank.toFixed(0)) : null,
-                par5Scoring: pgatour.par5Scoring !== null && pgatour.par5Scoring !== undefined ? Number(pgatour.par5Scoring.toFixed(2)) : null,
-                par5ScoringR: pgatour.par5ScoringRank !== null && pgatour.par5ScoringRank !== undefined ? Number(pgatour.par5ScoringRank.toFixed(0)) : null,
-                prox: pgatour.prox !== null && pgatour.prox !== undefined ? Number(pgatour.prox.toFixed(0)) : null,
-                proxR: pgatour.proxRank !== null && pgatour.proxRank !== undefined ? Number(pgatour.proxRank.toFixed(0)) : null,
-                roughProx: pgatour.roughProx !== null && pgatour.roughProx !== undefined ? Number(pgatour.roughProx.toFixed(0)) : null,
-                roughProxR: pgatour.roughProxRank !== null && pgatour.roughProxRank !== undefined ? Number(pgatour.roughProxRank.toFixed(0)) : null,
-                puttingBob: pgatour.puttingBob !== null && pgatour.puttingBob !== undefined ? Number(pgatour.puttingBob.toFixed(1)) : null,
-                puttingBobR: pgatour.puttingBobRank !== null && pgatour.puttingBobRank !== undefined ? Number(pgatour.puttingBobRank.toFixed(0)) : null,
-                threePuttAvd: pgatour.threePuttAvd !== null && pgatour.threePuttAvd !== undefined ? Number(pgatour.threePuttAvd.toFixed(1)) : null,
-                threePuttAvdR: pgatour.threePuttAvdRank !== null && pgatour.threePuttAvdRank !== undefined ? Number(pgatour.threePuttAvdRank.toFixed(0)) : null,
-                bonusPutt: pgatour.bonusPutt !== null && pgatour.bonusPutt !== undefined ? Number(pgatour.bonusPutt.toFixed(2)) : null,
-                bonusPuttR: pgatour.bonusPuttRank !== null && pgatour.bonusPuttRank !== undefined ? Number(pgatour.bonusPuttRank.toFixed(0)) : null,
-            };
-        }
-
-        profOvrTbl.innerHTML = '';
-
-        // Start building the HTML string for the table
-        let tableHTML = '';
-
-        // Map behind the scenes name to front end name
-        const statMappings = {
-            sgPutt: 'SG: Putt',
-            sgArg: 'SG: Arg',
-            sgApp: 'SG: App',
-            sgOtt: 'SG: Ott',
-            sgT2G: 'SG: T2G',
-            sgTot: 'SG: Tot.',
-            drDist: 'Dr. Dist.',
-            drAcc: 'Dr. Acc.',
-            gir: 'GIR%',
-            sandSave: 'Sand Save%',
-            scrambling: 'Scrambling',
-            app50_75: 'App. 50-75',
-            app75_100: 'App. 75-100',
-            app100_125: 'App. 100-125',
-            app125_150: 'App. 125-150',
-            app150_175: 'App. 150-175',
-            app175_200: 'App. 175-200',
-            app200_up: 'App. 200+',
-            bob: 'BOB%',
-            bogAvd: 'Bog. Avd.',
-            par3Scoring: 'Par 3s',
-            par4Scoring: 'Par 4s',
-            par5Scoring: 'Par 5s',
-            prox: 'Prox.',
-            roughProx: 'Rough Prox.',
-            puttingBob: 'PuttBOB%',
-            threePuttAvd: '3-Putt Avd.',
-            bonusPutt: 'BonusPutt',
-            // Add more mappings as needed
-        };
-        
-
-        // Table header row
-        tableHTML += '<thead><tr id="profOvrRow"><th id="profOvrHead">Stat</th><th id="profOvrHead">Value</th><th id="profOvrHead">Rank</th></tr></thead><tbody>';
-
-        let noPgaStats = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'sgTot'];
+        let pgatourData = generateData(pgatour, stats);
 
         // Funct to get color based on value
         function getColorFromScale(value) {
@@ -1346,7 +1241,6 @@ function loadProfOverview(){
             return scale(value);
         }
 
-        // Second funct to get color based on value
         function getColorFromScale2(value, stat){
             let dom;
             if(stat == 'sgPutt' | stat == 'sgArg' | stat == 'sgApp' | stat == 'sgOtt'){
@@ -1365,47 +1259,109 @@ function loadProfOverview(){
             return scale(value);
         }
 
-        if (pgatourData == null){ // Player doesn't have PgaTour data
-            // Create table with just sgAverages
-            for( let statInd in noPgaStats){
-                let stat = noPgaStats[statInd];
-                // Add a new row for each stat
-                tableHTML += '<tr id="profOvrRow">';
-                // Add the stat name to the first column
-                tableHTML += `<td id="profOvrElem" class="profOvrStat">${statMappings[stat]}</td>`;
-                // Add the stat value to the second column
-                tableHTML += `<td id="profOvrElem" style="background-color: ${getColorFromScale2(avgRoundData[stat], stat)};">${avgRoundData[stat]}</td>`;
-                tableHTML += `<td id="profOvrElem">-</td>`;
+        const columnDefs = [
+            { headerName: "Stat", field: "statName", width: 90, cellStyle: {textAlign: 'left', fontSize: '12px', paddingLeft: "5px"}},
+            { headerName: "Value", field: "value", cellStyle: params => ({ backgroundColor: params.valueColor }), width: 70, 
+                cellStyle: params => {
+                    const rankValue = params.data.rank;
+                    const statValue = params.data.value;
+                    const stat = params.data.statName;
 
-                tableHTML += '</tr>';
-            }
+                    let col;
+
+                    if(rankValue == '-'){
+                        col = getColorFromScale2(statValue, statName);
+                    } else if (rankValue !== null && rankValue !== undefined){
+                        col = getColorFromScale(rankValue);
+                    } else {
+                        col = 'transparent';
+                    }
+
+                    return {
+                        fontSize: '12px',
+                        paddingLeft: "7px",
+                        backgroundColor: col
+                    }
+                }},
+            { headerName: "Rank", field: "rank", width: 58, cellStyle: {textAlign: 'left', fontSize: '12px', paddingLeft: "7px"}}
+        ]
+
+        const rowData = [];
+
+        // Map behind the scenes name to front end name
+        const statMappings = {
+            sgPutt: 'SG: Putt',
+            sgArg: 'SG: Arg',
+            sgApp: 'SG: App',
+            sgOtt: 'SG: Ott',
+            sgT2G: 'SG: T2G',
+            sgTot: 'SG: Tot.',
+            drDist: 'Dr. Dist.',
+            drAcc: 'Dr. Acc.',
+            gir: 'GIR%',
+            sandSave: 'Sand Save%',
+            scrambling: 'Scrambling',
+            app50_75: 'App50-75',
+            app75_100: 'App75-100',
+            app100_125: 'App100-125',
+            app125_150: 'App125-150',
+            app150_175: 'App150-175',
+            app175_200: 'App175-200',
+            app200_up: 'App200+',
+            bob: 'BOB%',
+            bogAvd: 'Bog. Avd.',
+            par3Scoring: 'Par 3s',
+            par4Scoring: 'Par 4s',
+            par5Scoring: 'Par 5s',
+            prox: 'Prox.',
+            roughProx: 'Rough Prox.',
+            puttingBob: 'PuttBOB%',
+            threePuttAvd: '3-PuttAvd',
+            bonusPutt: 'BonusPutt',
+        };
+
+        if (pgatourData == null){ // Player doesn't have PGA Tour data
+            // Add SG averages to the table
+            const noPgaStats = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'sgTot'];
+            noPgaStats.forEach(stat => {
+                rowData.push({
+                    statName: statMappings[stat],
+                    value: avgRoundData[stat],
+                    rank: '-',
+                    valueColor: getColorFromScale2(avgRoundData[stat], stat)
+                });
+            });
         } else {
-            // Create table with SG averages and PgaTourStats
+            // Add SG averages and PGA Tour stats to the table
             for (let stat in pgatourData) {
-                // Check if the property is a valid stat (not a method, etc.) and does not end with 'R'
                 if (pgatourData.hasOwnProperty(stat) && !stat.endsWith('R')) {
-                    // Add a new row for each stat
-                    tableHTML += '<tr id="profOvrRow">';
-                    // Add the stat name to the first column
-                    tableHTML += `<td id="profOvrElem" class="profOvrStat">${statMappings[stat]}</td>`;
-        
-                    // Add the stat value to the second column
-                    let valueColumn = `<td id="profOvrElem" style="background-color: ${getColorFromScale(pgatourData[stat + 'R'])};">${pgatourData[stat]}</td>`;
-        
-                    // Add the corresponding rank to the third column
-                    let rankColumn = `<td id="profOvrElem">${pgatourData[stat + 'R']}</td>`;
-        
-                    tableHTML += valueColumn;
-                    tableHTML += rankColumn;
-        
-                    tableHTML += '</tr>';
+                    rowData.push({
+                        statName: statMappings[stat],
+                        value: pgatourData[stat],
+                        rank: pgatourData[stat + 'R'],
+                        valueColor: getColorFromScale(pgatourData[stat + 'R'])
+                    });
                 }
             }
         }
-        
 
-        profOvrTbl.innerHTML = tableHTML + '</tbody>';
+        const gridOptions = {
+            columnDefs: columnDefs,
+            rowData: rowData,
+            getRowHeight: function(params) {
+                return 20;
+            },
+            headerHeight: 25,
+            getRowStyle: function (params) {
+                return { borderBottom: '1px solid #ccc' };
+            },
+        };
 
+        if(ovrProfGridApi != null) {
+            ovrProfGridApi = null;
+            document.getElementById(('overallStatsProfile')).innerHTML = '';
+        }
+        ovrProfGridApi = agGrid.createGrid(document.querySelector('#overallStatsProfile'), gridOptions);
     })
 }
 
