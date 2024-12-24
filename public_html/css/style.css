@@ -499,6 +499,17 @@ div.dt-button-collection {
     height: 700px;
 }
 
+#trendPlotContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+#quadPlot {
+    width: 600px;
+}
+
 #floorCeilSheet {
     display: block;
     margin-left: auto;

@@ -1365,7 +1365,7 @@ function loadProfOverview(){
     })
 }
 
-// For list of players in Golfer Profile page
+// For dropdown list of players in Golfer Profile page
 function loadPlayerListGp(){
     let playerDropdown = document.getElementById('playerNameProf');
 
@@ -1379,8 +1379,6 @@ function loadPlayerListGp(){
         playerDropdown.innerHTML = '';
 
         let htmlString = '';
-
-        //console.log('playerList: ', jsonData);
         
         // Add all players to an html
         for (let i=0; i<jsonData.length; i++){
@@ -1404,6 +1402,7 @@ function loadPlayerListGp(){
     });
 }
 
+
 let isFloorCeilingInitialized = false;
 let gridApiFloorCeiling;
 
@@ -1426,71 +1425,57 @@ function loadFloorCeilingSheet() {
             return;
         }
 
-        // Loop through salary's rows (effectively loop through player)
-        let dataTableData = jsonData.salaries.map((salary) => {
-            let player = salary.player;
-            let fdSalary = salary.fdSalary;
-            let dkSalary = salary.dkSalary;
+        // Create array of data for data table (SG Threshold %'s)
+        let dataTableData = [];
+        for(let i = 0; i < jsonData.salaries.length; i++) {
+            const salary = jsonData.salaries[i];
+            const player = salary.player;
+            const fdSalary = salary.fdSalary;
+            const dkSalary = salary.dkSalary;
 
-            // This should get the last (baseRounds) rounds for each player
+            // playerRounds: array of last N rounds for player
             let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
                 .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
                 .slice(0, baseRounds.value);
 
-            // Set aside space for percentage of rds gaining this many strokes
-            sg0Plus = Number(0.00);
-            sg1Plus = Number(0.00);
-            sg2Plus = Number(0.00);
-            sg3Plus = Number(0.00);
-            sg4Plus = Number(0.00);
-            sg5Plus = Number(0.00);
-            totRounds = playerRounds.length;
+            // Arrays to calculate total rounds by sg threshold
+            let thresholds = [0, 1, 2, 3, 4, 5];
+            let totals = [];
+            let totRounds = playerRounds.length;
 
-            // Develop percents of rounds gaining certain number strokes
-            if (playerRounds.length > 0){
-                tot0Plus = Number(0.00);
-                tot1Plus = Number(0.00);
-                tot2Plus = Number(0.00);
-                tot3Plus = Number(0.00);
-                tot4Plus = Number(0.00);
-                tot5Plus = Number(0.00);
+            // Set all totals to zero
+            for(let i = 0; i < thresholds.length; i++) {
+                totals.push(0);
+            }
 
-                playerRounds.forEach((round) => {
-                    if (round.sgTot >= 0) {
-                        tot0Plus += 1;
+            if(totRounds > 0) {
+                // For each sg thresh, add to total rds for each thresh for each rd
+                for(let round of playerRounds) {
+                    for(let i = 0; i < thresholds.length; i++) {
+                        if(round.sgTot >= thresholds[i]) {
+                            totals[i]++;
+                        }
                     }
+                }
 
-                    if (round.sgTot >= 1) {
-                        tot1Plus += 1;
-                    }
+                // Calculate percentages for each sg threshold
+                let percentages = [];
+                for(let total of totals) {
+                    percentages.push(Number((total / totRounds).toFixed(2)));
+                }
 
-                    if (round.sgTot >= 2) {
-                        tot2Plus += 1;
-                    }
+                // Give variable names for percentages
+                sg0Plus = percentages[0];
+                sg1Plus = percentages[1];
+                sg2Plus = percentages[2];
+                sg3Plus = percentages[3];
+                sg4Plus = percentages[4];
+                sg5Plus = percentages[5];
+            } else {
+                // Default to zero for no rounds
+                sg0Plus = sg1Plus = sg2Plus = sg3Plus = sg4Plus = sg5Plus = 0.00;
+            }
 
-                    if (round.sgTot >= 3) {
-                        tot3Plus += 1;
-                    }
-
-                    if (round.sgTot >= 4) {
-                        tot4Plus += 1;
-                    }
-
-                    if (round.sgTot >= 5) {
-                        tot5Plus += 1;
-                    }
-                })
-
-                // Populate sgXPlus with percent of rounds gaining more than X strokes
-                sg0Plus = Number(tot0Plus / totRounds).toFixed(2);
-                sg1Plus = Number(tot1Plus / totRounds).toFixed(2);
-                sg2Plus = Number(tot2Plus / totRounds).toFixed(2);
-                sg3Plus = Number(tot3Plus / totRounds).toFixed(2);
-                sg4Plus = Number(tot4Plus / totRounds).toFixed(2);
-                sg5Plus = Number(tot5Plus / totRounds).toFixed(2);
-            };
-
-            // Set final data 'dict'
             let finalData = {
                 player,
                 fdSalary,
@@ -1502,95 +1487,52 @@ function loadFloorCeilingSheet() {
                 sg4Plus,
                 sg5Plus,
                 totRounds
-            }
+            };
 
-            return finalData;
-        }).filter(Boolean);
-
-        // Start to develop color scales for these values
-
-        // make list of percentages for each column
-        zeros = [];
-        ones = [];
-        twos = [];
-        threes = [];
-        fours = [];
-        fives = [];
-        dataTableData.forEach((player) => {
-
-            if (player.sg0Plus != null) {
-                zeros.push(player.sg0Plus);
-            }
-
-            if (player.sg1Plus != null) {
-                ones.push(player.sg1Plus);
-            }
-
-            if (player.sg2Plus != null) {
-                twos.push(player.sg2Plus);
-            }
-
-            if (player.sg3Plus != null) {
-                threes.push(player.sg3Plus);
-            }
-
-            if (player.sg4Plus != null) {
-                fours.push(player.sg4Plus);
-            }
-
-            if (player.sg5Plus != null) {
-                fives.push(player.sg5Plus);
-            }
-        });
-
-        // Function to get the median of an array
-        function getMedian(arr) {
-            // Convert every element to a double
-            arr = arr.map(element => parseFloat(element));
-        
-            // Sort the array in ascending order
-            arr.sort((a, b) => a - b);
-            
-            let mid = Math.floor(arr.length / 2);
-        
-            if (arr.length % 2 === 0) {
-                // If even, return the average of the two middle numbers
-                return (arr[mid - 1] + arr[mid]) / 2;
-            } else {
-                // If odd, return the middle number
-                return arr[mid];
-            }
+            dataTableData.push(finalData);
         }
 
-        // Dicts that have min, mid, and max value for each column
-        let minMax0 = {minValue: Math.min(...zeros), midValue: getMedian(zeros), maxValue: Math.max(...zeros)};
-        let minMax1 = {minValue: Math.min(...ones), midValue: getMedian(ones), maxValue: Math.max(...ones)};
-        let minMax2 = {minValue: Math.min(...twos), midValue: getMedian(twos), maxValue: Math.max(...twos)};
-        let minMax3 = {minValue: Math.min(...threes), midValue: getMedian(threes), maxValue: Math.max(...threes)};
-        let minMax4 = {minValue: Math.min(...fours), midValue: getMedian(fours), maxValue: Math.max(...fours)};
-        let minMax5 = {minValue: Math.min(...fives), midValue: getMedian(fives), maxValue: Math.max(...fives)};
+        // Helper function to get the median of an array
+        function getMedian(arr) {
+            const sorted = arr.map(parseFloat).sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+        }
 
-        // Assign column name to its set of minMidMax
-        const colMinMax = {
-            'sg0Plus': minMax0,
-            'sg1Plus': minMax1,
-            'sg2Plus': minMax2,
-            'sg3Plus': minMax3,
-            'sg4Plus': minMax4,
-            'sg5Plus': minMax5,
-        };
+        // COLUMN COLOR FORMATTING --
+        
+        const columns = ['sg0Plus', 'sg1Plus', 'sg2Plus', 'sg3Plus', 'sg4Plus', 'sg5Plus'];
 
-        // Develop color scales themselves for each column
+        // columnData: Dictionary of arrays of data for each column category
+        const columnData = {};
+        columns.forEach(col => columnData[col] = []);
+
+        dataTableData.forEach(player => {
+            columns.forEach(col => {
+                if(player[col] != null) {
+                    columnData[col].push(player[col]);
+                }
+            });
+        });
+
+        // Store min, median, max for each column
+        const colMinMax = {};
+        columns.forEach(col => {
+            const values = columnData[col];
+            colMinMax[col] = {
+                minValue: Math.min(...values),
+                midValue: getMedian(values),
+                maxValue: Math.max(...values),
+            };
+        });
+
+        // Hold color scales for each column
         const colorScales = {};
-        Object.keys(colMinMax).forEach(fieldName => {
-            const { minValue, midValue, maxValue } = colMinMax[fieldName];
-        
-            const colorScale = d3.scaleLinear()
-                .domain([minValue, midValue, maxValue]);
-        
-            colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
-        
-            colorScales[fieldName] = colorScale;
+        columns.forEach(col => {
+            const { minValue, midValue, maxValue } = colMinMax[col];
+            colorScales[col] = d3.scaleLinear()
+                .domain([minValue, midValue, maxValue])
+                .range(['#F83E3E', '#FFFFFF', '#4579F1'])
         });
 
         // Specify columns with color scale
@@ -1619,38 +1561,30 @@ function loadFloorCeilingSheet() {
 
         // Define col defs for table
         let columnDefs = [
-            {headerName: 'Player', field: 'player'},
-            {headerName: 'FD Salary', field: 'fdSalary'},
-            {headerName: 'DK Salary', field: 'dkSalary'},
-            {headerName: 'SG: 0+', field: 'sg0Plus'},
-            {headerName: 'SG: 1+', field: 'sg1Plus'},
-            {headerName: 'SG: 2+', field: 'sg2Plus'},
-            {headerName: 'SG: 3+', field: 'sg3Plus'},
-            {headerName: 'SG: 4+', field: 'sg4Plus'},
-            {headerName: 'SG: 5+', field: 'sg5Plus'},
-            {headerName: 'Tot Rds', field: 'totRounds'},
+            {headerName: 'Player', field: 'player', width: 200},
+            {headerName: 'FD Salary', field: 'fdSalary', width: 75},
+            {headerName: 'DK Salary', field: 'dkSalary', width: 75},
+            {headerName: 'SG: 0+', field: 'sg0Plus', width: 70},
+            {headerName: 'SG: 1+', field: 'sg1Plus', width: 70},
+            {headerName: 'SG: 2+', field: 'sg2Plus', width: 70},
+            {headerName: 'SG: 3+', field: 'sg3Plus', width: 70},
+            {headerName: 'SG: 4+', field: 'sg4Plus', width: 70},
+            {headerName: 'SG: 5+', field: 'sg5Plus', width: 70},
+            {headerName: 'Tot Rds', field: 'totRounds', width: 60},
         ];
 
         // Function to clear the sheet before initializing
         function clearFloorCeilSheetContent() {
-            /*
-                Clears the content of the floor ceil sheet.
-            */
                 const floorCeilSheet = document.getElementById('floorCeilSheet');
                 if (floorCeilSheet) {
-                    floorCeilSheet.innerHTML = ''; // Clear content
+                    floorCeilSheet.innerHTML = '';
                 }
         };
 
         // Function to initialize the sheet
         function initializeFloorCeilSheet() {
-            /*
-                clears floor ceil sheet if already initialized
 
-                builds up grid options - specifies column defs, row data,...
-                
-                creates the grid and puts it in #cheatSheet
-            */
+            // Clear sheet if initialized
             if (isFloorCeilingInitialized) {
                 clearFloorCeilSheetContent();
             }
@@ -1665,11 +1599,9 @@ function loadFloorCeilingSheet() {
                 suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
-                    params.api.autoSizeAllColumns();
                 },
                 getRowHeight: function(params) {
-                    // return the desired row height in pixels
-                    return 25; // adjust this value based on your preference
+                    return 25;
                 },
                 headerHeight: 30,
             };
@@ -1683,13 +1615,11 @@ function loadFloorCeilingSheet() {
         initializeFloorCeilSheet();
 
         console.log("data table data", dataTableData);
-
     })
 }
 
+// Floor ceiling sheet search box onChange
 function onFilterTextBoxChangedFloorCeil() {
-    // the function for the search box which filters the table 
-    // based on 'filter-text-box' for gridApi grid
     gridApiFloorCeiling.setGridOption(
       'quickFilterText',
       document.getElementById('filter-text-box-floor-ceil').value
@@ -1719,132 +1649,138 @@ function loadTrendsSheet() {
             return;
         }
 
-        // Loop through each salary row (each player effectively)
-        let dataTableData = jsonData.salaries.map((salary) => {
-            let player = salary.player;
-            let fdSalary = salary.fdSalary;
-            let dkSalary = salary.dkSalary;
+        // Returns dict of average for sg cats for last numRounds
+        function averageSgCats(numRounds, jsonData, player) {
 
-            // SG: RECENT Rounds Avg (to compare to base)
-            // Sort players rounds in desc order, grab only N most recent rounds
+            // playerRounds: array of last N rounds for player
             let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
-                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, recentRounds.value); // Grab at most the specified number of rounds
+            .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+            .slice(0, numRounds);
 
-            // Calculate averages for lastN rounds for each SG category
+            // Get average of each sg category over last N rounds
             let avgRoundData = {};
-            if (playerRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
-                columnsToAverage.forEach((col) => {
-                    let averageValue = playerRounds.reduce((sum, round) => sum + round[col], 0) / playerRounds.length;
+            avgRoundData['baseRds'] = playerRounds.length;
+            let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
+            if(playerRounds.length > 0) {
+                for(let i = 0; i < columnsToAverage.length; i++) {
+                    let col = columnsToAverage[i];
+                    let sum = 0;
+                    for(let j = 0; j < playerRounds.length; j++) {
+                        sum += playerRounds[j][col];
+                    }
+                    let averageValue = sum / playerRounds.length;
                     avgRoundData[col] = Number(averageValue.toFixed(2));
-                });
-            } else { // Set values to null if no rounds are found
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
-                columnsToAverage.forEach((col) => {
-                    avgRoundData[col] = null;
-                });
-            }
-
-
-            // SG: BASE Rounds Avg (evaluated as player's baseline)
-            // Sort players rounds in desc order, grab only M most recent rounds
-            let playerBaseRounds = jsonData.tournamentRow.filter((round) => round.player === player)
-                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, baseRounds.value); // Grab at most the specified number of rounds
-
-            // Calculate the baseline average for player's SG categories
-            let avgRoundBaseData = {};
-            avgRoundBaseData['baseRds'] = playerBaseRounds.length;
-            if (playerBaseRounds.length > 0 ) { // can change to ensure minimum # rounds for calc
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
-                columnsToAverage.forEach((col) => {
-                    let averageValue = playerBaseRounds.reduce((sum, round) => sum + round[col], 0) / playerBaseRounds.length;
-                    avgRoundBaseData[col] = Number(averageValue.toFixed(2));
-                });
-            } else { // Set values to null if no rounds are found
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt'];
-                columnsToAverage.forEach((col) => {
-                    avgRoundBaseData[col] = null;
-                });
-            }
-
-            // Setup data structure of trends data
-            let trendsData;
-            if(playerRounds.length != 0){
-                console.log('here');
-                trendsData = {
-                    player,
-                    fdSalary,
-                    dkSalary,
-                    'sgPutt': Number((avgRoundData.sgPutt - avgRoundBaseData.sgPutt).toFixed(2)),
-                    'sgArg': Number((avgRoundData.sgArg - avgRoundBaseData.sgArg).toFixed(2)),
-                    'sgApp': Number((avgRoundData.sgApp - avgRoundBaseData.sgApp).toFixed(2)),
-                    'sgOtt': Number((avgRoundData.sgOtt - avgRoundBaseData.sgOtt).toFixed(2)),
-                    'sgHeat': Number((
-                        (avgRoundData.sgPutt - avgRoundBaseData.sgPutt) +
-                        (avgRoundData.sgArg - avgRoundBaseData.sgArg) +
-                        (avgRoundData.sgApp - avgRoundBaseData.sgApp) +
-                        (avgRoundData.sgOtt - avgRoundBaseData.sgOtt)
-                    ).toFixed(2)),
-                    'baseRds':avgRoundBaseData.baseRds
-                    };
+                }
             } else {
-                trendsData = {
-                    player,
-                    fdSalary,
-                    dkSalary,  
-                    'sgPutt': null,
-                    'sgArg':null,
-                    'sgApp': null,
-                    'sgOtt': null,
-                    'sgHeat': null,
-                    'baseRds': 0
-                    };
+                // Default values to null
+                for(let i = 0; i < columnsToAverage.length; i++) {
+                    avgRoundData[columnsToAverage[i]] = null;
+                }
             }
 
-            return trendsData;
-        }).filter(Boolean);
+            return avgRoundData;
+        }
 
-        console.log(dataTableData);
+        // Produce trends data table data
+        let dataTableData = [];
+        for(let i = 0; i < jsonData.salaries.length; i++) {
+            const salary = jsonData.salaries[i];
+            const player = salary.player;
+            const fdSalary = salary.fdSalary;
+            const dkSalary = salary.dkSalary;
+
+            // Get averages by sg category over last N
+            let avgRoundData = averageSgCats(recentRounds.value, jsonData, player);
+
+            // Get averages by sg category over last BASE_N
+            let avgRoundBaseData = averageSgCats(baseRounds.value, jsonData, player);
+
+            let trendsData = {
+                player,
+                fdSalary,
+                dkSalary,
+                'sgPutt': null,
+                'sgArg': null,
+                'sgApp': null,
+                'sgOtt': null,
+                'sgHeat': null,
+                'baseRds': 0
+            };
+
+            if(avgRoundData.baseRds !== 0) {
+                const sgPuttDiff = avgRoundData.sgPutt - avgRoundBaseData.sgPutt;
+                const sgArgDiff = avgRoundData.sgArg - avgRoundBaseData.sgArg;
+                const sgAppDiff = avgRoundData.sgApp - avgRoundBaseData.sgApp;
+                const sgOttDiff = avgRoundData.sgOtt - avgRoundBaseData.sgOtt;
+
+                trendsData = {
+                    ...trendsData,
+                    'sgPutt': Number(sgPuttDiff.toFixed(2)),
+                    'sgArg': Number(sgArgDiff.toFixed(2)),
+                    'sgApp': Number(sgAppDiff.toFixed(2)),
+                    'sgOtt': Number(sgOttDiff.toFixed(2)),
+                    'sgHeat': Number((sgPuttDiff + sgArgDiff + sgAppDiff + sgOttDiff).toFixed(2)),
+                    'baseRds': avgRoundBaseData.baseRds
+                };
+            }
+
+            dataTableData.push(trendsData);
+        }
 
         // Define col defs for table
         let columnDefs = [
-            {headerName: 'Player', field: 'player'},
-            {headerName: 'FD Salary', field: 'fdSalary'},
-            {headerName: 'DK Salary', field: 'dkSalary'},
-            {headerName: 'SG: Putt', field: 'sgPutt'},
-            {headerName: 'SG: Arg', field: 'sgArg'},
-            {headerName: 'SG: App', field: 'sgApp'},
-            {headerName: 'SG: Ott', field: 'sgOtt'},
-            {headerName: 'SG HEAT', field: 'sgHeat', sortable: true, sort: 'desc'},
-            {headerName: 'Base Rds', field: 'baseRds'},
+            {headerName: 'Player', field: 'player', width: 200},
+            {headerName: 'FD Salary', field: 'fdSalary', width: 75},
+            {headerName: 'DK Salary', field: 'dkSalary', width: 75},
+            {headerName: 'SG: Putt', field: 'sgPutt', width: 70},
+            {headerName: 'SG: Arg', field: 'sgArg', width: 70},
+            {headerName: 'SG: App', field: 'sgApp', width: 70},
+            {headerName: 'SG: Ott', field: 'sgOtt', width: 70},
+            {headerName: 'SG HEAT', field: 'sgHeat', sortable: true, sort: 'desc', width: 80},
+            {headerName: 'Base Rds', field: 'baseRds', width: 70},
         ];
 
-        // Hard code minMidMax for color scales
-        let minMax = {minValue: -2, midValue: 0, maxValue: 2};
-        let minMaxHeat = {minValue: -3.5, midValue: 0, maxValue: 3.5};
+        // SETUP COLOR SCALES --
 
-        // Associate colNames to their minMidMax
-        const colMinMax = {
-            'sgPutt': minMax,
-            'sgArg': minMax,
-            'sgApp': minMax,
-            'sgOtt': minMax,
-            'sgHeat': minMaxHeat,
-        };
+        // Helper function to get the median of an array
+        function getMedian(arr) {
+            const sorted = arr.map(parseFloat).sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+        }
 
-        // Develop the actual color scales for each column name
+        const columns = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgHeat'];
+
+        // columnData: Dictionary of arrays of data for each column category
+        const columnData = {};
+        columns.forEach(col => columnData[col] = []);
+
+        dataTableData.forEach(player => {
+            columns.forEach(col => {
+                if(player[col] != null) {
+                    columnData[col].push(player[col]);
+                }
+            });
+        });
+
+        // Store min, median, max for each column
+        const colMinMax = {};
+        columns.forEach(col => {
+            const values = columnData[col];
+            colMinMax[col] = {
+                minValue: Math.min(...values),
+                midValue: getMedian(values),
+                maxValue: Math.max(...values),
+            };
+        });
+
+        // Hold color scales for each column
         const colorScales = {};
-        Object.keys(colMinMax).forEach(fieldName => {
-            const { minValue, midValue, maxValue } = colMinMax[fieldName];
-        
-            const colorScale = d3.scaleLinear()
-                .domain([minValue, midValue, maxValue]);
-        
-            colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
-        
-            colorScales[fieldName] = colorScale;
+        columns.forEach(col => {
+            const { minValue, midValue, maxValue } = colMinMax[col];
+            colorScales[col] = d3.scaleLinear()
+                .domain([minValue, midValue, maxValue])
+                .range(['#F83E3E', '#FFFFFF', '#4579F1'])
         });
 
         // Specify columns with a color scale
@@ -1879,85 +1815,108 @@ function loadTrendsSheet() {
                 }
         };
 
-        // Develops / places scatter quadrant plot for trend data
+        // Places trends 'Quad Plot'
         function placePlot() {
-            // creates arrays of all of these categories
-            let playerNames = dataTableData.map(d => d.player);
-            let sgPutting = dataTableData.map(d => d.sgPutt);
-            let sgApproach = dataTableData.map(d => d.sgApp);
+        
+            // Adds distance from center plot to data table data
+            let playersWithDistances = [];
+            for (let i = 0; i < dataTableData.length; i++) {
+                const d = dataTableData[i];
+                playersWithDistances.push({
+                    ...d,
+                    distance: Math.sqrt(d.sgPutt ** 2 + d.sgApp ** 2)
+                });
+            }
+            playersWithDistances.sort((a, b) => b.distance - a.distance);
+        
+            // Select the top N players by distance to mark with text
+            let topPlayers = [];
+            for (let i = 0; i < Math.min(15, playersWithDistances.length); i++) {
+                topPlayers.push(playersWithDistances[i].player);
+            }
+        
+            // Prepare data for the plot
+            let xValues = [];
+            let yValues = [];
+            let textValues = [];
+            let textPositions = [];
+            let hoverTexts = [];
+            let customData = [];
+            const positions = ['top center', 'bottom center', 'middle left', 'middle right'];
 
-            // Randomizes textposition to reduce overlap
-            function improveTextPosition(xValues) {
-                let positions = ['top center', 'bottom center', 'middle left', 'middle right']; // Add more positions as needed
-                return xValues.map((value, index) => positions[index % positions.length]);
+            for (let i = 0; i < dataTableData.length; i++) {
+                const d = dataTableData[i];
+                xValues.push(d.sgPutt);
+                yValues.push(d.sgApp);
+                textValues.push(topPlayers.includes(d.player) ? d.player : '');
+                textPositions.push(positions[i % positions.length]); // txt positions vary
+                hoverTexts.push(d.player);
+                customData.push(d.player);
             }
 
-            // Create data structure with distance category
-            //      Distance is distance from center of the plot to indicate
-            //      which players to label with their names
-            let playersWithDistances = dataTableData.map((d) => ({
-                player: d.player,
-                sgPutting: d.sgPutting,
-                sgApproach: d.sgApproach,
-                distance: Math.sqrt(d.sgPutt * d.sgPutt + d.sgApp * d.sgApp)
-            }));
-
-            // Sort players by distance in descending order
-            playersWithDistances.sort((a, b) => b.distance - a.distance);
-
-            // Select the top 20 players based on distance
-            let topPlayers = playersWithDistances.slice(0, 20);
-
-            // Extract the sgPutting, sgApproach, and player names for the top players
-            let topPlayerNames = topPlayers.map(d => d.player);
-
-            // Data and data info for plot
-            let trace = {
-                x: sgPutting,
-                y: sgApproach,
+            const trace = {
+                x: xValues,
+                y: yValues,
                 mode: 'markers+text',
                 type: 'scatter',
-                text: playerNames.map(name => topPlayerNames.includes(name) ? name : ''),
-                textposition: improveTextPosition(sgPutting),
-                hovertext: playerNames,
+                text: textValues,
+                textposition: textPositions,
+                hovertext: hoverTexts,
                 hoverinfo: 'text',
                 hovertemplate: 
                     '%{customdata}<br>' +
                     'SG Putt: %{x}<br>' +
                     'SG App: %{y}<br><extra></extra>',
-                customdata: playerNames,
-                marker: {
-                    size: 5,
-                    color: 'blue',
-                }
-            }
-
-            // Layout information for the plot
-            let layout = {
-                title: { text: 'SG: Putt vs. SG: App',
-                },
-                xaxis: { title: 'SG Putting',
-                         range: [Math.min(...sgPutting) - 0.1, Math.max(...sgPutting) + 0.1],
-                 },
-                yaxis: { title: 'SG Approach',
-                         range: [Math.min(...sgApproach) - 0.1, Math.max(...sgApproach) + 0.1],
-                 },
-                margin: {
-                    l: 50,
-                    r: 50,
-                    b: 50,
-                    t: 50,
-                    pad: 10
-                }, 
-                hovermode: 'closest',
+                customdata: customData,
+                marker: { size: 5, color: 'blue' }
             };
-
-            //Plotly.newPlot('quadPlot', [trace, fitLine], layout);
+        
+            // Layout settings
+            const layout = {
+                title: { 
+                    text: '<b>SG: Putt vs. SG: App</b>',
+                    font: {
+                        family: 'Arial, sans-serif',
+                        size: 20
+                    }
+                 },
+                xaxis: { 
+                    title: {
+                        text: '<b>SG Putting</b>',
+                        font: {
+                            family: 'Arial, sans-serif',
+                            size: 14
+                        },
+                    },
+                    range: [Math.min(...trace.x) - 0.5, Math.max(...trace.x) + 0.5]
+                },
+                yaxis: { 
+                    title: {
+                        text: '<b>SG Approach</b>',
+                        font: {
+                            family: 'Arial, sans-serif',
+                            size: 14
+                        },
+                    },
+                    range: [Math.min(...trace.y) - 0.5, Math.max(...trace.y) + 0.5]
+                },
+                margin: { l: 50, r: 50, b: 50, t: 50, pad: 10 },
+                hovermode: 'closest',
+                font: {
+                    family: 'Arial, sans-serif', 
+                    size: 10,  // Default text size
+                    color: '#000000'
+                },
+            };
+        
+            // Create the plot
             Plotly.newPlot('quadPlot', [trace], layout);
-        }
+        }        
 
-        // Initializes Cheat Sheet and plot
+        // Initializes cheat sheet and quad plot
         function initializeCheatSheet() {
+
+            // clear cheat sheet if needed
             if (isTrendSheetInitialized) {
                 clearCheatSheetContent();
             }
@@ -1969,15 +1928,12 @@ function loadTrendsSheet() {
                     cellStyle: globalCellStyle,
                 })),
                 rowData: dataTableData,
-                suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
+                suppressColumnVirtualisation: true,
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
-                    params.api.autoSizeAllColumns();
-                    params.api.setColumnWidth('sgHeat', 80);
                 },
                 getRowHeight: function(params) {
-                    // return the desired row height in pixels
-                    return 25; // adjust this value based on your preference
+                    return 25;
                 },
                 headerHeight: 30,
             };
@@ -1995,7 +1951,7 @@ function loadTrendsSheet() {
     });
 }
 
-// Filters trends table
+// Trend sheet search box onChange
 function onFilterTextBoxChangedTrend() {
     gridApiTrends.setGridOption(
       'quickFilterText',
