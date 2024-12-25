@@ -392,8 +392,19 @@ function getRecentHistory(tournamentRow, player) {
     return recentHistory;
 }
 
+function changeCellFormat() {
+    let cellFormatStyle = document.getElementById('selectColorDrop');
+
+    if(colDefHolder != null) {
+
+    }
+}
+
+let colDefHolder = null;
+
 function loadCheatSheet() {
     let lastNRounds = document.getElementById('lastNRounds');
+    let cellFormatStyle = document.getElementById('selectColorDrop');
 
     let url = '/get/cheatSheet/';
 
@@ -603,48 +614,30 @@ function loadCheatSheet() {
             },
         ];
 
-        // Calculate min, mid, and max values for each column
-        const columnMinMaxValues = {};
-        for (let i = 0; i < columnDefs.length; i++) {
-            const column = columnDefs[i];
+        colDefHolder = columnDefs;
 
-            if (column.children) {
-                // If it's a column group, iterate over its children
-                for (let j = 0; j < column.children.length; j++) {
-                    const childColumn = column.children[j];
-                    const fieldName = childColumn.field;
-                    const values = dataTableData.map(row => row[fieldName]);
-                    const sortedValues = [...values].sort((a, b) => a - b);
-                    const filteredValues = values.filter(value => value !== null && value !== 0);
-
-                    const minValue = filteredValues.length > 0 ? Math.min(...filteredValues) : 0;
-                    const maxValue = Math.max(...values);
-
-                    const midIndex = Math.floor(sortedValues.length / 2);
-                    const midValue = sortedValues.length % 2 === 0
-                        ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
-                        : sortedValues[midIndex];
-
-                    columnMinMaxValues[fieldName] = { minValue, midValue, maxValue };
-                }
-            } else {
-                // If it's an individual column
-                const fieldName = column.field;
-                const values = dataTableData.map(row => row[fieldName]);
-                const sortedValues = [...values].sort((a, b) => a - b);
-                const filteredValues = values.filter(value => value !== null && value !== 0);
-
-                const minValue = filteredValues.length > 0 ? Math.min(...filteredValues) : 0;
-                const maxValue = Math.max(...values);
-
-                const midIndex = Math.floor(sortedValues.length / 2);
-                const midValue = sortedValues.length % 2 === 0
-                    ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
-                    : sortedValues[midIndex];
-
-                columnMinMaxValues[fieldName] = { minValue, midValue, maxValue };
+        function calculateQuantiles(values) {
+            const filteredValues = values.filter(value => value !== null).sort((a, b) => a - b);
+            if (!filteredValues.length) return {};
+        
+            const quantiles = [0.25, 0.5, 0.75, 1];
+            const result = {};
+        
+            for (const q of quantiles) {
+                const index = Math.floor(q * (filteredValues.length - 1));
+                result[q] = filteredValues[index];
             }
+        
+            return result;
         }
+
+        // List of columns for which to apply the color scale
+        const columnsWithColorScale = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot',
+            'sgPuttPGA', 'sgArgPGA', 'sgAppPGA', 'sgOttPGA', 'sgT2GPGA', 'sgTotPGA',
+            'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75', 'app75_100',
+            'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bob',
+            'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
+            'puttingBob', 'threePuttAvd', 'bonusPutt'];
 
         // List of columns where you want to reverse the color scale
         const columnsWithReversedColorScale = ['app50_75','app75_100',
@@ -652,54 +645,72 @@ function loadCheatSheet() {
         'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd'];
 
         // Define the color scale for each column based on the calculated values
-        const colorScales = {};
-        for (let i = 0; i < columnDefs.length; i++) {
-            const column = columnDefs[i];
+        const colorScales = makeColorScales(dataTableData, columnsWithColorScale, columnsWithReversedColorScale);
 
-            if (column.children) {
-                // If it's a column group, iterate over its children
-                for (let j = 0; j < column.children.length; j++) {
-                    const childColumn = column.children[j];
-                    const fieldName = childColumn.field;
-                    const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
-
-                    const colorScale = d3.scaleLinear()
-                        .domain([minValue, midValue, maxValue]);
-
-                    if (columnsWithReversedColorScale.includes(fieldName)) {
-                        colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
-                    } else {
-                        colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
-                    }
-
-                    colorScales[fieldName] = colorScale;
-                }
+        // Formats cells with quantile emojis
+        function emojiCellRenderer(params, quantiles) {
+            const { value, colDef } = params;
+            if (value === null) return '';
+        
+            const columnName = colDef.field;
+        
+            let emoji;
+            if (columnsWithReversedColorScale.includes(columnName)) {
+                if (value < quantiles[0.25]) emoji = '🟢';
+                else if (value < quantiles[0.5]) emoji = '🟡';
+                else if (value < quantiles[0.75]) emoji = '🟠';
+                else emoji = '🚩';
             } else {
-                // If it's an individual column
-                const fieldName = column.field;
-                const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
+                if (value < quantiles[0.25]) emoji = '🚩';
+                else if (value < quantiles[0.5]) emoji = '🟠';
+                else if (value < quantiles[0.75]) emoji = '🟡';
+                else emoji = '🟢';
+            }
+        
+            return `<span title="${value}">${emoji} ${value}</span>`;
+        }
 
-                const colorScale = d3.scaleLinear()
-                    .domain([minValue, midValue, maxValue]);
-
-                if (columnsWithReversedColorScale.includes(fieldName)) {
-                    colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
-                } else {
-                    colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
+        // Clears emoji's from cells
+        function clearEmojis(colDefs) {
+            colDefs.forEach((group) => {
+                if (group.children) {
+                    group.children.forEach((column) => {
+                        column.cellRenderer = (params) => {
+                            if(params.value != null) {
+                                return `<span>${params.value}</span>`; // Render just the value without emoji
+                            } else {
+                                return `<span></span>`;
+                            }
+                        };
+                    });
                 }
+            });
+        }
 
-                colorScales[fieldName] = colorScale;
+        // Registers emoji formatting if flag format is specified
+        function registerEmojiFlags(colDefs = columnDefs) {
+            clearEmojis(colDefs);
+            if(cellFormatStyle.value == "flags") {
+                colDefs.forEach((group) => {
+                    if (group.children) {
+                        group.children.forEach((column) => {
+                            const columnName = column.field;
+                            
+                            if (columnsWithColorScale.includes(columnName) || columnsWithReversedColorScale.includes(columnName)) {
+                                // Calculate quantiles for the current column
+                                const columnQuantiles = calculateQuantiles(dataTableData.map(row => row[columnName]));
+                
+                                // Apply emojiCellRenderer to the current column
+                                column.cellRenderer = (params) => emojiCellRenderer(params, columnQuantiles, columnsWithReversedColorScale);
+                            }
+                        });
+                    }
+                });
             }
         }
 
-        // List of columns for which to apply the color scale
-        const columnsWithColorScale = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot',
-                                        'sgPuttPGA', 'sgArgPGA', 'sgAppPGA', 'sgOttPGA', 'sgT2GPGA', 'sgTotPGA',
-                                        'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75', 'app75_100',
-                                        'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bob',
-                                        'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
-                                        'puttingBob', 'threePuttAvd', 'bonusPutt'];
-        
+        registerEmojiFlags();
+
         // Sets styling & coloring for cheat sheet cells
         function globalCellStyle(params) {
             const fieldName = params.colDef.field;
@@ -711,7 +722,7 @@ function loadCheatSheet() {
             }
         
             // Check if the column is in the list and the value is numeric before applying the color scale
-            if (columnsWithColorScale.includes(fieldName) && !isNaN(numericValue) && isFinite(numericValue)) {
+            if (columnsWithColorScale.includes(fieldName) && !isNaN(numericValue) && isFinite(numericValue) && cellFormatStyle.value == "colorScales") {
                 const cellColor = colorScales[fieldName](numericValue);
                 return { backgroundColor: cellColor };
             }
@@ -722,53 +733,56 @@ function loadCheatSheet() {
 
         // Clear content of cheat sheet
         function clearCheatSheetContent() {
-            /*
-                Clears the content of the cheatSheet.
-            */
             const cheatSheet = document.getElementById('cheatSheet');
             if (cheatSheet) {
-                cheatSheet.innerHTML = ''; // Clear content
+                cheatSheet.innerHTML = '';
             }
         }
 
-        function initializeCheatSheet() {
-            /*
-                clears cheat sheet if already initialized
+        // Sets custom column widths
+        function getColumnWidth(field) {
+            salary = ['fdSalary', 'dkSalary'];
 
-                builds up grid options - specifies column defs, row data,...
-                
-                creates the grid and puts it in #cheatSheet
-            */
-            console.log('init');
+            recentHist = ['recent1', 'recent2', 'recent3', 'recent4', 'recent5',
+                'recent6', 'recent7', 'recent8', 'recent9', 'recent10'];
+            
+            courseHist = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];    
+            
+            if(field == 'player'){
+                return 180;
+            } else if(salary.includes(field)) {
+                return 78;
+            } else if(recentHist.includes(field)) {
+                return 65;
+            } else if(courseHist.includes(field)) {
+                return 55;
+            } else { // DEFAULT
+                return 70;
+            }
+        }
+
+        let gridApi;
+        let currColDefs = null;
+
+        // Set Cell Format Style onChange
+        if(cellFormatStyle) {
+            cellFormatStyle.addEventListener('change', function() {
+                cellFormatStyle = document.getElementById('selectColorDrop');
+                currColDefs = gridApi.getColumnDefs();
+                registerEmojiFlags(currColDefs);
+                initializeCheatSheet(currColDefs);
+            });
+        }
+
+        function initializeCheatSheet(colDef = columnDefs) {
+            // Clear cheat sheet if initialized
             if (isCheatSheetInitialized) {
                 clearCheatSheetContent();
-            }
-
-            // Sets custom column widths
-            function getColumnWidth(field) {
-                salary = ['fdSalary', 'dkSalary'];
-
-                recentHist = ['recent1', 'recent2', 'recent3', 'recent4', 'recent5',
-                    'recent6', 'recent7', 'recent8', 'recent9', 'recent10'];
-                
-                courseHist = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];    
-                
-                if(field == 'player'){
-                    return 180;
-                } else if(salary.includes(field)) {
-                    return 78;
-                } else if(recentHist.includes(field)) {
-                    return 65;
-                } else if(courseHist.includes(field)) {
-                    return 55;
-                } else { // DEFAULT
-                    return 65;
-                }
             }
     
             // setup grid options
             const gridOptions = {
-                columnDefs: columnDefs.map(column => ({
+                columnDefs: colDef.map(column => ({
                     ...column,
                     cellStyle: globalCellStyle,
                     children: column.children ? column.children.map(child => ({
@@ -781,7 +795,7 @@ function loadCheatSheet() {
                 suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
-                    setupColumnVisibilityDropdown(columnDefs);
+                    setupColumnVisibilityDropdown(colDef);
                 },
                 getRowHeight: function(params) {
                     // return the desired row height in pixels
@@ -789,8 +803,6 @@ function loadCheatSheet() {
                 },
                 headerHeight: 30,
             };
-
-            console.log('Column Definitions:', gridOptions.columnDefs);
     
             // Create the grid using createGrid
             gridApi = agGrid.createGrid(document.querySelector('#cheatSheet'), gridOptions);
@@ -923,9 +935,7 @@ function loadCheatSheet() {
             const applyButton = document.getElementById('applyColVisCS');
 
             if (checkboxContainer && applyButton) {
-                console.log('in if');
                 const isExpanded = checkboxContainer.style.height === 'auto' || checkboxContainer.style.height === '150px';
-                console.log('is expanded', isExpanded);
                 checkboxContainer.style.height = isExpanded ? '0' : '150px';
                 checkboxContainer.style.overflowY = isExpanded ? 'hidden' : 'auto';
                 applyButton.style.display = isExpanded ? 'none' : 'inline-block';
@@ -1402,6 +1412,55 @@ function loadPlayerListGp(){
     });
 }
 
+// Helper function to get the median of an array
+function getMedian(arr) {
+    const sorted = arr.map(parseFloat).sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+// Makes dict of color scales for specified colsWithColors
+function makeColorScales(dataTableData, colsWithColors, colsWithRevColors) {
+    const columnData = {};
+    colsWithColors.forEach(col => columnData[col] = []);
+
+    // Place Data for each column in columnData
+    dataTableData.forEach(player => {
+        colsWithColors.forEach(col => {
+            if(player[col] != null) {
+                columnData[col].push(player[col]);
+            }
+        });
+    });
+
+    // Store min, median, max for each column
+    const colMinMax = {};
+    colsWithColors.forEach(col => {
+        const values = columnData[col];
+        colMinMax[col] = {
+            minValue: Math.min(...values),
+            midValue: getMedian(values),
+            maxValue: Math.max(...values),
+        };
+    });
+
+    // Hold color scales for each column
+    const colorScales = {};
+    colsWithColors.forEach(col => {
+        const { minValue, midValue, maxValue } = colMinMax[col];
+        colorScales[col] = d3.scaleLinear()
+            .domain([minValue, midValue, maxValue])
+        
+        if(colsWithRevColors.includes(col)){
+            colorScales[col].range(['#4579F1', '#FFFFFF', '#F83E3E']);
+        } else {
+            colorScales[col].range(['#F83E3E', '#FFFFFF', '#4579F1']);
+        }
+            
+    });
+
+    return colorScales;
+}
 
 let isFloorCeilingInitialized = false;
 let gridApiFloorCeiling;
@@ -1492,52 +1551,13 @@ function loadFloorCeilingSheet() {
             dataTableData.push(finalData);
         }
 
-        // Helper function to get the median of an array
-        function getMedian(arr) {
-            const sorted = arr.map(parseFloat).sort((a, b) => a - b);
-            const mid = Math.floor(sorted.length / 2);
-            return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-        }
-
-        // COLUMN COLOR FORMATTING --
-        
-        const columns = ['sg0Plus', 'sg1Plus', 'sg2Plus', 'sg3Plus', 'sg4Plus', 'sg5Plus'];
-
-        // columnData: Dictionary of arrays of data for each column category
-        const columnData = {};
-        columns.forEach(col => columnData[col] = []);
-
-        dataTableData.forEach(player => {
-            columns.forEach(col => {
-                if(player[col] != null) {
-                    columnData[col].push(player[col]);
-                }
-            });
-        });
-
-        // Store min, median, max for each column
-        const colMinMax = {};
-        columns.forEach(col => {
-            const values = columnData[col];
-            colMinMax[col] = {
-                minValue: Math.min(...values),
-                midValue: getMedian(values),
-                maxValue: Math.max(...values),
-            };
-        });
-
-        // Hold color scales for each column
-        const colorScales = {};
-        columns.forEach(col => {
-            const { minValue, midValue, maxValue } = colMinMax[col];
-            colorScales[col] = d3.scaleLinear()
-                .domain([minValue, midValue, maxValue])
-                .range(['#F83E3E', '#FFFFFF', '#4579F1'])
-        });
-
         // Specify columns with color scale
         const columnsWithColorScale = ['sg0Plus', 'sg1Plus', 'sg2Plus', 'sg3Plus',
                                         'sg4Plus', 'sg5Plus'];
+        
+        const columnsWithRevColorScale = [];
+
+        const colorScales = makeColorScales(dataTableData, columnsWithColorScale, columnsWithRevColorScale);
 
         // Set global cell style (includes color scale specification)
         function globalCellStyle(params){
@@ -1651,7 +1671,6 @@ function loadTrendsSheet() {
 
         // Returns dict of average for sg cats for last numRounds
         function averageSgCats(numRounds, jsonData, player) {
-
             // playerRounds: array of last N rounds for player
             let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
             .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
@@ -1740,52 +1759,13 @@ function loadTrendsSheet() {
             {headerName: 'Base Rds', field: 'baseRds', width: 70},
         ];
 
-        // SETUP COLOR SCALES --
-
-        // Helper function to get the median of an array
-        function getMedian(arr) {
-            const sorted = arr.map(parseFloat).sort((a, b) => a - b);
-            const mid = Math.floor(sorted.length / 2);
-            return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-        }
-
-        const columns = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgHeat'];
-
-        // columnData: Dictionary of arrays of data for each column category
-        const columnData = {};
-        columns.forEach(col => columnData[col] = []);
-
-        dataTableData.forEach(player => {
-            columns.forEach(col => {
-                if(player[col] != null) {
-                    columnData[col].push(player[col]);
-                }
-            });
-        });
-
-        // Store min, median, max for each column
-        const colMinMax = {};
-        columns.forEach(col => {
-            const values = columnData[col];
-            colMinMax[col] = {
-                minValue: Math.min(...values),
-                midValue: getMedian(values),
-                maxValue: Math.max(...values),
-            };
-        });
-
-        // Hold color scales for each column
-        const colorScales = {};
-        columns.forEach(col => {
-            const { minValue, midValue, maxValue } = colMinMax[col];
-            colorScales[col] = d3.scaleLinear()
-                .domain([minValue, midValue, maxValue])
-                .range(['#F83E3E', '#FFFFFF', '#4579F1'])
-        });
-
         // Specify columns with a color scale
         const columnsWithColorScale = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt',
                                         'sgHeat'];
+
+        const columnsWithRevColorScale = [];
+
+        const colorScales = makeColorScales(dataTableData, columnsWithColorScale, columnsWithRevColorScale);
 
         // Set global cell style for table (includes color scales)
         function globalCellStyle(params){
@@ -1959,6 +1939,8 @@ function onFilterTextBoxChangedTrend() {
     );
 }
 
+
+// REMOVE flag sheet (implemented into cheat sheet)
 let isFlagSheetInitialized = false;
 let gridApiFlag;
 

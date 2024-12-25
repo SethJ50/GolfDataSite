@@ -354,6 +354,7 @@ tr.profBodyRow:hover {
 
 .ag-theme-quartz .ag-cell {
   border-right: 1px solid #ccc; /* Adjust color and thickness as needed */
+  padding: 1px;
 }
 
 /* Custom styles for DataTables Buttons */
@@ -387,6 +388,10 @@ div.dt-button-collection {
   #cheatSheet .ag-row-hover {
     filter: brightness(0.7);
   }
+
+#overallStatsProfile .ag-row:hover {
+    filter: brightness(0.7);
+}
 
 #filterContainer {
     display: flex;
@@ -456,8 +461,18 @@ div.dt-button-collection {
     display: inline-block;
 }
 
+#colorFormatAreaCS {
+    margin-left: 5px;
+}
+
 #innerRoundNumCS {
     display: inline-block;
+}
+
+#selectColorDrop {
+    display: inline-block;
+    width: 100px;
+    height: 21px;
 }
 
 #trendsDiv {
@@ -519,6 +534,15 @@ div.dt-button-collection {
 }
 
 #filterContainerTR {
+    display: flex;
+    flex-direction: row;
+    width: 900px;
+    height: fit-content;
+    padding-left: 10px;
+    margin-bottom: 10px;
+}
+
+#filterContainerFC {
     display: flex;
     position: relative;
     width: 900px;
@@ -744,10 +768,11 @@ div.dt-button-collection {
 #filterContainerCM {
     display: flex;
     position: relative;
-    width: 1000px;
+    width: 900px;
+    height: fit-content;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 15px;
+    padding-left: 10px;
     margin-bottom: 10px;
     margin-top: 10px;
 }
