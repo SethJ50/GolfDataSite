@@ -352,9 +352,13 @@ tr.profBodyRow:hover {
   border-right: 1px solid #ccc; /* Adjust color and thickness as needed */
 }
 
-.ag-theme-quartz .ag-cell {
-  border-right: 1px solid #ccc; /* Adjust color and thickness as needed */
+#cheatSheet.ag-theme-quartz .ag-cell {
   padding: 1px;
+}
+
+.ag-theme-quartz .ag-cell {
+    border-right: 1px solid #ccc; /* Adjust color and thickness as needed */
+    text-align: center;
 }
 
 /* Custom styles for DataTables Buttons */

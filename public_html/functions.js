@@ -693,6 +693,7 @@ function loadCheatSheet() {
                             const columnName = column.field;
                             
                             if (columnsWithColorScale.includes(columnName) || columnsWithReversedColorScale.includes(columnName)) {
+                                
                                 // Calculate quantiles for the current column
                                 const columnQuantiles = calculateQuantiles(dataTableData.map(row => row[columnName]));
                 
@@ -720,7 +721,7 @@ function loadCheatSheet() {
             // Check if the column is in the list and the value is numeric before applying the color scale
             if (columnsWithColorScale.includes(fieldName) && !isNaN(numericValue) && isFinite(numericValue) && cellFormatStyle.value == "colorScales") {
                 const cellColor = colorScales[fieldName](numericValue);
-                return { backgroundColor: cellColor };
+                return { backgroundColor: cellColor};
             }
         
             // Return default style if the column is not in the list or the value is not numeric
@@ -1285,11 +1286,12 @@ function loadProfOverview(){
 
                     return {
                         fontSize: '12px',
-                        paddingLeft: "7px",
+                        padding: '1px',
+                        textAlign: 'center',
                         backgroundColor: col
                     }
                 }},
-            { headerName: "Rank", field: "rank", width: 58, cellStyle: {textAlign: 'left', fontSize: '12px', paddingLeft: "7px"}}
+            { headerName: "Rank", field: "rank", width: 58, cellStyle: {textAlign: 'center', fontSize: '12px', padding: '1px'}}
         ]
 
         const rowData = [];
@@ -1943,75 +1945,35 @@ let savedData;
 function loadModelResults() {
 
     // Grab all custom model inputs:
+    const ids = ['sgPuttPGAinput', 'sgAppPGAinput', 'sgT2GPGAinput', 'sgArgPGAinput', 'sgOttPGAinput',
+        'sgTotPGAinput', 'sgPutt12input', 'sgApp12input', 'sgT2G12input', 'sgArg12input', 'sgOtt12input', 'sgTot12input',
+        'sgPutt24input', 'sgApp24input', 'sgT2G24input', 'sgArg24input', 'sgOtt24input', 'sgTot24input',
+        'sgPutt36input', 'sgApp36input', 'sgT2G36input', 'sgArg36input', 'sgOtt36input', 'sgTot36input',
+        'sgPutt50input', 'sgApp50input', 'sgT2G50input', 'sgArg50input', 'sgOtt50input', 'sgTot50input',
+        'drDist', 'bob', 'sandSave', 'par3scoring', 'par5scoring', 'prox', 'app50_75', 'app100_125', 
+        'app150_175', 'app200_up', 'bonusPutt', 'drAcc', 'bogAvd', 'scrambling', 'par4scoring', 
+        'gir', 'roughProx', 'app75_100', 'app125_150', 'app175_200', 'puttingBob', 'threePuttAvd', 
+        'easyField', 'mediumField', 'hardField', 'courseHistory'
+    ];
 
-    // PGA Tour SG Stats
-    let sgPuttPGAinput = document.getElementById('sgPuttPGAinput').value;
-    let sgAppPGAinput = document.getElementById('sgAppPGAinput').value;
-    let sgT2GPGAinput = document.getElementById('sgT2GPGAinput').value;
-    let sgArgPGAinput = document.getElementById('sgArgPGAinput').value;
-    let sgOttPGAinput = document.getElementById('sgOttPGAinput').value;
-    let sgTotPGAinput = document.getElementById('sgTotPGAinput').value;
-
-    // SG Last 12 Rds
-    let sgPutt12input = document.getElementById('sgPutt12input').value;
-    let sgApp12input = document.getElementById('sgApp12input').value;
-    let sgT2G12input = document.getElementById('sgT2G12input').value;
-    let sgArg12input = document.getElementById('sgArg12input').value;
-    let sgOtt12input = document.getElementById('sgOtt12input').value;
-    let sgTot12input = document.getElementById('sgTot12input').value;
-
-    // SG Last 24 Rds
-    let sgPutt24input = document.getElementById('sgPutt24input').value;
-    let sgApp24input = document.getElementById('sgApp24input').value;
-    let sgT2G24input = document.getElementById('sgT2G24input').value;
-    let sgArg24input = document.getElementById('sgArg24input').value;
-    let sgOtt24input = document.getElementById('sgOtt24input').value;
-    let sgTot24input = document.getElementById('sgTot24input').value;
-
-    // SG Last 36 Rds
-    let sgPutt36input = document.getElementById('sgPutt36input').value;
-    let sgApp36input = document.getElementById('sgApp36input').value;
-    let sgT2G36input = document.getElementById('sgT2G36input').value;
-    let sgArg36input = document.getElementById('sgArg36input').value;
-    let sgOtt36input = document.getElementById('sgOtt36input').value;
-    let sgTot36input = document.getElementById('sgTot36input').value;
-
-    // SG Last 50 Rds
-    let sgPutt50input = document.getElementById('sgPutt50input').value;
-    let sgApp50input = document.getElementById('sgApp50input').value;
-    let sgT2G50input = document.getElementById('sgT2G50input').value;
-    let sgArg50input = document.getElementById('sgArg50input').value;
-    let sgOtt50input = document.getElementById('sgOtt50input').value;
-    let sgTot50input = document.getElementById('sgTot50input').value;
-
-    // Other Stats
-    let drDist = document.getElementById('drDist').value;
-    let bob = document.getElementById('bob').value;
-    let sandSave = document.getElementById('sandSave').value;
-    let par3scoring = document.getElementById('par3scoring').value;
-    let par5scoring = document.getElementById('par5scoring').value;
-    let prox = document.getElementById('prox').value;
-    let app50_75 = document.getElementById('app50_75').value;
-    let app100_125 = document.getElementById('app100_125').value;
-    let app150_175 = document.getElementById('app150_175').value;
-    let app200_up = document.getElementById('app200_up').value;
-    let bonusPutt = document.getElementById('bonusPutt').value;
-    let drAcc = document.getElementById('drAcc').value;
-    let bogAvd = document.getElementById('bogAvd').value;
-    let scrambling = document.getElementById('scrambling').value;
-    let par4scoring = document.getElementById('par4scoring').value;
-    let gir = document.getElementById('gir').value;
-    let roughProx = document.getElementById('roughProx').value;
-    let app75_100 = document.getElementById('app75_100').value;
-    let app125_150 = document.getElementById('app125_150').value;
-    let app175_200 = document.getElementById('app175_200').value;
-    let puttingBob = document.getElementById('puttingBob').value;
-    let threePuttAvd = document.getElementById('threePuttAvd').value;
-    let easyField = document.getElementById('easyField').value;
-    let mediumField = document.getElementById('mediumField').value;
-    let hardField = document.getElementById('hardField').value;
-    let courseHistoryInput = document.getElementById('courseHistory').value;
-
+    // Create dictionary of inputs
+    const weights = {};
+    for(let i = 0; i < ids.length; i++) {
+        let key = ids[i];
+        let value = document.getElementById(key).value;
+        if(key.endsWith('input')) {
+            key = key.slice(0, -5);
+        } else if(key == 'easyField') {
+            key = 'sgEasy';
+        } else if(key == 'mediumField') {
+            key = 'sgMed';
+        } else if(key == 'hardField') {
+            key = 'sgHard';
+        } else if(key == 'courseHistory') {
+            key = 'chAvg';
+        }
+        weights[key] = value;
+    }
 
     let url = '/get/modelSheet/';
 
@@ -2020,22 +1982,19 @@ function loadModelResults() {
         return response.json();
     })
     .then((jsonData) =>{
-        // X - START
-        console.log('jsonData: ', jsonData);
-
         // Ensure that all parts of the jsonData are there.
         if (!jsonData.salaries || !jsonData.pgatour || !jsonData.courseHistory || !jsonData.tournamentRow || !jsonData.fieldStrength) {
             console.log('Invalid data format. Expected "salaries", "pgatour", "courseHistory","tournamentRow", and "fieldStrength" properties.');
             return;
         }
 
-        console.log('field strength', jsonData.fieldStrength);
-
         // For each salary row (essentially for each player)
-        let dataTableData = jsonData.salaries.map((salary) => {
-            let player = salary.player;
-            let fdSalary = salary.fdSalary;
-            let dkSalary = salary.dkSalary;
+        let dataTableData = [];
+        for(let i = 0; i < jsonData.salaries.length; i++) {
+            const salary = jsonData.salaries[i];
+            const player = salary.player;
+            const fdSalary = salary.fdSalary;
+            const dkSalary = salary.dkSalary;
 
             // SG: PGATOUR.COM
             // Grab player's pgatour data
@@ -2051,369 +2010,216 @@ function loadModelResults() {
                 courseHistoryData = Object.fromEntries(courseHistoryKeys.map(key => [key, null]));
             }
 
-
+            // SG LAST N ROUNDS
             // Calculate averages for all sg categories for num round buckets!
+            function averageSgCats(numRounds, jsonData, player) {
+                // playerRounds: array of last N rounds for player
+                let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
+                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+                .slice(0, numRounds);
+    
+                // Get average of each sg category over last N rounds
+                let avgRoundData = {};
+                avgRoundData['baseRds'] = playerRounds.length;
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                if(playerRounds.length > 0) {
+                    for(let i = 0; i < columnsToAverage.length; i++) {
+                        let col = columnsToAverage[i];
+                        let sum = 0;
+                        for(let j = 0; j < playerRounds.length; j++) {
+                            sum += playerRounds[j][col];
+                        }
+                        let averageValue = sum / playerRounds.length;
+                        avgRoundData[col] = Number(averageValue.toFixed(2));
+                    }
+                } else {
+                    // Default values to null
+                    for(let i = 0; i < columnsToAverage.length; i++) {
+                        avgRoundData[columnsToAverage[i]] = null;
+                    }
+                }
+    
+                return avgRoundData;
+            }
 
             // SG: LAST 12 ROUNDS
-            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
-            let playerRounds12 = jsonData.tournamentRow.filter((round) => round.player === player)
-                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, 12); // Grab at most the specified number of rounds
-
-            // Calculate the average of specific columns for the player's rounds
-            let avgRoundData12 = {};
-
-            if (playerRounds12.length > 0 ) { // can change to ensure minimum # rounds for calc
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    let averageValue = playerRounds12.reduce((sum, round) => sum + round[col], 0) / playerRounds12.length;
-                    avgRoundData12[`${col}12`] = Number(averageValue.toFixed(2));
-                });
-            } else { // Set values to null if no rounds are found
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    avgRoundData12[`${col}12`] = null;
-                });
+            let avgRoundData12 = averageSgCats(12, jsonData, player);
+            let updatedAvgRoundData12 = {};
+            for (let key in avgRoundData12) {
+                if (avgRoundData12.hasOwnProperty(key)) {
+                    updatedAvgRoundData12[key + '12'] = avgRoundData12[key];
+                }
             }
+            avgRoundData12 = updatedAvgRoundData12;
 
             // SG: LAST 24 ROUNDS
-            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
-            let playerRounds24 = jsonData.tournamentRow.filter((round) => round.player === player)
-                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, 24); // Grab at most the specified number of rounds
-
-            // Calculate the average of specific columns for the player's rounds
-            let avgRoundData24 = {};
-
-            if (playerRounds24.length > 0 ) { // can change to ensure minimum # rounds for calc
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    let averageValue = playerRounds24.reduce((sum, round) => sum + round[col], 0) / playerRounds24.length;
-                    avgRoundData24[`${col}24`] = Number(averageValue.toFixed(2));
-                });
-            } else { // Set values to null if no rounds are found
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    avgRoundData24[`${col}24`] = null;
-                });
+            let avgRoundData24 = averageSgCats(24, jsonData, player);
+            let updatedAvgRoundData24 = {};
+            for (let key in avgRoundData24) {
+                if (avgRoundData24.hasOwnProperty(key)) {
+                    updatedAvgRoundData24[key + '24'] = avgRoundData24[key];
+                }
             }
+            avgRoundData24 = updatedAvgRoundData24;
 
             // SG: LAST 36 ROUNDS
-            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
-            let playerRounds36 = jsonData.tournamentRow.filter((round) => round.player === player)
-                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, 36); // Grab at most the specified number of rounds
-
-            // Calculate the average of specific columns for the player's rounds
-            let avgRoundData36 = {};
-
-            if (playerRounds36.length > 0 ) { // can change to ensure minimum # rounds for calc
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    let averageValue = playerRounds36.reduce((sum, round) => sum + round[col], 0) / playerRounds36.length;
-                    avgRoundData36[`${col}36`] = Number(averageValue.toFixed(2));
-                });
-            } else { // Set values to null if no rounds are found
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    avgRoundData36[`${col}36`] = null;
-                });
+            let avgRoundData36 = averageSgCats(36, jsonData, player);
+            let updatedAvgRoundData36 = {};
+            for (let key in avgRoundData36) {
+                if (avgRoundData36.hasOwnProperty(key)) {
+                    updatedAvgRoundData36[key + '36'] = avgRoundData36[key];
+                }
             }
+            avgRoundData36 = updatedAvgRoundData36;
 
             // SG: LAST 50 ROUNDS
-            // Find all rounds for player in tournamentRow, order by 'dates' and 'Round' in descending order
-            let playerRounds50 = jsonData.tournamentRow.filter((round) => round.player === player)
-                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
-                .slice(0, 50); // Grab at most the specified number of rounds
-
-            // Calculate the average of specific columns for the player's rounds
-            let avgRoundData50 = {};
-
-            if (playerRounds50.length > 0 ) { // can change to ensure minimum # rounds for calc
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    let averageValue = playerRounds50.reduce((sum, round) => sum + round[col], 0) / playerRounds50.length;
-                    avgRoundData50[`${col}50`] = Number(averageValue.toFixed(2));
-                });
-            } else { // Set values to null if no rounds are found
-                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
-                columnsToAverage.forEach((col) => {
-                    avgRoundData50[`${col}50`] = null;
-                });
+            let avgRoundData50 = averageSgCats(50, jsonData, player);
+            let updatedAvgRoundData50 = {};
+            for (let key in avgRoundData50) {
+                if (avgRoundData50.hasOwnProperty(key)) {
+                    updatedAvgRoundData50[key + '50'] = avgRoundData50[key];
+                }
             }
+            avgRoundData36 = updatedAvgRoundData36;
 
             // RECENT HISTORY - get most recent 10 rounds for Player
-            //    TODO - I don't think I need abbreviation stuff here...
-            // Step 1: Sort tournamentRow Data in descending order by 'dates'
-            let sortedTournamentRow = jsonData.tournamentRow.sort((a, b) => new Date(b.dates) - new Date(a.dates));
+            let tournamentAbbreviations = makeTournAbbrv(jsonData);
+            let recentHistory = getRecentHistory(jsonData.tournamentRow, player);
 
-            // Step 2: Identify the 10 most recent tournaments
-            recentTournaments = Array.from(new Set(sortedTournamentRow.map(entry => entry.tournament))).slice(0, 10);
-
-            // Step 3: Create Abbreviations for Tournament Names
-            tournamentAbbreviations = recentTournaments.reduce((abbreviations, tournament, index) => {
-                // Split the tournament name into words
-                const words = tournament.split(' ');
-            
-                // Take the first 3 letters of the first word
-                let abbreviation = words[0].substring(0, 3);
-            
-                // Add the first letter of the remaining words, up to a total of 5 letters
-                abbreviation += words.slice(1).map(word => word[0]).join('').substring(0, 2);
-            
-                abbreviations[`recent${index + 1}`] = abbreviation.toUpperCase(); // Adjust the abbreviation logic as needed
-            
-                return abbreviations;
-            }, {});
-
-            // Ensure tournamentAbbreviations is of length 10
-            for (let index = 1; Object.keys(tournamentAbbreviations).length < 10; index++) {
-                let defaultAbbreviation = `Default${index}`;
-                let currentKey = `recent${index}`;
-
-                // Add default names only if the key doesn't already exist
-                if (!tournamentAbbreviations[currentKey]) {
-                    tournamentAbbreviations[currentKey] = defaultAbbreviation;
-                }
-            }
-
-            // Step 4: Compile Recent History Data for Player
-            /*
-                For each recent tournament, search thru sortedTournamentRow, find all entries where the entry has the
-                current player and the tournament is the current tournament.
-
-                If entry was found, return the finish from the entry, otherwise return null.
-            */
-            let recentHistory = recentTournaments.map(tournament => {
-                let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
-                return entry ? entry.finish : null;
-            });
-
-            // If recentHistory does not have 10 entries, fill it with null.
-            while (recentHistory.length < 10) {
-                recentHistory.push(null);
-            }
-
-            /*
-                Step 5: Generate Finish Data for Recent Tournaments with Abbreviations
-
-                reduce iterates over each 'tournament' in recent tournaments
-
-                'finishData' is what 'accumulates' or gains data over iteration
-
-                'tournament' is the current element in the array
-
-                'index' is the current index in the array
-
-                Finds a tournament in sorted tournament matching current tournament and player
-                Gets the abbreviation for this tournament
-                adds to 'finishData' the finish if an entry is found, otherwise null
-                returns this 'finishData'
-            */
-            let recentFinishData = recentTournaments.reduce((finishData, tournament, index) => {
-                let entry = sortedTournamentRow.find(entry => entry.player === player && entry.tournament === tournament);
-                let abbreviation = tournamentAbbreviations[`recent${index + 1}`]; // Get the abbreviation for the current tournament
-                finishData[abbreviation] = entry ? entry.finish : null; // Use abbreviation as column name
-
-                // Set null if the player has no data for the current tournament
-                if (!entry) {
-                    recentHistory[index] = null;
-                }
-
-                return finishData;
-            }, {});
-
-           // Step 6: Figure out average SG on easyField, mediumField, hard field for player...
-           let fieldStrengthData;
+           // FIELD STRENGTH PERFORMANCE
+           let fieldStrengthData = {};
            let playerTournamentData = jsonData.tournamentRow.filter((round) => round.player === player);
 
-           let sgEasyTotal = 0;
-           let sgEasyNum = 0;
-           let sgEasyAvg;
-           let sgMedTotal = 0;
-           let sgMedNum = 0;
-           let sgMedAvg;
-           let sgHardTotal = 0;
-           let sgHardNum = 0;
-           let sgHardAvg;
-
-           for(let i = 0; i < playerTournamentData.length; i++){
-                let currRow = playerTournamentData[i];
-                let currTournament = currRow.tournament;
-                let currSgTot = currRow.sgTot;
-
-                let sofTournament = jsonData.fieldStrength.filter((tourneyData) => tourneyData.tournament === currTournament);
-                if(sofTournament == null){
-                    console.log("Couldnt find tournament: ", currTournament);
-                }
-
-                let sof = sofTournament[0].strength;
-
-                if(sof <= -0.15){
-                    sgEasyTotal += currSgTot;
-                    sgEasyNum += 1;
-                } else if(sof >= 0.7) {
-                    sgHardTotal += currSgTot;
-                    sgHardNum += 1;
-                } else {
-                    sgMedTotal += currSgTot;
-                    sgMedNum += 1;
-                }
+           let fieldStrength = {
+                easy: {total: 0, count: 0},
+                medium: {total: 0, count: 0},
+                hard: {total: 0, count: 0}
            }
 
-           if(sgEasyNum == 0){
-            sgEasyAvg = null;
-           } else {
-            sgEasyAvg = Number((sgEasyTotal/sgEasyNum).toFixed(2));
-           }
-
-           if(sgMedNum == 0){
-            sgMedAvg = null;
-           } else {
-            sgMedAvg = Number((sgMedTotal/sgMedNum).toFixed(2));
-           }
-
-           if(sgHardNum == 0){
-            sgHardAvg = null;
-           } else {
-            sgHardAvg = Number((sgHardTotal/sgHardNum).toFixed(2));
-           }
-
-           fieldStrengthData = {'sgEasy': sgEasyAvg, 'sgMed': sgMedAvg, 'sgHard': sgHardAvg};
-
-            // Check if player exists in pgatour
-            if (pgatourData) {
-                // If player in pgatour data, add pga tour data
-                // FIXED BUG - checked for missing indv stats here...
-                let filteredPgatourData = {
-                    sgPuttPGA: pgatourData.sgPutt !== null && pgatourData.sgPutt !== undefined ? Number(pgatourData.sgPutt.toFixed(2)) : null,
-                    sgArgPGA: pgatourData.sgArg !== null && pgatourData.sgArg !== undefined ? Number(pgatourData.sgArg.toFixed(2)) : null,
-                    sgAppPGA: pgatourData.sgApp !== null && pgatourData.sgApp !== undefined ? Number(pgatourData.sgApp.toFixed(2)) : null,
-                    sgOttPGA: pgatourData.sgOtt !== null && pgatourData.sgOtt !== undefined ? Number(pgatourData.sgOtt.toFixed(2)) : null,
-                    sgT2GPGA: pgatourData.sgT2G !== null && pgatourData.sgT2G !== undefined ? Number(pgatourData.sgT2G.toFixed(2)) : null,
-                    sgTotPGA: pgatourData.sgTot !== null && pgatourData.sgTot !== undefined ? Number(pgatourData.sgTot.toFixed(2)) : null,
-                    drDist: pgatourData.drDist !== null && pgatourData.drDist !== undefined ? Number(pgatourData.drDist.toFixed(2)) : null,
-                    drAcc: pgatourData.drAcc !== null && pgatourData.drAcc !== undefined ? Number(pgatourData.drAcc.toFixed(2)) : null,
-                    gir: pgatourData.gir !== null && pgatourData.gir !== undefined ? Number(pgatourData.gir.toFixed(2)) : null,
-                    sandSave: pgatourData.sandSave !== null && pgatourData.sandSave !== undefined ? Number(pgatourData.sandSave.toFixed(2)) : null,
-                    scrambling: pgatourData.scrambling !== null && pgatourData.scrambling !== undefined ? Number(pgatourData.scrambling.toFixed(2)) : null,
-                    app50_75: pgatourData.app50_75 !== null && pgatourData.app50_75 !== undefined ? Number(pgatourData.app50_75.toFixed(2)) : null,
-                    app75_100: pgatourData.app75_100 !== null && pgatourData.app75_100 !== undefined ? Number(pgatourData.app75_100.toFixed(2)) : null,
-                    app100_125: pgatourData.app100_125 !== null && pgatourData.app100_125 !== undefined ? Number(pgatourData.app100_125.toFixed(2)) : null,
-                    app125_150: pgatourData.app125_150 !== null && pgatourData.app125_150 !== undefined ? Number(pgatourData.app125_150.toFixed(2)) : null,
-                    app150_175: pgatourData.app150_175 !== null && pgatourData.app150_175 !== undefined ? Number(pgatourData.app150_175.toFixed(2)) : null,
-                    app175_200: pgatourData.app175_200 !== null && pgatourData.app175_200 !== undefined ? Number(pgatourData.app175_200.toFixed(2)) : null,
-                    app200_up: pgatourData.app200_up !== null && pgatourData.app200_up !== undefined ? Number(pgatourData.app200_up.toFixed(2)) : null,
-                    bob: pgatourData.bob !== null && pgatourData.bob !== undefined ? Number(pgatourData.bob.toFixed(2)) : null,
-                    bogAvd: pgatourData.bogAvd !== null && pgatourData.bogAvd !== undefined ? Number(pgatourData.bogAvd.toFixed(2)) : null,
-                    par3Scoring: pgatourData.par3Scoring !== null && pgatourData.par3Scoring !== undefined ? Number(pgatourData.par3Scoring.toFixed(2)) : null,
-                    par4Scoring: pgatourData.par4Scoring !== null && pgatourData.par4Scoring !== undefined ? Number(pgatourData.par4Scoring.toFixed(2)) : null,
-                    par5Scoring: pgatourData.par5Scoring !== null && pgatourData.par5Scoring !== undefined ? Number(pgatourData.par5Scoring.toFixed(2)) : null,
-                    prox: pgatourData.prox !== null && pgatourData.prox !== undefined ? Number(pgatourData.prox.toFixed(2)) : null,
-                    roughProx: pgatourData.roughProx !== null && pgatourData.roughProx !== undefined ? Number(pgatourData.roughProx.toFixed(2)) : null,
-                    puttingBob: pgatourData.puttingBob !== null && pgatourData.puttingBob !== undefined ? Number(pgatourData.puttingBob.toFixed(2)) : null,
-                    threePuttAvd: pgatourData.threePuttAvd !== null && pgatourData.threePuttAvd !== undefined ? Number(pgatourData.threePuttAvd.toFixed(2)) : null,
-                    bonusPutt: pgatourData.bonusPutt !== null && pgatourData.bonusPutt !== undefined ? Number(pgatourData.bonusPutt.toFixed(2)) : null,
-                    // Add other fields as needed
-                };                
-
-                // Returns all of this data in cumulation as a list of dicts in dataTableData
-                return {
-                    player,
-                    fdSalary,
-                    dkSalary,
-                    ...filteredPgatourData,
-                    ...courseHistoryData, // Include course history data
-                    ...avgRoundData12, // Include average round data
-                    ...avgRoundData24,
-                    ...avgRoundData36,
-                    ...avgRoundData50,
-                    ...recentHistory.reduce((result, finish, index) => {
-                        result[`recent${index + 1}`] = finish;
-                        return result;
-                    }, {}),
-                    ...recentFinishData, // Include finish data for recent tournaments
-                    tournamentAbbreviations, // Include tournament abbreviations
-                    ...fieldStrengthData,
-                };
-            } else {
-                // Set pgatour data for the player as null because player doesn't have data.
-                let filteredPgatourData = {
-                    sgPuttPGA: null,
-                    sgArgPGA: null,
-                    sgAppPGA: null,
-                    sgOttPGA: null,
-                    sgT2GPGA: null,
-                    sgTotPGA: null,
-                    drDist: null,
-                    drAcc: null,
-                    gir: null,
-                    sandSave: null,
-                    scrambling: null,
-                    app50_75: null,
-                    app75_100: null,
-                    app100_125: null,
-                    app125_150: null,
-                    app150_175: null,
-                    app175_200: null,
-                    app200_up: null,
-                    bob: null,
-                    bogAvd: null,
-                    par3Scoring: null,
-                    par4Scoring: null,
-                    par5Scoring: null,
-                    prox: null,
-                    roughProx: null,
-                    puttingBob: null,
-                    threePuttAvd: null,
-                    bonusPutt: null,
-                    // Add other fields as needed
-                };
-
-                // Returns all of this data in cumulation as a list of dicts in dataTableData
-                return {
-                    player,
-                    fdSalary,
-                    dkSalary,
-                    ...filteredPgatourData,
-                    ...courseHistoryData, // Include course history data
-                    ...avgRoundData12, // Include average round data
-                    ...avgRoundData24,
-                    ...avgRoundData36,
-                    ...avgRoundData50,
-                    ...recentHistory.reduce((result, finish, index) => {
-                        result[`recent${index + 1}`] = finish;
-                        return result;
-                    }, {}),
-                    ...recentFinishData, // Include finish data for recent tournaments
-                    tournamentAbbreviations, // Include tournament abbreviations
-                    ...fieldStrengthData,
-                };
+           function calculateAverage(total, count) {
+                return count === 0 ? null : Number((total / count).toFixed(2));
             }
-        }).filter(Boolean); // Remove null entries
+
+            // Sum up sg and num rds for different field strengths for player
+            for (let i = 0; i < playerTournamentData.length; i++) {
+                let row = playerTournamentData[i];
+                let sofTournament = jsonData.fieldStrength.find(tourneyData => tourneyData.tournament === row.tournament);
+                
+                if (!sofTournament) {
+                    console.error("Couldn't find tournament:", row.tournament);
+                    continue; // Skip this row if no strength data is found
+                }
+            
+                let sof = sofTournament.strength;
+                if (sof <= -0.15) {
+                    fieldStrength.easy.total += row.sgTot;
+                    fieldStrength.easy.count++;
+                } else if (sof >= 0.7) {
+                    fieldStrength.hard.total += row.sgTot;
+                    fieldStrength.hard.count++;
+                } else {
+                    fieldStrength.medium.total += row.sgTot;
+                    fieldStrength.medium.count++;
+                }
+            }
+            
+            // Calculate averages for each field strength
+            fieldStrengthData = {
+                sgEasy: calculateAverage(fieldStrength.easy.total, fieldStrength.easy.count),
+                sgMed: calculateAverage(fieldStrength.medium.total, fieldStrength.medium.count),
+                sgHard: calculateAverage(fieldStrength.hard.total, fieldStrength.hard.count)
+            };
+
+            function formatData(value) {
+                // Returns null or the stat value
+                return value !== null && value !== undefined ? Number(value.toFixed(2)) : null;
+            }
+
+            // FILTER PLAYER DATA FOR ALL CATEGORIES
+            function generateFilteredData(source, keys) {
+                // Generates a dictionary of PGATOUR statistics for player
+                const data = {};
+
+                const sgKeys = ["sgPutt", "sgArg", "sgApp", "sgOtt", "sgT2G", "sgTot"];
+                for(let i = 0; i < keys.length; i++) {
+                    let key;
+                    if(sgKeys.includes(keys[i])) {
+                        key = keys[i] + "PGA";
+                    } else {
+                        key = keys[i];
+                    }
+                    data[key] = source ? formatData(source[keys[i]]) : null;
+                }
+                return data;
+            }
+
+            const keys = [
+                "sgPutt", "sgArg", "sgApp", "sgOtt", "sgT2G", "sgTot",
+                "drDist", "drAcc", "gir", "sandSave", "scrambling",
+                "app50_75", "app75_100", "app100_125", "app125_150",
+                "app150_175", "app175_200", "app200_up", "bob", "bogAvd",
+                "par3Scoring", "par4Scoring", "par5Scoring", "prox",
+                "roughProx", "puttingBob", "threePuttAvd", "bonusPutt"
+            ];
+
+            let filteredPgatourData = generateFilteredData(pgatourData || null, keys);
+
+            const rowData = {
+                player,
+                fdSalary,
+                dkSalary,
+                ...filteredPgatourData,
+                ...courseHistoryData, // Include course history data
+                ...avgRoundData12, // Include average round data
+                ...avgRoundData24,
+                ...avgRoundData36,
+                ...avgRoundData50,
+                ...recentHistory.reduce((result, finish, index) => {
+                    result[`recent${index + 1}`] = finish;
+                    return result;
+                }, {}),
+                tournamentAbbreviations,
+                ...fieldStrengthData,
+            };
+
+            if(rowData) {
+                dataTableData.push(rowData);
+            }
+        }
 
         // Calculate average course history to quantify course history in model
-        dataTableData.forEach(playerData => {
+        for (let i = 0; i < dataTableData.length; i++) {
+            let playerData = dataTableData[i];
+
             // Extract the relevant stats for chAvg calculation
             let statsToAverage = ['minus1', 'minus2', 'minus3', 'minus4', 'minus5'];
-        
-            // Filter out null values and convert to numbers
-            let validStats = statsToAverage.map(stat => {
-                let statValue = playerData[stat];
-                return statValue !== null ? parseFloat(statValue) : null;
-            });
-        
-            // Filter out null values and calculate the average
-            let filteredStats = validStats.filter(stat => stat !== null);
-            let filterNaNs = filteredStats.filter(value => !Number.isNaN(value));
-            let chAvg = filterNaNs.length > 0 ? Number((filterNaNs.reduce((sum, stat) => sum + stat, 0) / filterNaNs.length).toFixed(2)) : null;
-            if(Number.isNaN(chAvg)){
-                chAvg = null;
+            let validStats = [];
+
+            // Collect valid stats (non-null and parsed as numbers)
+            for (let j = 0; j < statsToAverage.length; j++) {
+                let statKey = statsToAverage[j];
+                let statValue = playerData[statKey];
+                if (statValue !== null) {
+                    let parsedValue = parseFloat(statValue);
+                    if (!Number.isNaN(parsedValue)) {
+                        validStats.push(parsedValue);
+                    }
+                }
             }
-        
+
+            // Calculate the average of valid stats
+            let chAvg = null;
+            if (validStats.length > 0) {
+                let sum = 0;
+                for (let k = 0; k < validStats.length; k++) {
+                    sum += validStats[k];
+                }
+                chAvg = Number((sum / validStats.length).toFixed(2));
+            }
+
             // Add chAvg to playerData
             playerData['chAvg'] = chAvg;
-        });
+        }
         
         // Define the fields for which you want to calculate z-scores
         const zScoreFields = [
@@ -2429,251 +2235,148 @@ function loadModelResults() {
             'sgEasy', 'sgMed', 'sgHard'
         ];
 
-        // Calculate mean and standard deviation for each stat
-        let statSums = {}; // This is the issue !!
-        let statSumsSquared = {};
-        let statCounts = {};
+        // Initialize accumulators for statistics
+        const stats = {};
+        zScoreFields.forEach(field => {
+            stats[field] = { sum: 0, sumSquared: 0, count: 0 };
+        });
 
-        // Iterate through data to calculate sums and counts to use for mean and stdev calc
-        dataTableData.forEach((playerData) => {
-            Object.keys(playerData).forEach((stat) => {
-                // Check if the field is in the zScoreFields array
-                if (zScoreFields.includes(stat) && typeof playerData[stat] === 'number' && playerData[stat] !== null && !Number.isNaN(playerData[stat])) {
-                    if (!statSums[stat]) statSums[stat] = 0;
-                    if (!statSumsSquared[stat]) statSumsSquared[stat] = 0;
-                    if (!statCounts[stat]) statCounts[stat] = 0;
-
-                    statSums[stat] += playerData[stat];
-                    statSumsSquared[stat] += Math.pow(playerData[stat], 2);
-                    statCounts[stat]++;
+        // Step 1: Collect sums and counts for mean and standard deviation calculation
+        for (let playerData of dataTableData) {
+            for (let stat of zScoreFields) {
+                let value = playerData[stat];
+                if (typeof value === 'number' && value !== null && !Number.isNaN(value)) {
+                    stats[stat].sum += value;
+                    stats[stat].sumSquared += value * value;
+                    stats[stat].count++;
                 }
-            });
-        });
-
-        // Calculate mean and standard deviation for each stat
-        let statMeans = {};
-        let statStdDevs = {};
-        Object.keys(statSums).forEach((stat) => {
-            statMeans[stat] = statSums[stat] / statCounts[stat];
-            statStdDevs[stat] = Math.sqrt((statSumsSquared[stat] / statCounts[stat]) - Math.pow(statMeans[stat], 2));
-            if(stat == 'chAvg'){
-                console.log('sum: ', statSums[stat]);
-                console.log('count: ', statCounts[stat]);
-                console.log('stat: ', stat, 'mean : ', statMeans[stat], 'std dev: ', statStdDevs[stat]);
             }
-        });
-
-        // Compute z-score for each data point
-        dataTableData.forEach((playerData) => {
-            Object.keys(playerData).forEach((stat) => {
-                // Check if the field is in the zScoreFields array and is a number
-                if (zScoreFields.includes(stat)){
-                    if (typeof playerData[stat] === 'number' && !Number.isNaN(playerData[stat])) {
-                        // Calculate z-score for the current stat
-                        let zScore = playerData[stat] !== null
-                            ? (playerData[stat] - statMeans[stat]) / statStdDevs[stat]
-                            : null;
-    
-                        // Add z-score to playerData
-                        playerData[`${stat}_zScore`] = zScore;
-                    } else {
-                        playerData[`${stat}_zScore`] = null;
-                    }
-                }
-            });
-        });
-
-        // Function to calc normal cdf??
-        function normalCDF(mean, sigma, to) {
-            var z = (to-mean)/Math.sqrt(2*sigma*sigma);
-            var t = 1/(1+0.3275911*Math.abs(z));
-            var a1 =  0.254829592;
-            var a2 = -0.284496736;
-            var a3 =  1.421413741;
-            var a4 = -1.453152027;
-            var a5 =  1.061405429;
-            var erf = 1-(((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-z*z);
-            var sign = 1;
-            if(z < 0)
-            {
-                sign = -1;
-            }
-            return (1/2)*(1+sign*erf);
         }
 
-        // Dictionary of custom model weights
-        let weightDict = {
-            // PGA Tour SG Stats
-            'sgPuttPGA': sgPuttPGAinput,
-            'sgAppPGA': sgAppPGAinput,
-            'sgT2GPGA': sgT2GPGAinput,
-            'sgArgPGA': sgArgPGAinput,
-            'sgOttPGA': sgOttPGAinput,
-            'sgTotPGA': sgTotPGAinput,
-        
-            // SG Last 12 Rds
-            'sgPutt12': sgPutt12input,
-            'sgApp12': sgApp12input,
-            'sgT2G12': sgT2G12input,
-            'sgArg12': sgArg12input,
-            'sgOtt12': sgOtt12input,
-            'sgTot12': sgTot12input,
-        
-            // SG Last 24 Rds
-            'sgPutt24': sgPutt24input,
-            'sgApp24': sgApp24input,
-            'sgT2G24': sgT2G24input,
-            'sgArg24': sgArg24input,
-            'sgOtt24': sgOtt24input,
-            'sgTot24': sgTot24input,
-        
-            // SG Last 36 Rds
-            'sgPutt36': sgPutt36input,
-            'sgApp36': sgApp36input,
-            'sgT2G36': sgT2G36input,
-            'sgArg36': sgArg36input,
-            'sgOtt36': sgOtt36input,
-            'sgTot36': sgTot36input,
-        
-            // SG Last 50 Rds
-            'sgPutt50': sgPutt50input,
-            'sgApp50': sgApp50input,
-            'sgT2G50': sgT2G50input,
-            'sgArg50': sgArg50input,
-            'sgOtt50': sgOtt50input,
-            'sgTot50': sgTot50input,
-        
-            // Other Stats
-            'drDist': drDist,
-            'bob': bob,
-            'sandSave': sandSave,
-            'par3Scoring': par3scoring,
-            'par5Scoring': par5scoring,
-            'prox': prox,
-            'app50_75': app50_75,
-            'app100_125': app100_125,
-            'app150_175': app150_175,
-            'app200_up': app200_up,
-            'bonusPutt': bonusPutt,
-            'drAcc': drAcc,
-            'bogAvd': bogAvd,
-            'scrambling': scrambling,
-            'par4Scoring': par4scoring,
-            'gir': gir,
-            'roughProx': roughProx,
-            'app75_100': app75_100,
-            'app125_150': app125_150,
-            'app175_200': app175_200,
-            'puttingBob': puttingBob,
-            'threePuttAvd': threePuttAvd,
-            'sgEasy': easyField,
-            'sgMed': mediumField,
-            'sgHard': hardField,
-            'chAvg': courseHistoryInput
-        };
+        // Step 2: Calculate means and standard deviations of each stat
+        const statMeans = {};
+        const statStdDevs = {};
 
-        console.log('weightDict: ', weightDict);
+        for (let stat of zScoreFields) {
+            const { sum, sumSquared, count } = stats[stat];
+            if (count > 0) {
+                const mean = sum / count;
+                const variance = (sumSquared / count) - (mean * mean);
+                const stdDev = Math.sqrt(variance);
+
+                statMeans[stat] = mean;
+                statStdDevs[stat] = stdDev;
+            } else {
+                statMeans[stat] = null;
+                statStdDevs[stat] = null;
+            }
+        }
+
+        // Step 3: Compute z-scores for each stat of each player
+        for (let playerData of dataTableData) {
+            for (let stat of zScoreFields) {
+                let value = playerData[stat];
+                if (typeof value === 'number' && value !== null && !Number.isNaN(value)) {
+                    const mean = statMeans[stat];
+                    const stdDev = statStdDevs[stat];
+                    playerData[`${stat}_zScore`] = stdDev ? (value - mean) / stdDev : null;
+                } else {
+                    playerData[`${stat}_zScore`] = null;
+                }
+            }
+        }
+
+        // Normal CDF function
+        function normalCDF(mean, sigma, to) {
+            const z = (to - mean) / Math.sqrt(2 * sigma * sigma);
+            const t = 1 / (1 + 0.3275911 * Math.abs(z));
+            const coefficients = [1.061405429, -1.453152027, 1.421413741, -0.284496736, 0.254829592];
+            const erf = 1 - coefficients.reduce((sum, coef, i) => sum * t + coef, 0) * t * Math.exp(-z * z);
+            return 0.5 * (1 + Math.sign(z) * erf);
+        }
+
+        let weightDict = weights;
 
         // Stats to reverse sign of for analysis
         const reverseStats = ['app50_75','app75_100',
         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
         'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd', 'chAvg'];
-
-        let testPlayer = 'Lucas Glover';
-        //let testPlayerData = dataTableData.filter((round) => round.player === testPlayer);
-        //console.log('Player: ', testPlayerData);
         
-        dataTableData.forEach((playerData) =>{
+        // Computation for weighted average of zScores, value, and fd/dk value
+        for (let i = 0; i < dataTableData.length; i++) {
+            let playerData = dataTableData[i];
             let ratingSum = 0;
             let weightSum = 0;
-
-            // For each stat, add to weighted average (weighted sum) and keep track of weight used
-            //      Weight will not be used completely if player has empty stat for one with a weight on it
+        
+            // For each stat, calculate weighted sum and keep track of weights
             let statLog = {};
-            for (let key in weightDict){
+            for (let key in weightDict) {
                 let zScore = playerData[`${key}_zScore`];
                 let weight = parseFloat(weightDict[key]); // Convert weight to a number
-
-                // Check if zScore is not null, not undefined, and weight is not null before incrementing
-                if (zScore !== null && zScore !== undefined && weight !== null && weight !== 0 && weight !== '' && !isNaN(weight)) {
-                    // Reverse the sign of z-score for stats in reverseStats
+        
+                // Check validity of zScore and weight before using them
+                if (zScore !== null && zScore !== undefined && weight && !isNaN(weight)) {
+                    // Reverse the sign of z-score for reverse stats
                     if (reverseStats.includes(key)) {
                         zScore = -zScore;
                     }
-                    
+        
                     ratingSum += zScore * weight;
                     weightSum += weight;
-
-                    if(playerData['player'] == testPlayer){
-                        console.log('stat: ',key ,'zscore: ', zScore, 'weight: ', weight, 'mult: ', zScore * weight);
-                    }
-
+        
                     statLog[key] = weight;
                 }
             }
-
-            // For players missing data for stats, add weighted average based on their salary
+        
+            // Handle missing data by using the player's salary as a fallback
             let fullModel = true;
-            if(weightSum !== 100){
+            if (weightSum !== 100) {
                 fullModel = false;
                 let remSum = 100 - weightSum;
-                let platformCheck = document.getElementById('platform').value;
-                let salZScore;
-
-                if(platformCheck == 'fanduel'){
-                    salZScore = playerData['fdSalary_zScore'];
-                } else{
-                    salZScore = playerData['dkSalary_zScore'];
-                }
-
+                let platform = document.getElementById('platform').value;
+                let salZScore = platform === 'fanduel' ? playerData['fdSalary_zScore'] : playerData['dkSalary_zScore'];
+        
                 ratingSum += salZScore * remSum;
                 weightSum += remSum;
             }
-
-            
-
+        
             // Calculate weighted average rating
             let rating = weightSum !== 0 ? ratingSum / weightSum : null;
-
-            // Calculate the percentile of the outcome weighted average using normal CDF
-            let percentile;
-            if (fullModel == false){
-                percentile = rating !== null ? Number((Number((normalCDF(0, 1, rating) * 100).toFixed(2)) - 10).toFixed(2)) : null; // IMPORTANT, can change value of 5 here
-            } else {
-                percentile = rating !== null ? Number((normalCDF(0, 1, rating) * 100).toFixed(2)) : null;
+        
+            // Calculate percentile of the outcome weighted average using normal CDF
+            let percentile = null;
+            if (rating !== null) {
+                percentile = fullModel 
+                    ? Number((normalCDF(0, 1, rating) * 100).toFixed(2)) 
+                    : Number((normalCDF(0, 1, rating) * 100 - 10).toFixed(2)); // Adjusted value for incomplete models
             }
-
-            if(playerData['player'] == testPlayer){
-                console.log('weightsum: ', weightSum, ' rating sum: ', ratingSum);
-                console.log('stat log', statLog);
-                console.log('rating: ', rating, ' percentile: ', percentile);
-            }
-
+        
             // Calculate fdValue and dkValue
-            let fdSalary = playerData['fdSalary']; // Replace with the actual key for FanDuel salary
-            let dkSalary = playerData['dkSalary']; // Replace with the actual key for DraftKings salary
-
+            let fdSalary = playerData['fdSalary']; // Replace with the actual FanDuel salary key
+            let dkSalary = playerData['dkSalary']; // Replace with the actual DraftKings salary key
+        
             let fdValue = rating !== null && fdSalary !== null ? Number((percentile / (fdSalary / 1000)).toFixed(2)) : null;
             let dkValue = rating !== null && dkSalary !== null ? Number((percentile / (dkSalary / 1000)).toFixed(2)) : null;
-
-            // Add fdValue and dkValue to playerData
+        
+            // Add calculated values to playerData
             playerData['fdValue'] = fdValue;
             playerData['dkValue'] = dkValue;
-
             playerData['rating'] = percentile;
-        });
+        }
 
-        console.log('data table data: ', dataTableData);
-
-        // Save current model data to local storage for optimizer
+        // Save current model data to local storage for use in optimizer
         let savePlatform = document.getElementById('platform').value;
-        savedData = dataTableData.map(playerData => ({
-            player: playerData.player,
-            fdSalary: playerData.fdSalary,
-            dkSalary: playerData.dkSalary,
-            rating: playerData.rating,
-            platform: savePlatform
-        }));
+        let savedData = [];
+        for (let i = 0; i < dataTableData.length; i++) {
+            let playerData = dataTableData[i];
+            savedData.push({
+                player: playerData.player,
+                fdSalary: playerData.fdSalary,
+                dkSalary: playerData.dkSalary,
+                rating: playerData.rating,
+                platform: savePlatform
+            });
+        }
         localStorage.setItem('modelData', JSON.stringify(savedData));
         console.log('Data saved:', savedData);
 
@@ -2703,77 +2406,77 @@ function loadModelResults() {
 
         // Create column definitions
         let columnDefs = [
-            { headerName: 'Player', field: 'player', pinned: 'left'},
-            { headerName: 'FD Salary', field: 'fdSalary', pinned: 'left' },
-            { headerName: 'DK Salary', field: 'dkSalary', pinned: 'left' },
-            { headerName: 'FD Value', field: 'fdValue'},
-            { headerName: 'DK Value', field: 'dkValue'},
-            {headerName: 'Model Rtg.', field: 'rating', sortable: true, sort: 'desc'},
+            { headerName: 'Player', field: 'player', pinned: 'left', width: 180},
+            { headerName: 'FD Salary', field: 'fdSalary', pinned: 'left', width: 78},
+            { headerName: 'DK Salary', field: 'dkSalary', pinned: 'left', width: 78},
+            { headerName: 'FD Value', field: 'fdValue', width: 70},
+            { headerName: 'DK Value', field: 'dkValue', width: 70},
+            { headerName: 'Model Rtg.', field: 'rating', sortable: true, sort: 'desc', width: 70},
 
-            { headerName: 'SG: Putt L12', field: 'sgPutt12', hide: true },
-            { headerName: 'SG: Arg L12', field: 'sgArg12', hide: true },
-            { headerName: 'SG: App L12', field: 'sgApp12', hide: true },
-            { headerName: 'SG: Ott L12', field: 'sgOtt12', hide: true },
-            { headerName: 'SG: T2G L12', field: 'sgT2G12', hide: true },
-            { headerName: 'SG: Tot L12', field: 'sgTot12', hide: true },
+            { headerName: 'SG:PuttL12', field: 'sgPutt12', hide: true },
+            { headerName: 'SG:Arg L12', field: 'sgArg12', hide: true },
+            { headerName: 'SG:AppL12', field: 'sgApp12', hide: true },
+            { headerName: 'SG:OttL12', field: 'sgOtt12', hide: true },
+            { headerName: 'SG:T2GL12', field: 'sgT2G12', hide: true },
+            { headerName: 'SG:TotL12', field: 'sgTot12', hide: true },
 
-            { headerName: 'SG: Putt L24', field: 'sgPutt24', hide: true },
-            { headerName: 'SG: Arg L24', field: 'sgArg24', hide: true },
-            { headerName: 'SG: App L24', field: 'sgApp24', hide: true },
-            { headerName: 'SG: Ott L24', field: 'sgOtt24', hide: true },
-            { headerName: 'SG: T2G L24', field: 'sgT2G24', hide: true },
-            { headerName: 'SG: Tot L24', field: 'sgTot24', hide: true },
+            { headerName: 'SG:PuttL24', field: 'sgPutt24', hide: true },
+            { headerName: 'SG:ArgL24', field: 'sgArg24', hide: true },
+            { headerName: 'SG:AppL24', field: 'sgApp24', hide: true },
+            { headerName: 'SG:OttL24', field: 'sgOtt24', hide: true },
+            { headerName: 'SG:T2GL24', field: 'sgT2G24', hide: true },
+            { headerName: 'SG:TotL24', field: 'sgTot24', hide: true },
 
-            { headerName: 'SG: Putt L36', field: 'sgPutt36', hide: true },
-            { headerName: 'SG: Arg L36', field: 'sgArg36', hide: true },
-            { headerName: 'SG: App L36', field: 'sgApp36', hide: true },
-            { headerName: 'SG: Ott L36', field: 'sgOtt36', hide: true },
-            { headerName: 'SG: T2G L36', field: 'sgT2G36', hide: true },
-            { headerName: 'SG: Tot L36', field: 'sgTot36', hide: true },
+            { headerName: 'SG:PuttL36', field: 'sgPutt36', hide: true },
+            { headerName: 'SG:ArgL36', field: 'sgArg36', hide: true },
+            { headerName: 'SG:AppL36', field: 'sgApp36', hide: true },
+            { headerName: 'SG:OttL36', field: 'sgOtt36', hide: true },
+            { headerName: 'SG:T2GL36', field: 'sgT2G36', hide: true },
+            { headerName: 'SG:TotL36', field: 'sgTot36', hide: true },
 
-            { headerName: 'SG: Putt L50', field: 'sgPutt50', hide: true },
-            { headerName: 'SG: Arg L50', field: 'sgArg50', hide: true },
-            { headerName: 'SG: App L50', field: 'sgApp50', hide: true },
-            { headerName: 'SG: Ott L50', field: 'sgOtt50', hide: true },
-            { headerName: 'SG: T2G L50', field: 'sgT2G50', hide: true },
-            { headerName: 'SG: Tot L50', field: 'sgTot50', hide: true },
+            { headerName: 'SG:PuttL50', field: 'sgPutt50', hide: true },
+            { headerName: 'SG:ArgL50', field: 'sgArg50', hide: true },
+            { headerName: 'SG:AppL50', field: 'sgApp50', hide: true },
+            { headerName: 'SG:OttL50', field: 'sgOtt50', hide: true },
+            { headerName: 'SG:T2GL50', field: 'sgT2G50', hide: true },
+            { headerName: 'SG:TotL50', field: 'sgTot50', hide: true },
 
-            { headerName: 'SG: Putt PGA', field: 'sgPuttPGA', hide: true },
-            { headerName: 'SG: Arg PGA', field: 'sgArgPGA', hide: true },
-            { headerName: 'SG: App PGA', field: 'sgAppPGA', hide: true },
-            { headerName: 'SG: Ott PGA', field: 'sgOttPGA', hide: true},
-            { headerName: 'SG: T2G PGA', field: 'sgT2GPGA', hide: true },
-            { headerName: 'SG: Tot PGA', field: 'sgTotPGA', hide: true },
+            { headerName: 'SG:PuttPGA', field: 'sgPuttPGA', hide: true },
+            { headerName: 'SG:ArgPGA', field: 'sgArgPGA', hide: true },
+            { headerName: 'SG:AppPGA', field: 'sgAppPGA', hide: true },
+            { headerName: 'SG:OttPGA', field: 'sgOttPGA', hide: true},
+            { headerName: 'SG:T2GPGA', field: 'sgT2GPGA', hide: true },
+            { headerName: 'SG:TotPGA', field: 'sgTotPGA', hide: true },
 
             { headerName: 'Dr. Dist.', field: 'drDist', hide: true },
             { headerName: 'Dr. Acc.', field: 'drAcc', hide: true },
             { headerName: 'GIR %', field: 'gir', hide: true },
-            { headerName: 'Sand Save %', field: 'sandSave', hide: true },
-            { headerName: 'Scrambling %', field: 'scrambling', hide: true },
-            { headerName: 'App. 50-75', field: 'app50_75', hide: true, comparator: customComparator },
-            { headerName: 'App. 75-100', field: 'app75_100', hide: true, comparator: customComparator },
-            { headerName: 'App. 100-125', field: 'app100_125', hide: true, comparator: customComparator },
-            { headerName: 'App. 125-150', field: 'app125_150', hide: true, comparator: customComparator },
-            { headerName: 'App. 150-175', field: 'app150_175', hide: true, comparator: customComparator },
-            { headerName: 'App. 175-200', field: 'app175_200', hide: true, comparator: customComparator },
-            { headerName: 'App. 200+', field: 'app200_up', hide: true, comparator: customComparator },
+            { headerName: 'SndSave%', field: 'sandSave', hide: true },
+            { headerName: 'Scrbl%', field: 'scrambling', hide: true },
+            { headerName: 'Ap50-75', field: 'app50_75', hide: true, comparator: customComparator },
+            { headerName: 'Ap75-100', field: 'app75_100', hide: true, comparator: customComparator },
+            { headerName: 'Ap100-125', field: 'app100_125', hide: true, comparator: customComparator },
+            { headerName: 'Ap125-150', field: 'app125_150', hide: true, comparator: customComparator },
+            { headerName: 'Ap150-175', field: 'app150_175', hide: true, comparator: customComparator },
+            { headerName: 'Ap175-200', field: 'app175_200', hide: true, comparator: customComparator },
+            { headerName: 'Ap200+', field: 'app200_up', hide: true, comparator: customComparator },
             { headerName: 'BoB %', field: 'bob', hide: true },
             { headerName: 'Bogey Avd.', field: 'bogAvd', hide: true, comparator: customComparator },
-            { headerName: 'Par 3s Avg', field: 'par3Scoring', hide: true, comparator: customComparator },
-            { headerName: 'Par 4s Avg', field: 'par4Scoring', hide: true, comparator: customComparator },
-            { headerName: 'Par 5s Avg', field: 'par5Scoring', hide: true, comparator: customComparator },
+            { headerName: 'Par3Avg', field: 'par3Scoring', hide: true, comparator: customComparator },
+            { headerName: 'Par4Avg', field: 'par4Scoring', hide: true, comparator: customComparator },
+            { headerName: 'Par5Avg', field: 'par5Scoring', hide: true, comparator: customComparator },
             { headerName: 'Prox.', field: 'prox', hide: true, comparator: customComparator },
-            { headerName: 'Rough Prox.', field: 'roughProx', hide: true, comparator: customComparator },
-            { headerName: 'Putt. BoB %', field: 'puttingBob', hide: true },
-            { headerName: '3-Putt Avd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
+            { headerName: 'RoughProx.', field: 'roughProx', hide: true, comparator: customComparator },
+            { headerName: 'PuttBoB %', field: 'puttingBob', hide: true },
+            { headerName: '3-PuttAvd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
             { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
-            { headerName: 'SG: EasyField', field: 'sgEasy', hide: true},
-            { headerName: 'SG: MedField', field: 'sgMed', hide: true},
-            { headerName: 'SG: HardField', field: 'sgHard', hide: true},
-            { headerName: 'Course History', field: 'chAvg', hide: true, comparator: customComparator },
+            { headerName: 'SG:EasyField', field: 'sgEasy', hide: true},
+            { headerName: 'SG:MedField', field: 'sgMed', hide: true},
+            { headerName: 'SG:HardField', field: 'sgHard', hide: true},
+            { headerName: 'Course Hist.', field: 'chAvg', hide: true, comparator: customComparator },
         ];
 
-        // Function to determine if a column should not be hidden
+        // Function to determine if a column should not be hidden (if has value in custom model, don't hide)
         function shouldNotHideColumn(key, weightDict) {
             const value = weightDict[key];
 
@@ -2786,101 +2489,17 @@ function loadModelResults() {
             return false; // Hide for other cases
         }
 
-        // Set columns to be hidden if they should be based on above function
+        // Set columns not in current custom model to be hidden
         columnDefs.forEach((column) => {
             if (column.field && shouldNotHideColumn(column.field, weightDict)) {
                 column.hide = false;
             }
         });
 
-        // Calculate min, mid, and max values for each column
-        const columnMinMaxValues = columnDefs.reduce((acc, column) => {
-            if (column.children) {
-                // If it's a column group, iterate over its children
-                column.children.forEach(childColumn => {
-                    const fieldName = childColumn.field;
-                    const values = dataTableData.map(row => row[fieldName]);
-                    const sortedValues = [...values].sort((a, b) => a - b);
-                    const filteredValues = values.filter(value => value !== null && value !== 0);
-
-                    const minValue = filteredValues.length > 0 ? Math.min(...filteredValues) : 0;
-                    const maxValue = Math.max(...values);
-
-                    const midIndex = Math.floor(sortedValues.length / 2);
-                    const midValue = sortedValues.length % 2 === 0
-                        ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
-                        : sortedValues[midIndex];
-
-                    acc[fieldName] = { minValue, midValue, maxValue };
-                });
-            } else {
-                // If it's an individual column
-                const fieldName = column.field;
-                const values = dataTableData.map(row => row[fieldName]);
-                const sortedValues = [...values].sort((a, b) => a - b);
-                const filteredValues = values.filter(value => value !== null && value !== 0);
-
-                const minValue = filteredValues.length > 0 ? Math.min(...filteredValues) : 0;
-                const maxValue = Math.max(...values);
-
-
-                const midIndex = Math.floor(sortedValues.length / 2);
-                const midValue = sortedValues.length % 2 === 0
-                    ? (sortedValues[midIndex - 1] + sortedValues[midIndex]) / 2
-                    : sortedValues[midIndex];
-
-                acc[fieldName] = { minValue, midValue, maxValue };
-            }
-
-            return acc;
-        }, {});
-
-        // List of columns where you want to reverse the color scale
         const columnsWithReversedColorScale = ['app50_75','app75_100',
         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bogAvd', 'par3Scoring',
         'par4Scoring', 'par5Scoring', 'prox', 'roughProx', 'threePuttAvd', 'chAvg'];
 
-        // Define the color scale for each column based on the calculated values
-        const colorScales = columnDefs.reduce((acc, column) => {
-            if (column.children) {
-                // If it's a column group, iterate over its children
-                column.children.forEach(childColumn => {
-                    const fieldName = childColumn.field;
-                    const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
-        
-                    const colorScale = d3.scaleLinear()
-                        .domain([minValue, midValue, maxValue]);
-        
-                    if (columnsWithReversedColorScale.includes(fieldName)) {
-                        colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
-                    } else {
-                        colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
-                    }
-        
-                    acc[fieldName] = colorScale;
-                });
-            } else {
-                // If it's an individual column
-                const fieldName = column.field;
-                const { minValue, midValue, maxValue } = columnMinMaxValues[fieldName];
-        
-                const colorScale = d3.scaleLinear()
-                    .domain([minValue, midValue, maxValue]);
-        
-                if (columnsWithReversedColorScale.includes(fieldName)) {
-                    colorScale.range(['#4579F1', '#FFFFFF', '#F83E3E']);
-                } else {
-                    colorScale.range(['#F83E3E', '#FFFFFF', '#4579F1']);
-                }
-        
-                acc[fieldName] = colorScale;
-            }
-        
-            return acc;
-        }, {});
-        
-
-        // List of columns for which to apply the color scale
         const columnsWithColorScale = ['sgOtt12', 'sgApp12', 'sgArg12', 'sgPutt12', 'sgT2G12', 'sgTot12',
         'sgOtt24', 'sgApp24', 'sgArg24', 'sgPutt24', 'sgT2G24', 'sgTot24',
         'sgOtt36', 'sgApp36', 'sgArg36', 'sgPutt36', 'sgT2G36', 'sgTot36',
@@ -2890,6 +2509,8 @@ function loadModelResults() {
                                         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bob',
                                         'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
                                         'puttingBob', 'threePuttAvd', 'bonusPutt', 'rating', 'chAvg', 'sgEasy', 'sgMed', 'sgHard'];
+
+        const colorScales = makeColorScales(dataTableData, columnsWithColorScale, columnsWithReversedColorScale);
         
         // Define global cell style (with color scale)
         function globalCellStyle(params) {
@@ -2912,10 +2533,7 @@ function loadModelResults() {
         }
 
         // Clear model results content
-        function clearCheatSheetContent() {
-            /*
-                Clears the content of the cheatSheet.
-            */
+        function clearModelResContent() {
             const cheatSheet = document.getElementById('modelSheet');
             if (cheatSheet) {
                 cheatSheet.innerHTML = ''; // Clear content
@@ -2925,7 +2543,22 @@ function loadModelResults() {
         // Initialize model results sheet
         function initializeCheatSheet() {
             if (isModelSheetInitialized) {
-                clearCheatSheetContent();
+                clearModelResContent();
+            }
+
+            function getColumnWidth(field) {
+                let salary = ['fdSalary', 'dkSalary'];
+                let value = ['fdValue', 'dkValue'];
+    
+                if(field == 'player') {
+                    return 180;
+                } else if(salary.includes(field)) {
+                    return 78;
+                } else if(value.includes(field)) {
+                    return 70;
+                } else {
+                    return 80;
+                }
             }
         
             // Setup grid options
@@ -2933,6 +2566,7 @@ function loadModelResults() {
                 columnDefs: columnDefs.map(column => ({
                     ...column,
                     cellStyle: globalCellStyle,
+                    width: getColumnWidth(column.field),
                     children: column.children ? column.children.map(child => ({
                         ...child,
                         cellStyle: globalCellStyle,
@@ -2942,8 +2576,6 @@ function loadModelResults() {
                 suppressColumnVirtualisation: true,
                 onFirstDataRendered: function (params) {
                     console.log('grid is ready');
-                    params.api.autoSizeAllColumns();
-                    params.api.setColumnWidth('rating', 90);
                 },
                 getRowHeight: function(params) {
                     return 25;
@@ -2971,14 +2603,18 @@ function loadModelResults() {
                             column.hide = false;
                         }
                     }
+
+                    column.width = getColumnWidth(colId);
                 });
             
-                gridOptionsModel.api.setColumnDefs(gridOptionsModel.columnDefs);
+                if (gridOptionsModel.api) {
+                    gridOptionsModel.api.setColumnDefs(gridOptionsModel.columnDefs); // Reapply updated column definitions
+                } else {
+                    console.error('Grid API is not initialized yet.');
+                }
             }                      
         
-            //const gridDiv = document.querySelector('#modelSheet');
-            //gridApiModel = new agGrid.Grid(gridDiv, gridOptionsModel).gridOptions.api; // Use new agGrid.Grid constructor
-            clearCheatSheetContent();
+            clearModelResContent();
             gridApiModel = new agGrid.createGrid(document.querySelector('#modelSheet'), gridOptionsModel);
             updateColumnVisibility();
         
@@ -3012,114 +2648,41 @@ function loadModelResults() {
     });
 }
 
-// Filter the model results
+// Model search box onChange
 function onFilterTextBoxChangedModel() {
-    // the function for the search box which filters the table 
-    // based on 'filter-text-box' for gridOptionsModel
-    //const filterText = document.getElementById('filter-text-box-model').value;
-    //gridOptionsModel.api.setQuickFilter(filterText);
-
     gridApiModel.setGridOption(
         'quickFilterText',
         document.getElementById('filter-text-box-model').value
       );
 }
 
+// Change sum of model inputs when they are changed
 function onModelInputChange() {
-    let currentSum = document.getElementById('currSumModel');
+    const currentSum = document.getElementById('currSumModel');
 
-    // GET all model inputs
-    let sgPuttPGAinput = document.getElementById('sgPuttPGAinput').value;
-    let sgAppPGAinput = document.getElementById('sgAppPGAinput').value;
-    let sgT2GPGAinput = document.getElementById('sgT2GPGAinput').value;
-    let sgArgPGAinput = document.getElementById('sgArgPGAinput').value;
-    let sgOttPGAinput = document.getElementById('sgOttPGAinput').value;
-    let sgTotPGAinput = document.getElementById('sgTotPGAinput').value;
-
-    // SG Last 12 Rds
-    let sgPutt12input = document.getElementById('sgPutt12input').value;
-    let sgApp12input = document.getElementById('sgApp12input').value;
-    let sgT2G12input = document.getElementById('sgT2G12input').value;
-    let sgArg12input = document.getElementById('sgArg12input').value;
-    let sgOtt12input = document.getElementById('sgOtt12input').value;
-    let sgTot12input = document.getElementById('sgTot12input').value;
-
-    // SG Last 24 Rds
-    let sgPutt24input = document.getElementById('sgPutt24input').value;
-    let sgApp24input = document.getElementById('sgApp24input').value;
-    let sgT2G24input = document.getElementById('sgT2G24input').value;
-    let sgArg24input = document.getElementById('sgArg24input').value;
-    let sgOtt24input = document.getElementById('sgOtt24input').value;
-    let sgTot24input = document.getElementById('sgTot24input').value;
-
-    // SG Last 36 Rds
-    let sgPutt36input = document.getElementById('sgPutt36input').value;
-    let sgApp36input = document.getElementById('sgApp36input').value;
-    let sgT2G36input = document.getElementById('sgT2G36input').value;
-    let sgArg36input = document.getElementById('sgArg36input').value;
-    let sgOtt36input = document.getElementById('sgOtt36input').value;
-    let sgTot36input = document.getElementById('sgTot36input').value;
-
-    // SG Last 50 Rds
-    let sgPutt50input = document.getElementById('sgPutt50input').value;
-    let sgApp50input = document.getElementById('sgApp50input').value;
-    let sgT2G50input = document.getElementById('sgT2G50input').value;
-    let sgArg50input = document.getElementById('sgArg50input').value;
-    let sgOtt50input = document.getElementById('sgOtt50input').value;
-    let sgTot50input = document.getElementById('sgTot50input').value;
-
-    // Other Stats
-    let drDist = document.getElementById('drDist').value;
-    let bob = document.getElementById('bob').value;
-    let sandSave = document.getElementById('sandSave').value;
-    let par3scoring = document.getElementById('par3scoring').value;
-    let par5scoring = document.getElementById('par5scoring').value;
-    let prox = document.getElementById('prox').value;
-    let app50_75 = document.getElementById('app50_75').value;
-    let app100_125 = document.getElementById('app100_125').value;
-    let app150_175 = document.getElementById('app150_175').value;
-    let app200_up = document.getElementById('app200_up').value;
-    let bonusPutt = document.getElementById('bonusPutt').value;
-    let drAcc = document.getElementById('drAcc').value;
-    let bogAvd = document.getElementById('bogAvd').value;
-    let scrambling = document.getElementById('scrambling').value;
-    let par4scoring = document.getElementById('par4scoring').value;
-    let gir = document.getElementById('gir').value;
-    let roughProx = document.getElementById('roughProx').value;
-    let app75_100 = document.getElementById('app75_100').value;
-    let app125_150 = document.getElementById('app125_150').value;
-    let app175_200 = document.getElementById('app175_200').value;
-    let puttingBob = document.getElementById('puttingBob').value;
-    let threePuttAvd = document.getElementById('threePuttAvd').value;
-    let easyField = document.getElementById('easyField').value;
-    let mediumField = document.getElementById('mediumField').value;
-    let strongField = document.getElementById('hardField').value;
-    let courseHistoryInput = document.getElementById('courseHistory').value;
-
-    const inputElements = [
-        sgPuttPGAinput, sgAppPGAinput, sgT2GPGAinput, sgArgPGAinput, sgOttPGAinput, sgTotPGAinput,
-        sgPutt12input, sgApp12input, sgT2G12input, sgArg12input, sgOtt12input, sgTot12input,
-        sgPutt24input, sgApp24input, sgT2G24input, sgArg24input, sgOtt24input, sgTot24input,
-        sgPutt36input, sgApp36input, sgT2G36input, sgArg36input, sgOtt36input, sgTot36input,
-        sgPutt50input, sgApp50input, sgT2G50input, sgArg50input, sgOtt50input, sgTot50input,
-        drDist, bob, sandSave, par3scoring, par5scoring, prox, app50_75, app100_125, app150_175,
-        app200_up, bonusPutt, drAcc, bogAvd, scrambling, par4scoring, gir, roughProx, app75_100,
-        app125_150, app175_200, puttingBob, threePuttAvd, easyField, mediumField, strongField, courseHistoryInput
+    // List of all input field IDs
+    const inputIds = [
+        'sgPuttPGAinput', 'sgAppPGAinput', 'sgT2GPGAinput', 'sgArgPGAinput', 'sgOttPGAinput', 'sgTotPGAinput',
+        'sgPutt12input', 'sgApp12input', 'sgT2G12input', 'sgArg12input', 'sgOtt12input', 'sgTot12input',
+        'sgPutt24input', 'sgApp24input', 'sgT2G24input', 'sgArg24input', 'sgOtt24input', 'sgTot24input',
+        'sgPutt36input', 'sgApp36input', 'sgT2G36input', 'sgArg36input', 'sgOtt36input', 'sgTot36input',
+        'sgPutt50input', 'sgApp50input', 'sgT2G50input', 'sgArg50input', 'sgOtt50input', 'sgTot50input',
+        'drDist', 'bob', 'sandSave', 'par3scoring', 'par5scoring', 'prox', 'app50_75', 'app100_125', 'app150_175',
+        'app200_up', 'bonusPutt', 'drAcc', 'bogAvd', 'scrambling', 'par4scoring', 'gir', 'roughProx', 'app75_100',
+        'app125_150', 'app175_200', 'puttingBob', 'threePuttAvd', 'easyField', 'mediumField', 'hardField', 'courseHistory'
     ];
 
-    // Sum of all stats
-    const totalSum = inputElements.reduce((sum, input) => {
-        const value = parseFloat(input) || 0; // Convert input value to number, default to 0 if NaN
+    // Sum of all input values
+    const totalSum = inputIds.reduce((sum, id) => {
+        const value = parseFloat(document.getElementById(id).value) || 0;
         return sum + value;
     }, 0);
 
-
-    currentSum.innerText = "";
-
-    // Update currentSum element
-    currentSum.innerText = "Current Sum: " + totalSum.toFixed(1); // Display sum with 2 decimal places
+    // Update the current sum
+    currentSum.innerText = `Current Sum: ${totalSum.toFixed(1)}`;
 }
 
+// Call onModelInputChange() whenever a custom model field is changed
 document.addEventListener('DOMContentLoaded', function () {
     // Get all elements with the class 'modelInput'
     const modelInputs = document.querySelectorAll('.modelInput');
@@ -3277,62 +2840,6 @@ function loadOptimizedLineups() {
     
         return allLineups;
     }
-    
-
-    // Example usage:
-    const modelData2 = [
-        { player: 'player1', fdSalary: 10000, rating: 97 },
-        { player: 'player2', fdSalary: 9500, rating: 85 },
-        { player: 'player3', fdSalary: 11000, rating: 92 },
-        { player: 'player4', fdSalary: 8800, rating: 78 },
-        { player: 'player5', fdSalary: 10500, rating: 89 },
-        { player: 'player6', fdSalary: 9300, rating: 88 },
-        { player: 'player7', fdSalary: 9700, rating: 90 },
-        { player: 'player8', fdSalary: 9200, rating: 91 },
-        { player: 'player9', fdSalary: 8900, rating: 86 },
-        { player: 'player10', fdSalary: 10200, rating: 94 },
-        { player: 'player11', fdSalary: 9800, rating: 87 },
-        { player: 'player12', fdSalary: 9400, rating: 93 },
-        { player: 'player13', fdSalary: 9900, rating: 96 },
-        { player: 'player14', fdSalary: 9100, rating: 84 },
-        { player: 'player15', fdSalary: 10800, rating: 88 },
-        { player: 'player16', fdSalary: 9600, rating: 90 },
-        { player: 'player17', fdSalary: 9300, rating: 85 },
-        { player: 'player18', fdSalary: 9800, rating: 89 },
-        { player: 'player19', fdSalary: 9500, rating: 91 },
-        { player: 'player20', fdSalary: 10300, rating: 92 },
-        { player: 'player21', fdSalary: 9700, rating: 94 },
-        { player: 'player22', fdSalary: 9200, rating: 86 },
-        { player: 'player23', fdSalary: 9000, rating: 88 },
-        { player: 'player24', fdSalary: 9400, rating: 91 },
-        { player: 'player25', fdSalary: 9900, rating: 93 },
-        { player: 'player26', fdSalary: 9600, rating: 95 },
-        { player: 'player27', fdSalary: 9200, rating: 87 },
-        { player: 'player28', fdSalary: 9100, rating: 89 },
-        { player: 'player29', fdSalary: 8800, rating: 84 },
-        { player: 'player30', fdSalary: 10500, rating: 91 },
-        { player: 'player31', fdSalary: 10200, rating: 92 },
-        { player: 'player32', fdSalary: 9800, rating: 90 },
-        { player: 'player33', fdSalary: 9300, rating: 86 },
-        { player: 'player34', fdSalary: 9200, rating: 88 },
-        { player: 'player35', fdSalary: 9400, rating: 89 },
-        { player: 'player36', fdSalary: 9500, rating: 87 },
-        { player: 'player37', fdSalary: 9900, rating: 91 },
-        { player: 'player38', fdSalary: 9600, rating: 88 },
-        { player: 'player39', fdSalary: 9700, rating: 89 },
-        { player: 'player40', fdSalary: 9000, rating: 92 },
-        { player: 'player41', fdSalary: 9200, rating: 94 },
-        { player: 'player42', fdSalary: 9300, rating: 86 },
-        { player: 'player43', fdSalary: 9500, rating: 88 },
-        { player: 'player44', fdSalary: 9800, rating: 89 },
-        { player: 'player45', fdSalary: 9600, rating: 90 },
-        { player: 'player46', fdSalary: 9400, rating: 91 },
-        { player: 'player47', fdSalary: 9700, rating: 92 },
-        { player: 'player48', fdSalary: 9200, rating: 93 },
-        { player: 'player49', fdSalary: 9000, rating: 94 },
-        { player: 'player50', fdSalary: 9100, rating: 95 },
-        // ... (other players)
-    ];    
     
     // Call to generate optimal lineups
     const n = numLineups; // Specify the number of lineups to generate
