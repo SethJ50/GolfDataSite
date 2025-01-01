@@ -1087,9 +1087,9 @@ function loadProfile(){
             sg = ['sgPutt', 'sgArg', 'sgApp', 'sgT2G', 'sgOtt', 'sgTot'];
 
             if(field == 'dates') {
-                return 110;
+                return 70;
             } else if(field == 'finish') {
-                return 60;
+                return 55;
             } else if(field == 'tournament') {
                 return 280;
             } else if(field == 'Round') {
