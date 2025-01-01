@@ -744,7 +744,7 @@ function loadCheatSheet() {
             }
         }
 
-        let gridApi;
+        //let gridApi;
         let currColDefs = null;
 
         // Set Cell Format Style onChange
