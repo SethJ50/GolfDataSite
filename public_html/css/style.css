@@ -359,6 +359,7 @@ tr.profBodyRow:hover {
 .ag-theme-quartz .ag-cell {
     border-right: 1px solid #ccc; /* Adjust color and thickness as needed */
     text-align: center;
+    padding: 1px;
 }
 
 /* Custom styles for DataTables Buttons */

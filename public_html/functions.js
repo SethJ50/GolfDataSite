@@ -33,64 +33,69 @@ function floorCeiling() {
 }
 
 /*
-    logSavedData() -- Using localStorage variable that carries data from a user,
-        checks local storage to see if it has data - specifically data "Choose Players",
-        which is the chosen players for an optimizer's player pool, and "Exclude Players",
-        which is a group of players excluded from the optimizer
+    logSavedData() -- 
+        - Gets custom model saved data, saved player pool & saved excluded players
+        - Populate player pool & excluded player dropdowns
+        - On change of player pool / excluded player list, call to update optimizer data
+        - Set player pool & excluded player lists if saved versions exist
 
     Called by: optimizerSettings.html
 */
 function logSavedData() {
+    // Retrieve saved custom model data from localStorage
     const savedDataJSON = localStorage.getItem('modelData');
-    let inModelData = savedDataJSON ? JSON.parse(savedDataJSON) : [];
-    console.log('in model data: ', inModelData);
-    let chosenPlayers1 = localStorage.getItem('chosenPlayers');
-    let excludedPlayers1 = localStorage.getItem('excludedPlayers');
-    if(chosenPlayers1 == null || excludedPlayers1 == null){
-        localStorage.setItem('selectedModelData', savedDataJSON);
-        console.log('set savedModelData to full set - chosen/excluded was null');
-    }else if (JSON.parse(chosenPlayers1).length == 0 && JSON.parse(excludedPlayers1).length == 0){
-        localStorage.setItem('selectedModelData', savedDataJSON);
-        console.log('set savedModelData to full set');
-    } else {
-        console.log('had some excluded or chosen players already...');
+    let inModelData = [];
+    if (savedDataJSON) {
+        inModelData = JSON.parse(savedDataJSON);
     }
 
-    // Dynamically populate the "Choose Players" dropdown with player names
-    //      (For choosing set of players for player pool)
+    // Retrieve chosen and excluded players data from localStorage
+    let chosenPlayers1 = localStorage.getItem('chosenPlayers');
+    let excludedPlayers1 = localStorage.getItem('excludedPlayers');
+
+    // If there are no chosen/excluded players in localStorage,
+    //      set optimizer data to full custom model data
+    if (chosenPlayers1 == null || excludedPlayers1 == null) { // null case
+        localStorage.setItem('selectedModelData', savedDataJSON);
+        console.log('Set savedModelData to full set - chosen/excluded was null');
+    } else if (JSON.parse(chosenPlayers1).length == 0 && JSON.parse(excludedPlayers1).length == 0) { // empty case
+        localStorage.setItem('selectedModelData', savedDataJSON);
+        console.log('Set savedModelData to full set');
+    } else {
+        console.log('Had some excluded or chosen players already...');
+    }
+
+    // Dynamically populate "Choose Players" (choose player pool) dropdown with player names
     var selectDropdown = document.getElementById('choosePlayerBox');
     var htmlString = "";
-    inModelData.forEach(function(data) {
-        var playerName = data.player;
+    for (var i = 0; i < inModelData.length; i++) {
+        var playerName = inModelData[i].player; // Get player name from model data
         var option = document.createElement('option');
-        option.text = playerName;
-        option.value = playerName;
-        selectDropdown.add(option);
-    });
+        option.text = playerName;  // Set option text to player name
+        option.value = playerName; // Set option value to player name
+        selectDropdown.add(option); // Add option to the dropdown
+    }
 
-    // Dynamically populate the "Exclude Players" dropdown with player names
+    // Dynamically populate "Exclude Players" dropdown with player names
     var excludeDropdown = document.getElementById('excludePlayerBox');
-    inModelData.forEach(function(data) {
-        var playerName = data.player;
+    for (var i = 0; i < inModelData.length; i++) {
+        var playerName = inModelData[i].player; // Get player name from model data
         var option = document.createElement('option');
-        option.text = playerName;
-        option.value = playerName;
-        excludeDropdown.add(option);
-    });
+        option.text = playerName;  // Set option text to player name
+        option.value = playerName; // Set option value to player name
+        excludeDropdown.add(option); // Add option to the dropdown
+    }
 
-    // Trigger Chosen update after adding options to both dropdowns
+    // Call updateSelectedData() given player pool & excluded players
     $(selectDropdown).trigger('chosen:updated');
     $(excludeDropdown).trigger('chosen:updated');
 
-    // NOTE: localStorage saves data from previous optimizer run...
-    // We check local storage and populate selections if there is saved data there
-
-    // Check for selected data in local storage
+    // Check for selected "chosen players" data in localStorage
     const selectedModelDataJSON = localStorage.getItem('chosenPlayers');
     if (selectedModelDataJSON) {
         var selectedModelData = JSON.parse(selectedModelDataJSON);
 
-        // Iterate through the options and select chosen players in "Choose Players" dropdown
+        // Loop through options and mark chosen players in the "Choose Players" dropdown
         for (var i = 0; i < selectDropdown.options.length; i++) {
             var playerName = selectDropdown.options[i].value;
             if (selectedModelData.includes(playerName)) {
@@ -98,55 +103,59 @@ function logSavedData() {
             }
         }
 
-        // Trigger Chosen update after updating selected options for "Choose Players" dropdown
+        // Update optimizer players: updateSelectedData()
         $(selectDropdown).trigger('chosen:updated');
     }
 
-    // Check for excluded players in local storage
+    // Check for selected "excluded players" data in localStorage
     const excludedPlayersJSON = localStorage.getItem('excludedPlayers');
     if (excludedPlayersJSON) {
         var excludedPlayers = JSON.parse(excludedPlayersJSON);
 
-        // Iterate through the options and select excluded players in "Exclude Players" dropdown
+        // Loop through options and mark excluded players in the "Exclude Players" dropdown
         for (var i = 0; i < excludeDropdown.options.length; i++) {
             var playerName = excludeDropdown.options[i].value;
             if (excludedPlayers.includes(playerName)) {
                 excludeDropdown.options[i].selected = true;
             }
         }
+
+        // Update optimizer players: updateSelectedData()
         $(excludeDropdown).trigger('chosen:updated');
     }
-    
 
-    // Initialize the Chosen plugin for "Choose Players"
+    // Initialize the Chosen plugin for the "Choose Players" dropdown
     $(selectDropdown).chosen();
 
-    // Initialize the Chosen plugin for "Exclude Players"
+    // Initialize the Chosen plugin for the "Exclude Players" dropdown
     $(excludeDropdown).chosen();
 
-    // Add event listener for Chosen's 'change' event on "Choose Players" dropdown
+    // On selectDropdown change, call updateSelectedData
     $(selectDropdown).on('change', function() {
-        updateSelectedData(inModelData, savedDataJSON);
+        updateSelectedData(inModelData, savedDataJSON); // Update the selected data when the dropdown changes
     });
 
-    // Add event listener for Chosen's 'change' event on "Exclude Players" dropdown
+    // on excludeDropdown change, call updateSelectedData
     $(excludeDropdown).on('change', function() {
-        updateSelectedData(inModelData, savedDataJSON);
+        updateSelectedData(inModelData, savedDataJSON); // Update the selected data when the dropdown changes
     });
 }
 
 /*
-    updateSelectedData(inModelData, savedDataJSON)
-        Gets list of all players specifically chosen for optimizer player pool, as well as
-        those specified to be excluded, and filters the data for the optimizer (inModelData)
-        to address these specifications
+    updateSelectedData(inModelData, savedDataJSON) --
+        - Grab players in player pool dropdown & excluded player dropdown
+        - Exclude players that are in both dropdown
+        - save lists of excluded and player pool players to local storage
+        - Update list of players to send to optimizer accordingly
+            - (If players are in player pool / some players are excluded)
 */
 function updateSelectedData(inModelData, savedDataJSON) {
-    console.log('update selected data called');
+
+    // Grab player pool & excluded player dropdown elements
     var selectDropdown = document.getElementById('choosePlayerBox');
     var excludeDropdown = document.getElementById('excludePlayerBox');
 
-    // Get selected players from "Choose Players" dropdown
+    // Get selected players for player pool from "Choose Players" dropdown
     var selectedPlayers = Array.from(selectDropdown.selectedOptions).map(option => option.value);
 
     // Get excluded players from "Exclude Players" dropdown
@@ -160,13 +169,15 @@ function updateSelectedData(inModelData, savedDataJSON) {
         }
     });
 
+    // Save the lists of excluded players and chosen player pool
     localStorage.setItem('excludedPlayers', JSON.stringify(excludedPlayers));
     localStorage.setItem('chosenPlayers', JSON.stringify(selectedPlayers));
 
-    // Check if any players are selected in "Choose Players" or "Exclude Players"
+    // If player pool or exluded players are specified
     if (selectedPlayers.length > 0 || excludedPlayers.length > 0) {
         var selectedData;
 
+        // SETUP PLAYER POOL
         // If players are selected in "Choose Players," filter modelData based on selected players
         if (selectedPlayers.length > 0) {
             selectedData = inModelData.filter(data => selectedPlayers.includes(data.player));
@@ -175,11 +186,10 @@ function updateSelectedData(inModelData, savedDataJSON) {
             selectedData = inModelData.filter(data => !excludedPlayers.includes(data.player));
         }
 
-        // Save excluded players to local storage
+        // Save new player pool for optimizer to local storage
         localStorage.setItem('selectedModelData', JSON.stringify(selectedData));
 
-        console.log('Selected model data: ', selectedData);
-    } else {
+    } else { // No modifications needed to custom model player pool
         console.log('No players selected. Using all saved model data.');
         localStorage.setItem('selectedModelData', savedDataJSON);
         console.log('All saved model data: ', inModelData);
@@ -187,9 +197,10 @@ function updateSelectedData(inModelData, savedDataJSON) {
 }
 
 /*
-    goOptimizerResults()
-        Grabs the number of lineups to optimize, and sends the
-        page to optimizer results page.
+    goOptimizerResults() --
+        - Grab number of lineups to make
+        - Set numLineups in local storage
+        - Go to optimizerResults.html page (calls loadOptimizedLineups())
 */
 function goOptimizerResults() {
     let numLineups = document.getElementById('numLineups').value;
@@ -197,31 +208,6 @@ function goOptimizerResults() {
     localStorage.setItem('numLineups', numLineups);
 
     window.location.href = './optimizerResults.html';
-}
-
-/*
-    applyClassesBasedOnValue()
-        Some sort of helper function that adds a 'class' to elements based on there value relative to cutoffs,
-        probably for color filtering
-*/
-function applyClassesBasedOnValue(element, numericValue, lowestCutoff, lowCutoff, mediumCutoff, highCutoff, higherCutoff, highestCutoff) {
-    if (!isNaN(numericValue)) {
-        if (numericValue < lowestCutoff) {
-            element.addClass('lowest-value');
-        } else if (numericValue >= lowestCutoff && numericValue <= lowCutoff) {
-            element.addClass('lower-value');
-        } else if (numericValue >= lowCutoff && numericValue <= mediumCutoff) {
-            element.addClass('low-value');
-        } else if (numericValue >= mediumCutoff && numericValue <= highCutoff) {
-            element.addClass('medium-value');
-        } else if (numericValue >= highCutoff && numericValue <= higherCutoff) {
-            element.addClass('high-value');
-        } else if (numericValue >= higherCutoff && numericValue <= highestCutoff) {
-            element.addClass('higher-value');
-        } else {
-            element.addClass('highest-value');
-        }
-    }
 }
 
 let isCheatSheetInitialized = false;
@@ -1016,12 +1002,12 @@ function loadProfile(){
             { headerName: 'Finish', field: 'finish' },
             { headerName: 'Tournament', field: 'tournament', width: 240},
             { headerName: 'Round', field: 'Round' },
-            { headerName: 'SG: Putt', field: 'sgPutt', valueFormatter: roundToTwoDecimals},
-            { headerName: 'SG: Arg', field: 'sgArg', valueFormatter: roundToTwoDecimals},
-            { headerName: 'SG: App', field: 'sgApp', valueFormatter: roundToTwoDecimals},
-            { headerName: 'SG: Ott', field: 'sgOtt', valueFormatter: roundToTwoDecimals},
-            { headerName: 'SG: T2G', field: 'sgT2G', valueFormatter: roundToTwoDecimals},
-            { headerName: 'SG: TOT', field: 'sgTot', valueFormatter: roundToTwoDecimals},
+            { headerName: 'SG: Putt', field: 'sgPutt', valueFormatter: roundToTwoDecimals, width: 70},
+            { headerName: 'SG: Arg', field: 'sgArg', valueFormatter: roundToTwoDecimals, width: 70},
+            { headerName: 'SG: App', field: 'sgApp', valueFormatter: roundToTwoDecimals, width: 70},
+            { headerName: 'SG: Ott', field: 'sgOtt', valueFormatter: roundToTwoDecimals, width: 70},
+            { headerName: 'SG: T2G', field: 'sgT2G', valueFormatter: roundToTwoDecimals, width: 70},
+            { headerName: 'SG: TOT', field: 'sgTot', valueFormatter: roundToTwoDecimals, width: 70},
             ];
         
         // Function to round some columns to 2 decimals
@@ -2695,207 +2681,197 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function loadOptimizedLineups() {
-    let numLineups;
-    let modelData;
-
-    // get model data from local storage
-    const savedDataJSONModel = localStorage.getItem('selectedModelData');
-    const savedDataJSONNum = localStorage.getItem('numLineups');
-    // ensure we have saved model data
-    if (savedDataJSONModel) {
-        modelData = JSON.parse(savedDataJSONModel);
-        console.log('model data: ', modelData);
-    } else {
-        console.log('No saved model data found');
-        return;
+    // Gets saved model data from custom model
+    function getSavedModelData() {
+        const savedDataJSON = localStorage.getItem('selectedModelData');
+        if (!savedDataJSON) {
+            console.log('No saved model data found');
+            return null;
+        }
+        console.log('Model data:', JSON.parse(savedDataJSON));
+        return JSON.parse(savedDataJSON);
+    }
+    
+    // Gets number of lineups to generate
+    function getNumLineups() {
+        const savedDataNum = localStorage.getItem('numLineups');
+        const numLineups = savedDataNum ? parseInt(savedDataNum) : 0;
+        if (!numLineups) {
+            console.log('No saved number of lineups found');
+        }
+        return numLineups;
     }
 
-    // get num lineups to make
-    if (savedDataJSONNum) {
-        numLineups = parseInt(savedDataJSONNum);
-        console.log('numLineups: ', numLineups);
-    } else {
-        console.log('No saved number of lineups found');
-        return;
-    }
+    const modelData = getSavedModelData();
+    if (!modelData) return;
 
-    // sort model data in desc order by rating
+    const numLineups = getNumLineups();
+    if (!numLineups) return;
+
+    // Sort model data by rating in descending order
     modelData.sort((a, b) => b.rating - a.rating);
 
-    // Recursively generates optimal linepu
-    function generateOptimalLineup(modelData, currentIndex, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating, platform) {
-        // Base case: if the lineup has 6 players, update the best lineup if needed
-        if (currentLineup.length === 6) {
-            // Calculate total rating and total salary for the current lineup
-            const totalRating = currentLineup.reduce((sum, player) => sum + player.rating, 0);
-            const totalSalary = currentLineup.reduce((sum, player) => sum + player.fdSalary, 0);
+    // Generate optimal lineups
+    const allLineups = generateOptimalLineups(modelData, numLineups);
+
+    // Show player exposure percentages
+    const playerExposures = calculatePlayerPercentages(allLineups);
+    populateDataTable(playerExposures);
     
-            // Check if the current lineup is better than the current best lineup
-            if (!bestLineup.totalRating || totalRating > bestLineup.totalRating) {
-                // Update the best lineup information
-                bestLineup.players = [...currentLineup];
-                bestLineup.totalRating = totalRating;
-                bestLineup.totalSalary = totalSalary;
-            }
-            return; // Exit the function as the lineup is complete
+    // Alert if not enough lineups can be generated
+    if (allLineups.length < numLineups) {
+        alert(`Based on your optimizer settings, can only make ${allLineups.length} total lineups.`);
+    }
+
+    console.log('All Lineups:', allLineups);
+
+    function generateOptimalLineups(modelData, numLineups) {
+        const platform = modelData[0].platform;
+        const sortedModelData = modelData.slice(0, 40); // Only use top 40 players
+        const allLineups = [];
+        const maxLineups = choose(sortedModelData.length, 6);
+    
+        // Ensure we can generate the requested number of lineups
+        const lineupsToGenerate = Math.min(numLineups, maxLineups);
+        if (lineupsToGenerate < numLineups) {
+            console.log(`Can only generate ${lineupsToGenerate} unique lineups. Add more players to fully generate!`);
         }
     
-        // Iterate through the remaining players in modelData
-        for (let i = currentIndex; i < modelData.length; i++) {
-            const currentPlayer = modelData[i];
-            let maxSalary;
-            let playerSalary;
-            if(platform == 'fanduel'){
-                maxSalary = 60000;
-                playerSalary = currentPlayer.fdSalary;
+        const dataTable = initializeDataTable(numLineups);
+    
+        // Generate the specified number of lineups
+        for (let i = 0; i < lineupsToGenerate; i++) {
+            const bestLineup = { players: [], totalRating: 0, totalSalary: 0 };
+            let targetRating;
+            if (i === 0) {
+                targetRating = 601;
             } else {
-                maxSalary = 50000;
-                playerSalary = currentPlayer.dkSalary;
+                targetRating = allLineups[allLineups.length - 1].totalRating - 0.01;
             }
     
-            // Check if adding the current player exceeds the salary limit
-            if (currentTotalSalary + playerSalary <= maxSalary &&
-                (!targetRating || currentTotalRating + currentPlayer.rating < targetRating)) {
-                // Choose the current player for the lineup
+            generateOptimalLineup(sortedModelData, 0, [], 0, bestLineup, targetRating, 0, platform);
+    
+            allLineups.push({ ...bestLineup });
+            updateDataTable(dataTable, bestLineup);
+        }
+    
+        dataTable.draw();
+        return allLineups;
+    }
+    
+
+    function generateOptimalLineup(modelData, currentIndex, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating, platform) {
+        // TODO: Can improve this logic in the future
+        // BASE CASE: If the lineup contains 6 players, check if it's the best lineup found so far
+        if (currentLineup.length === 6) {
+            let totalRating = 0;
+            let totalSalary = 0;
+    
+            // Loop to calculate the total rating
+            for (let i = 0; i < currentLineup.length; i++) {
+                totalRating += currentLineup[i].rating;
+            }
+    
+            // Loop to calculate the total salary based on platform
+            for (let i = 0; i < currentLineup.length; i++) {
+                totalSalary += platform === 'fanduel' ? currentLineup[i].fdSalary : currentLineup[i].dkSalary;
+            }
+    
+            // If the totalRating of this lineup is higher than the current best, update the best lineup
+            if (!bestLineup.totalRating || totalRating > bestLineup.totalRating) {
+                bestLineup.players = [...currentLineup];  // Copy the current lineup to bestLineup
+                bestLineup.totalRating = totalRating;     // Update the total rating of the best lineup
+                bestLineup.totalSalary = totalSalary;     // Update the total salary of the best lineup
+            }
+            return;  // Exit the function as we've reached a valid lineup of 6 players
+        }
+    
+        // RECURSIVE CASE: Try adding each player starting from the current index
+        for (let i = currentIndex; i < modelData.length; i++) {
+            const currentPlayer = modelData[i];
+            const playerSalary = platform === 'fanduel' ? currentPlayer.fdSalary : currentPlayer.dkSalary;
+            const maxSalary = platform === 'fanduel' ? 60000 : 50000;
+    
+            // Check if adding this player would exceed the salary cap and if it doesn't exceed the target rating
+            if (currentTotalSalary + playerSalary <= maxSalary && (!targetRating || currentTotalRating + currentPlayer.rating < targetRating)) {
+                // Add current player to the lineup
                 currentLineup.push(currentPlayer);
-                currentTotalSalary += playerSalary;
-                currentTotalRating += currentPlayer.rating;
-    
-                // Recursively generate lineups with the current player chosen
-                generateOptimalLineup(modelData, i + 1, currentLineup, currentTotalSalary, bestLineup, targetRating, currentTotalRating, platform);
-    
-                // Backtrack: remove the last player to explore other combinations
+                // Recursively generate lineups with the new player added
+                generateOptimalLineup(modelData, i + 1, currentLineup, currentTotalSalary + playerSalary, bestLineup, targetRating, currentTotalRating + currentPlayer.rating, platform);
+                // Backtrack: Remove the player from the lineup to try the next one
                 currentLineup.pop();
-                currentTotalSalary -= playerSalary;
-                currentTotalRating -= currentPlayer.rating;
-    
             }
         }
     }    
-
-    // x choose y function
-    function choose(x, y) {
-        if (y < 0 || y > x) {
-            return 0;
-        }
     
+    // Function for x choose y
+    function choose(x, y) {
+        if (y < 0 || y > x) return 0;
         let result = 1;
         for (let i = 1; i <= y; i++) {
             result *= (x - i + 1) / i;
         }
-    
         return Math.round(result);
     }
     
-    // Generate all optimal lineups
-    function generateOptimalLineups(modelData, numLineups) {
-        // sort data in desc order
-        const sortedModelData = modelData.sort((a, b) => b.rating - a.rating);
-
-        // only use top 40 players (complexity)
-        let sortedModelDataSlice = sortedModelData.slice(0, 40);
-
-        // grab betting platform
-        let platform = sortedModelDataSlice[0].platform;
-        console.log('sorted model data sliced: ', sortedModelDataSlice, ' length: ', sortedModelDataSlice.length);
-        const allLineups = [];
-
-        // Ensure player pool allows enough players to make this many lineups
-        let numChoose = choose(sortedModelDataSlice.length, 6);
-        let numGen = numLineups;
-        if (numChoose < numLineups) {
-            console.log('Could only generate ', numChoose, ' unique lineups. Add more players to fully generate!');
-            numGen = numChoose;
-        }
-    
-        // Initialize DataTable
-        var dataTable = $('#allLineupsTable').DataTable({
-            order: [[6, 'desc']],  // Sort by totalRating column in descending order
+    // Initializes optimal lineup data table
+    function initializeDataTable(numLineups) {
+        return $('#allLineupsTable').DataTable({
+            order: [[6, 'desc']], 
             pageLength: numLineups,
-            dom: 'Bfrtip',  // Specify that you want to use the Buttons extension
-            buttons: [
-                'excelHtml5',
-            ]
+            dom: 'Bfrtip',
+            buttons: ['excelHtml5']
         });
+    }
     
-        // Generate the specified number of lineups
-        for (let i = 0; i < numGen; i++) {
-            const bestLineup = { players: [], totalRating: 0, totalSalary: 0 };
-
-            // Each iteration, change target rating so we continue to get next best lineup
-            const targetRating = i === 0 ? 601 : (allLineups[allLineups.length - 1].totalRating - 0.01);
+    // Add lineup as row to dataTable data
+    function updateDataTable(dataTable, bestLineup) {
+        const rowData = [];
     
-            generateOptimalLineup(sortedModelDataSlice, 0, [], 0, bestLineup, targetRating, 0, platform);
-    
-            // Add the best lineup to the list
-            allLineups.push({ ...bestLineup });
-    
-            // Populate DataTable with data for each lineup
-            var rowData = bestLineup.players.map(player => player.player).concat([bestLineup.totalRating.toFixed(2), bestLineup.totalSalary]);
-            dataTable.row.add(rowData);
+        // Loop through players to get their names
+        for (let i = 0; i < bestLineup.players.length; i++) {
+            rowData.push(bestLineup.players[i].player);
         }
     
-        // Draw the DataTable
-        dataTable.draw();
+        // Add totalRating and totalSalary at the end of the row data
+        rowData.push(bestLineup.totalRating.toFixed(2));
+        rowData.push(bestLineup.totalSalary);
     
-        return allLineups;
+        // Add the row to the DataTable
+        dataTable.row.add(rowData);
     }
     
-    // Call to generate optimal lineups
-    const n = numLineups; // Specify the number of lineups to generate
-    const allLineups = generateOptimalLineups(modelData, n);
-
-    if( allLineups.length < numLineups){
-        let alertString = 'Based on your optimizer settings, can only make ' + allLineups.length + ' total lineups';
-        alert(alertString);
-    }
-    
-    console.log('All Lineups: ', allLineups);
-
-    // Function to calculate player occurrences and percentages
+    // Calculates player exposure percentages
     function calculatePlayerPercentages(allLineups) {
         const playerCount = {};
-
-        // Count occurrences of each player
+    
         allLineups.forEach(lineup => {
             lineup.players.forEach(playerObj => {
-                let playerName = playerObj.player;
-                console.log('player: ', playerName);
+                const playerName = playerObj.player;
                 playerCount[playerName] = (playerCount[playerName] || 0) + 1;
             });
         });
-
-        // Calculate percentages
+    
         const totalLineups = allLineups.length;
-        const playerPercentages = Object.entries(playerCount).map(([player, count]) => ({
+        return Object.entries(playerCount).map(([player, count]) => ({
             player,
-            percentage: (count / totalLineups * 100).toFixed(2),
+            percentage: ((count / totalLineups) * 100).toFixed(2)
         }));
-
-        return playerPercentages;
     }
-
-    // Function to populate DataTable with ownership percentages
+    
+    // Populates player exposures to exposure table
     function populateDataTable(playerPercentages) {
-
         const table = $('#playerTable').DataTable({
             order: [[1, 'desc']],
             lengthChange: false,
-            pageLength: -1, 
+            pageLength: -1
         });
-
-        // Clear existing rows
+    
         table.clear();
-
-        // Add rows with player name and percentage
         playerPercentages.forEach(player => {
-            table.row.add([player.player, player.percentage + '%']).draw();
+            table.row.add([player.player, `${player.percentage}%`]).draw();
         });
     }
-
-    let playerExposures = calculatePlayerPercentages(allLineups);
-    console.log('exposures: ', playerExposures);
-    populateDataTable(playerExposures);
 }
 
 
