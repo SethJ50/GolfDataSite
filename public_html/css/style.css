@@ -9,14 +9,20 @@ body {
 #headerBar {
     position: fixed;
     width: 100%;
-    background-color: rgb(0,0,70);
+    background-color: rgb(0, 0, 70);
     height: 50px;
     z-index: 10;
+    padding-right: 50px;
+
+    /* Enable horizontal scrolling */
+    overflow-x: auto;
+    white-space: nowrap; /* Prevent wrapping of elements */
+    scrollbar-width: none;
 }
 
 .navText {
     display: inline-block;
-    margin-left: 20px;
+    margin-left: 5px;
     color: white;
     font-family:'Lato', sans-serif;
     font-weight: lighter;
@@ -24,6 +30,7 @@ body {
     font-size: 18px;
     padding-top: 10px;
     letter-spacing: 0px;
+    margin-right: 10px;
 }
 
 #navTitle {

@@ -2066,7 +2066,7 @@ function loadModelResults() {
                     updatedAvgRoundData50[key + '50'] = avgRoundData50[key];
                 }
             }
-            avgRoundData36 = updatedAvgRoundData36;
+            avgRoundData50 = updatedAvgRoundData50;
 
             // RECENT HISTORY - get most recent 10 rounds for Player
             let tournamentAbbreviations = makeTournAbbrv(jsonData);
@@ -2110,10 +2110,12 @@ function loadModelResults() {
             }
             
             // Calculate averages for each field strength
+            //     Note: We use difference of sg_avg_for_difficulty_level - sg_average_overall
+            //           to adjust for player strength
             fieldStrengthData = {
-                sgEasy: calculateAverage(fieldStrength.easy.total, fieldStrength.easy.count),
-                sgMed: calculateAverage(fieldStrength.medium.total, fieldStrength.medium.count),
-                sgHard: calculateAverage(fieldStrength.hard.total, fieldStrength.hard.count)
+                sgEasy: Number((calculateAverage(fieldStrength.easy.total, fieldStrength.easy.count) - avgRoundData50.sgTot50).toFixed(2)),
+                sgMed: Number((calculateAverage(fieldStrength.medium.total, fieldStrength.medium.count) - avgRoundData50.sgTot50).toFixed(2)),
+                sgHard: Number((calculateAverage(fieldStrength.hard.total, fieldStrength.hard.count) - avgRoundData50.sgTot50).toFixed(2))
             };
 
             function formatData(value) {
