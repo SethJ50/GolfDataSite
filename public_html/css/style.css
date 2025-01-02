@@ -530,8 +530,8 @@ div.dt-button-collection {
     align-items: flex-start;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 10px;
-    padding-right: 15px;
+    padding-left: 20px;
+    padding-right: 20px;
     padding-top: 15px;
     padding-bottom: 15px;
     overflow-x: auto;
@@ -582,8 +582,8 @@ div.dt-button-collection {
 }
 
 #quadPlot {
-    width: 600px;
-    margin-left: 10px;
+    width: 525px;
+    margin-left: 5px;
 }
 
 #floorCeilSheet {
