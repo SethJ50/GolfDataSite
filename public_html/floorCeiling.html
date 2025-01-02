@@ -7,6 +7,7 @@
         <title>DataCaddie</title>
 
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
         <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
         <script src="https://d3js.org/d3.v5.min.js"></script>
@@ -26,14 +27,18 @@
         </div>
         <div id="mainBody">
             <div id="trendsDiv">
+                <div id="fcHeader" class="pageHeader">Floor Ceiling Performance</div>
+                <div id="fcDescr" class="pageDescr">
+                    What percentage of rounds does each golfer gain 0-5 strokes to the field?
+                </div>
                 <div id="filterContainerFC">
                     <div id="searchAreaTR">
                         <div id="searchInnerAreaTR">
-                            <div>Search:</div>
+                            <div class="tableFilter">Search:</div>
                             <input type="text" id="filter-text-box-floor-ceil" placeholder="Filter..." oninput="onFilterTextBoxChangedFloorCeil();">
                         </div>
 
-                        <div id="baseRdsDiv">
+                        <div id="baseRdsDiv" class="tableFilter">
                             <div>Base Round Size:</div>
                             <input type="text" id="baseRdsInp" value="100" onchange="onFilterTextBoxChangedFloorCeil(); loadFloorCeilingSheet();">
                         </div>

@@ -32,6 +32,10 @@ function floorCeiling() {
     window.location.href = './floorCeiling.html';
 }
 
+function fieldStrength() {
+    window.location.href = './fieldStrength.html';
+}
+
 /*
     logSavedData() -- 
         - Gets custom model saved data, saved player pool & saved excluded players

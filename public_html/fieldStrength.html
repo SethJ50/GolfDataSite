@@ -7,14 +7,14 @@
         <title>DataCaddie</title>
 
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
         <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
         <script src="https://d3js.org/d3.v5.min.js"></script>
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
         <link rel="stylesheet" type="text/css" href="css/style.css"> <!-- Your custom stylesheet -->
     </head>
-    <body onload="loadTrendsSheet();">
+    <body onload="loadFloorCeilingSheet();"> 
         <div id="headerBar">
             <a href="#" class="navText" id="navTitle" onclick="home();">DataCaddie</a>
             <a href="#" class="navText" onclick="home();">Home</a>
@@ -22,36 +22,31 @@
             <a href="#" class="navText" onclick="golferProfiles();">Golfer Profiles</a>
             <a href="#" class="navText" onclick="trends();">Trends</a>
             <a href="#" class="navText" onclick="floorCeiling();">Floor Ceiling</a>
+			<a href="#" class="navText" onclick="fieldStrength();">Field Strength</a>
             <a href="#" class="navText" onclick="modelPage();">Custom Model</a>
             <a href="#" class="navText" onclick="uploadPage();">Upload Data</a>
         </div>
-        <div id="mainBodyTrend">
+        <div id="mainBody">
             <div id="trendsDiv">
-                <div id="trHeader" class="pageHeader">Strokes Gained Trends</div>
-                <div id="trDescr" class="pageDescr">
-                    How is each golfer performing recently in each category compared to their baseline skill level?
+                <div id="fsHeader" class="pageHeader">Field Strength Performance</div>
+                <div id="fsDescr" class="pageDescr">
+                    How well does each golfer perform in various field strengths versus their baseline skill level?
                 </div>
-                <div id="filterContainerTR">
+                <div id="filterContainerFC">
                     <div id="searchAreaTR">
                         <div id="searchInnerAreaTR">
-                            <div>Search:</div>
-                            <input type="text" id="filter-text-box-trend" placeholder="Filter..." oninput="onFilterTextBoxChangedTrend();">
-                        </div>
-    
-                        <div id="recRdsDiv">
-                            <div># Recent Rounds:</div>
-                            <input type="text" id="recRdsInp" value="12" onchange="onFilterTextBoxChangedTrend(); loadTrendsSheet();">
+                            <div class="tableFilter">Search:</div>
+                            <input type="text" id="filter-text-box-floor-ceil" placeholder="Filter..." oninput="onFilterTextBoxChangedFloorCeil();">
                         </div>
 
-                        <div id="baseRdsDiv">
+                        <div id="baseRdsDiv" class="tableFilter">
                             <div>Base Round Size:</div>
-                            <input type="text" id="baseRdsInp" value="50" onchange="onFilterTextBoxChangedTrend(); loadTrendsSheet();">
+                            <input type="text" id="baseRdsInp" value="100" onchange="onFilterTextBoxChangedFloorCeil(); loadFloorCeilingSheet();">
                         </div>
                     </div>
                 </div>
-                <div id="trendPlotContainer">
-                    <div id="trendSheet" class="ag-theme-quartz"></div>
-                    <div id="quadPlot"></div>
+                <div id="floorCeilSheet" class="ag-theme-quartz">
+
                 </div>
             </div>
         </div>

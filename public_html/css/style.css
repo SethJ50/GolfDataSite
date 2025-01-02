@@ -49,10 +49,26 @@ body {
     z-index: 5;
 }
 
+#mainBodyTrend {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top:50px;
+    background-color: white;
+    z-index: 5;
+}
+
 #mainParagraph {
     text-align: center;
     margin-left: 25px;
     margin-right: 25px;
+}
+
+.tableFilter {
+    font-size: 13px;
+    font-family: 'Roboto', sans-serif;
+    color: black;
 }
 
 #cheatSheet {
@@ -508,8 +524,10 @@ div.dt-button-collection {
 }
 
 #trendsDiv {
-    width: 95%;
-    display: block;
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     margin-left: auto;
     margin-right: auto;
     padding-left: 10px;
@@ -519,6 +537,16 @@ div.dt-button-collection {
     overflow-x: auto;
     height: fit-content;
     margin-bottom: 20px;
+}
+
+#trHeader {
+    margin-left: 2px;
+    margin-bottom: 5px;
+}
+
+#trDescr {
+    margin-left: 15px;
+    margin-bottom: 10px;
 }
 
 #searchAreaTR {
@@ -555,6 +583,7 @@ div.dt-button-collection {
 
 #quadPlot {
     width: 600px;
+    margin-left: 10px;
 }
 
 #floorCeilSheet {
@@ -570,8 +599,41 @@ div.dt-button-collection {
     flex-direction: row;
     width: 900px;
     height: fit-content;
-    padding-left: 10px;
+    padding-left: 5px;
     margin-bottom: 10px;
+}
+
+.pageHeader {
+    font-size: 25px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    color: rgb(0, 0, 70);
+}
+
+.pageDescr {
+    font-size: 13px;
+    font-family: 'Roboto', sans-serif;
+    color: grey;
+}
+
+#fcHeader {
+    display: flex;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    width: 900px;
+    margin-bottom: 5px;
+    padding-left: 5px;
+}
+
+#fcDescr {
+    display: flex;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    width: 900px;
+    margin-bottom: 10px;
+    padding-left: 30px;
 }
 
 #filterContainerFC {
