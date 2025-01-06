@@ -651,6 +651,10 @@ div.dt-button-collection {
     filter: brightness(0.7);
 }
 
+#floorCeilSheet .ag-row:hover {
+    filter: brightness(0.7);
+}
+
 
 #flagSheet{
     width: 95%;
