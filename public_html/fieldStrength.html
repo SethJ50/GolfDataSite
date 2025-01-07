@@ -14,7 +14,7 @@
 
         <link rel="stylesheet" type="text/css" href="css/style.css"> <!-- Your custom stylesheet -->
     </head>
-    <body onload="loadFloorCeilingSheet();"> 
+    <body onload="loadFieldStrengthSheet();"> 
         <div id="headerBar">
             <a href="#" class="navText" id="navTitle" onclick="home();">DataCaddie</a>
             <a href="#" class="navText" onclick="home();">Home</a>
@@ -30,22 +30,30 @@
             <div id="trendsDiv">
                 <div id="fsHeader" class="pageHeader">Field Strength Performance</div>
                 <div id="fsDescr" class="pageDescr">
-                    How well does each golfer perform in various field strengths versus their baseline skill level?
+                    How well does each golfer perform in various field strengths relative to their baseline skill level?
+                </div>
+                <div id="fsDescr2" class="pageDescr">
+                    Adj: Neutralizes players with less rounds in specific field strength
                 </div>
                 <div id="filterContainerFC">
                     <div id="searchAreaTR">
-                        <div id="searchInnerAreaTR">
-                            <div class="tableFilter">Search:</div>
-                            <input type="text" id="filter-text-box-floor-ceil" placeholder="Filter..." oninput="onFilterTextBoxChangedFloorCeil();">
-                        </div>
-
-                        <div id="baseRdsDiv" class="tableFilter">
-                            <div>Base Round Size:</div>
-                            <input type="text" id="baseRdsInp" value="100" onchange="onFilterTextBoxChangedFloorCeil(); loadFloorCeilingSheet();">
+                        <div class="tableFilterContainer">
+                            <div id="searchInnerAreaTR">
+                                <div class="tableFilter">Search:</div>
+                                <input type="text" id="filter-text-box-field-strength" placeholder="Filter..." oninput="onFilterTextBoxChangedFieldStrength();">
+                            </div>
+                            <div id="levelRdsDiv" class="tableFilter">
+                                <div>Level Round Size:</div>
+                                <input type="text" id="levelRdsInp" value="100" onchange="onFilterTextBoxChangedFieldStrength(); loadFieldStrengthSheet();">
+                            </div>
+                            <div id="baseRdsDiv" class="tableFilter">
+                                <div>Base Round Size:</div>
+                                <input type="text" id="baseRdsInp" value="100" onchange="onFilterTextBoxChangedFieldStrength(); loadFieldStrengthSheet();">
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div id="floorCeilSheet" class="ag-theme-quartz">
+                <div id="fieldStrengthSheet" class="ag-theme-quartz">
 
                 </div>
             </div>
