@@ -733,6 +733,45 @@ app.get('/get/cheatSheet/', async (req, res) => {
     }
   });
 
+app.get('/get/fieldStrengthSheet', async (req, res) => {
+  try {
+    const salariesResults = await salaries.find({});
+
+    if(salariesResults.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    // Extract player names from salariesResults
+    const playerNames = salariesResults.map(result => result.player);
+
+    const convertedPlayerNamesPga = playerNames.map(name => FD_TO_PGA[name] || name);
+
+    const convertedPlayerNamesTournament = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
+
+    // Perform subsequent queries using the filtered player names
+    const tournamentRowResults = await TournamentRow.find({$or: [{player: {$in: convertedPlayerNamesTournament}}, {player: {$in: playerNames}}], 'Round': {$ne: 'Event'}});
+    const fieldStrengthResults = await fieldStrength.find({});
+
+    tournamentRowResults.forEach(result => {
+      if (TO_FD[result.player]) {
+        result.player = TO_FD[result.player];
+      }
+    });
+
+    const combinedResults = {
+      salaries: salariesResults,
+      tournamentRow: tournamentRowResults,
+      fieldStrength: fieldStrengthResults
+    }
+
+    res.json(combinedResults);
+  } catch(error) {
+    console.error('Error retrieving data:', error);
+    res.status(500).json({error: 'Internal Server Error'});
+  }
+});
+
 app.listen(port, () =>
 console.log(
     `Example app listening at http://127.0.0.1:${port}` // Change this ip address

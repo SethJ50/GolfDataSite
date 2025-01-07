@@ -65,10 +65,18 @@ body {
     margin-right: 25px;
 }
 
+.tableFilterContainer {
+    display: flex;
+    gap: 10px; /* Adds spacing between the divs */
+    align-items: center; /* Aligns the content vertically */
+}
+
 .tableFilter {
     font-size: 13px;
     font-family: 'Roboto', sans-serif;
     color: black;
+    display: flex;
+    flex-direction: column;
 }
 
 #cheatSheet {
@@ -549,6 +557,21 @@ div.dt-button-collection {
     margin-bottom: 10px;
 }
 
+#fsHeader {
+    margin-left: 8px;
+    margin-bottom: 5px;
+}
+
+#fsDescr {
+    margin-left: 20px;
+    margin-bottom: 2px;
+}
+
+#fsDescr2 {
+    margin-left: 24px;
+    margin-bottom: 7px;
+}
+
 #searchAreaTR {
     display: inline;
     width: fit-content;
@@ -591,6 +614,14 @@ div.dt-button-collection {
     margin-left: auto;
     margin-right: auto;
     width: 900px;
+    height: 700px;
+}
+
+#fieldStrengthSheet {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 975px;
     height: 700px;
 }
 
@@ -648,6 +679,10 @@ div.dt-button-collection {
 }
 
 #trendSheet .ag-row:hover {
+    filter: brightness(0.7);
+}
+
+#fieldStrengthSheet .ag-row:hover {
     filter: brightness(0.7);
 }
 

@@ -2072,6 +2072,16 @@ function loadModelResults() {
             }
             avgRoundData50 = updatedAvgRoundData50;
 
+            // SG: LAST 50 ROUNDS
+            let avgRoundData100 = averageSgCats(100, jsonData, player);
+            let updatedAvgRoundData100 = {};
+            for (let key in avgRoundData100) {
+                if (avgRoundData100.hasOwnProperty(key)) {
+                    updatedAvgRoundData100[key + '100'] = avgRoundData100[key];
+                }
+            }
+            avgRoundData100 = updatedAvgRoundData100;
+
             // RECENT HISTORY - get most recent 10 rounds for Player
             let tournamentAbbreviations = makeTournAbbrv(jsonData);
             let recentHistory = getRecentHistory(jsonData.tournamentRow, player);
@@ -2101,13 +2111,13 @@ function loadModelResults() {
                 }
             
                 let sof = sofTournament.strength;
-                if (sof <= -0.15) {
+                if (sof <= -0.15 && fieldStrength.easy.count < 100) {
                     fieldStrength.easy.total += row.sgTot;
                     fieldStrength.easy.count++;
-                } else if (sof >= 0.7) {
+                } else if (sof >= 0.7 && fieldStrength.hard.count < 100) {
                     fieldStrength.hard.total += row.sgTot;
                     fieldStrength.hard.count++;
-                } else {
+                } else if (fieldStrength.medium.count < 100) {
                     fieldStrength.medium.total += row.sgTot;
                     fieldStrength.medium.count++;
                 }
@@ -2117,10 +2127,40 @@ function loadModelResults() {
             //     Note: We use difference of sg_avg_for_difficulty_level - sg_average_overall
             //           to adjust for player strength
             fieldStrengthData = {
-                sgEasy: Number((calculateAverage(fieldStrength.easy.total, fieldStrength.easy.count) - avgRoundData50.sgTot50).toFixed(2)),
-                sgMed: Number((calculateAverage(fieldStrength.medium.total, fieldStrength.medium.count) - avgRoundData50.sgTot50).toFixed(2)),
-                sgHard: Number((calculateAverage(fieldStrength.hard.total, fieldStrength.hard.count) - avgRoundData50.sgTot50).toFixed(2))
+                sgEasy: Number((calculateAverage(fieldStrength.easy.total, fieldStrength.easy.count) - avgRoundData100.sgTot100).toFixed(2)),
+                sgEasyN: Number(fieldStrength.easy.count),
+                sgMed: Number((calculateAverage(fieldStrength.medium.total, fieldStrength.medium.count) - avgRoundData100.sgTot100).toFixed(2)),
+                sgMedN: Number(fieldStrength.medium.count),
+                sgHard: Number((calculateAverage(fieldStrength.hard.total, fieldStrength.hard.count) - avgRoundData100.sgTot100).toFixed(2)),
+                sgHardN: Number(fieldStrength.hard.count),
             };
+
+            // Neutralize players with less rounds in specific field strengths
+            //      Remove this to go back to normal...
+            function powerAdjust(sgLevel, sgLevelN, sgTot) {
+                let result;
+                result = sgLevel * (sgLevelN / levelRounds);
+                if(sgLevelN == 0) {
+                    return null;
+                } else {
+                    return Number(result.toFixed(2));
+                }
+            }
+
+            fieldStrengthData.sgEasy = powerAdjust(fieldStrengthData.sgEasy, fieldStrengthData.sgEasyN, avgRoundData100.sgTot100);
+            fieldStrengthData.sgMed = powerAdjust(fieldStrengthData.sgMed, fieldStrengthData.sgMedN, avgRoundData100.sgTot100);
+            fieldStrengthData.sgHard = powerAdjust(fieldStrengthData.sgHard, fieldStrengthData.sgHardN, avgRoundData100.sgTot100);
+
+            // Set to zero if player has no rounds at this difficulty
+            if(fieldStrengthData.sgEasyN == 0) {
+                fieldStrengthData.sgEasy = 0;
+            }
+            if(fieldStrengthData.sgMedN == 0) {
+                fieldStrengthData.sgMed = 0;
+            }
+            if(fieldStrengthData.sgHardN == 0) {
+                fieldStrengthData.sgHard = 0;
+            } 
 
             function formatData(value) {
                 // Returns null or the stat value
@@ -2462,9 +2502,9 @@ function loadModelResults() {
             { headerName: 'PuttBoB %', field: 'puttingBob', hide: true },
             { headerName: '3-PuttAvd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
             { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
-            { headerName: 'SG:EasyField', field: 'sgEasy', hide: true},
-            { headerName: 'SG:MedField', field: 'sgMed', hide: true},
-            { headerName: 'SG:HardField', field: 'sgHard', hide: true},
+            { headerName: 'SG: Easy', field: 'sgEasy', hide: true},
+            { headerName: 'SG: Med.', field: 'sgMed', hide: true},
+            { headerName: 'SG: Hard', field: 'sgHard', hide: true},
             { headerName: 'Course Hist.', field: 'chAvg', hide: true, comparator: customComparator },
         ];
 
@@ -2880,8 +2920,255 @@ function loadOptimizedLineups() {
     }
 }
 
+let isFieldStrengthInitialized = false;
+let gridApiFieldStrength;
 
+function loadFieldStrengthSheet() {
+    let sheet = document.getElementById('fieldStrengthSheet');
+    let baseRounds = document.getElementById('baseRdsInp').value;
+    let levelRounds = document.getElementById('levelRdsInp').value;
 
+    let url = '/get/fieldStrengthSheet';
+
+    let p = fetch(url);
+    p.then((response) => {
+        return response.json();
+    })
+    .then((jsonData) => {
+        console.log(jsonData);
+
+        if(!jsonData.salaries || !jsonData.tournamentRow || !jsonData.fieldStrength) {
+            console.log('Invalid data format. Expected "salaries", "tournamentRow", and "fieldStrength" properties.');
+            return;
+        }
+
+        dataTableData = [];
+        for(let i = 0; i < jsonData.salaries.length; i++) {
+            const salary = jsonData.salaries[i];
+            const player = salary.player;
+            const fdSalary = salary.fdSalary;
+            const dkSalary = salary.dkSalary;
+
+            // SG LAST N ROUNDS
+            // Calculate averages for all sg categories for num round buckets!
+            function averageSgCats(numRounds, jsonData, player) {
+                // playerRounds: array of last N rounds for player
+                let playerRounds = jsonData.tournamentRow.filter((round) => round.player === player)
+                .sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round)
+                .slice(0, numRounds);
+    
+                // Get average of each sg category over last N rounds
+                let avgRoundData = {};
+                avgRoundData['baseRds'] = playerRounds.length;
+                let columnsToAverage = ['sgOtt', 'sgApp', 'sgArg', 'sgPutt', 'sgT2G', 'sgTot'];
+                if(playerRounds.length > 0) {
+                    for(let i = 0; i < columnsToAverage.length; i++) {
+                        let col = columnsToAverage[i];
+                        let sum = 0;
+                        for(let j = 0; j < playerRounds.length; j++) {
+                            sum += playerRounds[j][col];
+                        }
+                        let averageValue = sum / playerRounds.length;
+                        avgRoundData[col] = Number(averageValue.toFixed(2));
+                    }
+                } else {
+                    // Default values to null
+                    for(let i = 0; i < columnsToAverage.length; i++) {
+                        avgRoundData[columnsToAverage[i]] = null;
+                    }
+                }
+    
+                return avgRoundData;
+            }
+
+            // SG: LAST N ROUNDS
+            let avgRoundDataN = averageSgCats(baseRounds, jsonData, player);
+            let updatedAvgRoundDataN = {};
+            for (let key in avgRoundDataN) {
+                if (avgRoundDataN.hasOwnProperty(key)) {
+                    updatedAvgRoundDataN[key + 'N'] = avgRoundDataN[key];
+                }
+            }
+            avgRoundDataN = updatedAvgRoundDataN;
+
+            // FIELD STRENGTH PERFORMANCE
+           let fieldStrengthData = {};
+           let playerTournamentData = jsonData.tournamentRow.filter((round) => round.player === player);
+           playerTournamentData.sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round);
+
+           let fieldStrength = {
+                easy: {total: 0, count: 0},
+                medium: {total: 0, count: 0},
+                hard: {total: 0, count: 0}
+           }
+
+           function calculateAverage(total, count) {
+                return count === 0 ? null : Number((total / count).toFixed(2));
+            }
+
+            // Sum up sg and num rds for different field strengths for player
+            for (let i = 0; i < playerTournamentData.length; i++) {
+                let row = playerTournamentData[i];
+                let sofTournament = jsonData.fieldStrength.find(tourneyData => tourneyData.tournament === row.tournament);
+                
+                if (!sofTournament) {
+                    console.error("Couldn't find tournament:", row.tournament);
+                    continue; // Skip this row if no strength data is found
+                }
+            
+                let sof = sofTournament.strength;
+                if (sof <= -0.15 && fieldStrength.easy.count < levelRounds) {
+                    fieldStrength.easy.total += row.sgTot;
+                    fieldStrength.easy.count++;
+                } else if (sof >= 0.7 && fieldStrength.hard.count < levelRounds) {
+                    fieldStrength.hard.total += row.sgTot;
+                    fieldStrength.hard.count++;
+                } else if (fieldStrength.medium.count < levelRounds) {
+                    fieldStrength.medium.total += row.sgTot;
+                    fieldStrength.medium.count++;
+                }
+            }
+            
+            // Calculate averages for each field strength
+            //     Note: We use difference of sg_avg_for_difficulty_level - sg_average_overall
+            //           to adjust for player strength
+            fieldStrengthData = {
+                sgEasy: Number((calculateAverage(fieldStrength.easy.total, fieldStrength.easy.count) - avgRoundDataN.sgTotN).toFixed(2)),
+                sgEasyN: Number(fieldStrength.easy.count),
+                sgMed: Number((calculateAverage(fieldStrength.medium.total, fieldStrength.medium.count) - avgRoundDataN.sgTotN).toFixed(2)),
+                sgMedN: Number(fieldStrength.medium.count),
+                sgHard: Number((calculateAverage(fieldStrength.hard.total, fieldStrength.hard.count) - avgRoundDataN.sgTotN).toFixed(2)),
+                sgHardN: Number(fieldStrength.hard.count),
+            };
+
+            // Adjusts the above by neutralizing players with less rounds towards 0
+            function powerAdjust(sgLevel, sgLevelN, sgTot) {
+                let result;
+                result = sgLevel * (sgLevelN / levelRounds);
+                if(sgLevelN == 0) {
+                    return null;
+                } else {
+                    return Number(result.toFixed(2));
+                }
+            }
+
+            fieldStrengthData.sgEasyAdj = powerAdjust(fieldStrengthData.sgEasy, fieldStrengthData.sgEasyN, avgRoundDataN.sgTotN);
+            fieldStrengthData.sgMedAdj = powerAdjust(fieldStrengthData.sgMed, fieldStrengthData.sgMedN, avgRoundDataN.sgTotN);
+            fieldStrengthData.sgHardAdj = powerAdjust(fieldStrengthData.sgHard, fieldStrengthData.sgHardN, avgRoundDataN.sgTotN);
+
+            // Set to zero if player has no rounds at this difficulty
+            if(fieldStrengthData.sgEasyN == 0) {
+                fieldStrengthData.sgEasy = null;
+            }
+            if(fieldStrengthData.sgMedN == 0) {
+                fieldStrengthData.sgMed = null;
+            }
+            if(fieldStrengthData.sgHardN == 0) {
+                fieldStrengthData.sgHard = null;
+            } 
+
+            let finalData = {
+                player,
+                fdSalary,
+                dkSalary,
+                ...fieldStrengthData,
+                ...avgRoundDataN,
+            }
+
+            dataTableData.push(finalData);
+        }
+
+        console.log(dataTableData);
+
+        const columnsWithColorScale = ['sgEasy', 'sgMed', 'sgHard', 'sgTotN', 'sgEasyAdj', 'sgMedAdj', 'sgHardAdj'];
+        const columnsWithReversedColorScale = [];
+
+        const colorScales = makeColorScales(dataTableData, columnsWithColorScale, columnsWithReversedColorScale);
+
+        // Set global cell style (includes color scale specification)
+        function globalCellStyle(params){
+            const fieldName = params.colDef.field;
+            const numericValue = params.value;
+
+            // Set background color to white for null values
+            if (numericValue === null) {
+                return { backgroundColor: '#FFFFFF' };
+            }
+        
+            // Check if the column is in the list and the value is numeric before applying the color scale
+            if (columnsWithColorScale.includes(fieldName) && !isNaN(numericValue) && isFinite(numericValue)) {
+                const cellColor = colorScales[fieldName](numericValue);
+                return { backgroundColor: cellColor };
+            }
+        
+            // Return default style if the column is not in the list or the value is not numeric
+            return {};
+        }
+
+        // Define col defs for table
+        let columnDefs = [
+            {headerName: 'Player', field: 'player', width: 170},
+            {headerName: 'FD Salary', field: 'fdSalary', width: 70},
+            {headerName: 'DK Salary', field: 'dkSalary', width: 70},
+            {headerName: 'SG:Easy', field: 'sgEasy', width: 65},
+            {headerName: 'EasyAdj', field: 'sgEasyAdj', width: 65},
+            {headerName: 'Rds', field: 'sgEasyN', width: 40},
+            {headerName: 'SG:Med.', field: 'sgMed', width: 65},
+            {headerName: 'MedAdj', field: 'sgMedAdj', width: 65},
+            {headerName: 'Rds', field: 'sgMedN', width: 40},
+            {headerName: 'SG:Hard', field: 'sgHard', width: 65},
+            {headerName: 'HardAdj', field: 'sgHardAdj', width: 65},
+            {headerName: 'Rds', field: 'sgHardN', width: 40},
+            {headerName: 'SG: Tot', field: 'sgTotN', width: 65},
+            {headerName: 'TotRds', field: 'baseRdsN', width: 55},
+        ];
+
+        function clearFieldStrengthSheet() {
+            const fieldStrengthSheet = document.getElementById('fieldStrengthSheet');
+            if (fieldStrengthSheet) {
+                fieldStrengthSheet.innerHTML = '';
+            }
+        };
+
+        function initializeFieldStrengthSheet() {
+            
+            // Clear sheet if initialized
+            if(isFieldStrengthInitialized) {
+                clearFieldStrengthSheet();
+            }
+
+            // setup grid options
+            const gridOptions = {
+                columnDefs: columnDefs.map(column => ({
+                    ...column,
+                    cellStyle: globalCellStyle,
+                })),
+                rowData: dataTableData,
+                suppressColumnVirtualisation: true,  // allows auto resize of non-visible cols
+                onFirstDataRendered: function (params) {
+                    console.log('grid is ready');
+                },
+                getRowHeight: function(params) {
+                    return 25;
+                },
+                headerHeight: 30,
+            }
+
+            // Create the grid using createGrid
+            gridApiFieldStrength = agGrid.createGrid(document.querySelector('#fieldStrengthSheet'), gridOptions);
+            isFieldStrengthInitialized = true;
+        };
+
+        initializeFieldStrengthSheet();
+    })
+}
+
+function onFilterTextBoxChangedFieldStrength() {
+    gridApiFieldStrength.setGridOption(
+        'quickFilterText',
+        document.getElementById('filter-text-box-field-strength').value
+      );
+}
 
 
 
