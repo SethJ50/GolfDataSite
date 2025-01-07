@@ -781,7 +781,8 @@ div.dt-button-collection {
 }
 
 #modelOutputDiv {
-    display: inline;
+    display: flex;
+    flex-direction: column;
     position: absolute;
     width: calc(100% - 403px);
     height: 100%;
@@ -898,8 +899,10 @@ div.dt-button-collection {
 
 #filterContainerCM {
     display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     position: relative;
-    width: 900px;
+    width: 1000px;
     height: fit-content;
     margin-left: auto;
     margin-right: auto;
@@ -914,14 +917,16 @@ div.dt-button-collection {
 }
 
 #searchInnerAreaCM {
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+
 }
 
 #modelSheet {
     display: block;
     margin-left: auto;
     margin-right: auto;
-    width: 900px;
+    width: 1000px;
     height: 700px;
     overflow-x: auto;
 }

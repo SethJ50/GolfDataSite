@@ -2139,7 +2139,7 @@ function loadModelResults() {
             //      Remove this to go back to normal...
             function powerAdjust(sgLevel, sgLevelN, sgTot) {
                 let result;
-                result = sgLevel * (sgLevelN / levelRounds);
+                result = sgLevel * (sgLevelN / 100);
                 if(sgLevelN == 0) {
                     return null;
                 } else {
@@ -2500,12 +2500,12 @@ function loadModelResults() {
             { headerName: 'Prox.', field: 'prox', hide: true, comparator: customComparator },
             { headerName: 'RoughProx.', field: 'roughProx', hide: true, comparator: customComparator },
             { headerName: 'PuttBoB %', field: 'puttingBob', hide: true },
-            { headerName: '3-PuttAvd.', field: 'threePuttAvd', hide: true, comparator: customComparator },
+            { headerName: '3-PuttAvd', field: 'threePuttAvd', hide: true, comparator: customComparator },
             { headerName: 'Bonus Putt', field: 'bonusPutt', hide: true },
-            { headerName: 'SG: Easy', field: 'sgEasy', hide: true},
-            { headerName: 'SG: Med.', field: 'sgMed', hide: true},
-            { headerName: 'SG: Hard', field: 'sgHard', hide: true},
-            { headerName: 'Course Hist.', field: 'chAvg', hide: true, comparator: customComparator },
+            { headerName: 'EasyField', field: 'sgEasy', hide: true},
+            { headerName: 'MedField', field: 'sgMed', hide: true},
+            { headerName: 'HardField', field: 'sgHard', hide: true},
+            { headerName: 'CourseHist', field: 'chAvg', hide: true, comparator: customComparator },
         ];
 
         // Function to determine if a column should not be hidden (if has value in custom model, don't hide)
