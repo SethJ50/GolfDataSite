@@ -1933,6 +1933,7 @@ let gridOptionsModel;
 let savedData;
 
 function loadModelResults() {
+    let platform = document.getElementById("platform");
 
     // Grab all custom model inputs:
     const ids = ['sgPuttPGAinput', 'sgAppPGAinput', 'sgT2GPGAinput', 'sgArgPGAinput', 'sgOttPGAinput',
@@ -2525,6 +2526,20 @@ function loadModelResults() {
         columnDefs.forEach((column) => {
             if (column.field && shouldNotHideColumn(column.field, weightDict)) {
                 column.hide = false;
+            }
+
+            if(platform.value == "fanduel") {
+                if(column.field == "dkSalary" || column.field == "dkValue") {
+                    column.hide = true;
+                } else if(column.field == "fdSalary" || column.field == "fdValue") {
+                    column.hide = false;
+                }
+            } else {
+                if(column.field == "dkSalary" || column.field == "dkValue") {
+                    column.hide = false;
+                } else if(column.field == "fdSalary" || column.field == "fdValue") {
+                    column.hide = true;
+                }
             }
         });
 
