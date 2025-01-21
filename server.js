@@ -26,7 +26,8 @@ const TO_FD = {
   'Jordan Smith':'Jordan L. Smith',
   'Rasmus Højgaard': 'Rasmus Hojgaard',
   'Ludvig Åberg': 'Ludvig Aberg',
-  'Nico Echavarria':'Nicolas Echavarria'
+  'Nico Echavarria':'Nicolas Echavarria',
+  'Frankie Capan III':'Frankie Capan'
 };
 
 const FD_TO_PGA = {
@@ -49,6 +50,7 @@ const FD_TO_TOURNAMENT = {
   'Rasmus Hojgaard': 'Rasmus Højgaard',
   'Ludvig Aberg': 'Ludvig Åberg',
   'Nicolas Echavarria':'Nico Echavarria',
+  'Frankie Capan':'Frankie Capan III'
 };
 
 var TournamentRowSchema = mongoose.Schema({
