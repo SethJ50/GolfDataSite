@@ -53,6 +53,25 @@ const FD_TO_TOURNAMENT = {
   'Frankie Capan':'Frankie Capan III'
 };
 
+// DataGolf course table to tournament naming
+const DG_TO_TOURNAMENT = {
+  'ACCORDIA GOLF Narashino Country Club': 'Accordia Golf Narashino Country Club',
+  'Hamilton Golf &amp; Country Club':'Hamilton Golf and Country Club',
+  'PGA National Resort (The Champion)':'PGA National Resort',
+  'Pinehurst Resort &amp; Country Club (Course No. 2)':'Pinehurst Resort and Country Club',
+  'TPC San Antonio (Oaks Course)':'TPC San Antonio',
+  'TPC Sawgrass (THE PLAYERS Stadium Course)':'TPC Sawgrass',
+  'TPC Scottsdale (Stadium Course)':'TPC Scottsdale',
+};
+
+// Also consider course rotation tournaments...
+
+// Fix these in excel files
+// Plantation course *A*t Kapalua
+// TPC Southwind" "
+// TPC Twin Cities" "
+
+
 var TournamentRowSchema = mongoose.Schema({
     player: String,
     finish: Number,
