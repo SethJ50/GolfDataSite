@@ -3206,8 +3206,8 @@ function loadCourseDifficultySheet() {
     .then((jsonData) => {
         console.log(jsonData);
 
-        if(!jsonData.salaries || !jsonData.tournamentRow || !jsonData.fieldStrength) {
-            console.log('Invalid data format. Expected "salaries", "tournamentRow", and "fieldStrength" properties.');
+        if(!jsonData.salaries || !jsonData.tournamentRow || !jsonData.courseDifficulty) {
+            console.log('Invalid data format. Expected "salaries", "tournamentRow", and "courseDifficulty" properties.');
             return;
         }
 
