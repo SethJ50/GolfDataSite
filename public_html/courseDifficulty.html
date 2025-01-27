@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css2?family=Lato:wght@900&display=swap" rel="stylesheet">
+        <title>DataCaddie</title>
+
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+        <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="css/style.css"> <!-- Your custom stylesheet -->
+    </head>
+    <body onload="loadCourseDifficultySheet();"> 
+        <div id="headerBar">
+            <a href="#" class="navText" id="navTitle" onclick="home();">DataCaddie</a>
+            <a href="#" class="navText" onclick="home();">Home</a>
+            <a href="#" class="navText" onclick="cheatSheet();">Cheat Sheet</a>
+            <a href="#" class="navText" onclick="golferProfiles();">Golfer Profiles</a>
+            <a href="#" class="navText" onclick="trends();">Trends</a>
+            <a href="#" class="navText" onclick="floorCeiling();">Floor Ceiling</a>
+			<a href="#" class="navText" onclick="fieldStrength();">Field Strength</a>
+			<a href="#" class="navText" onclick="courseDifficulty();">Course Difficulty</a>
+            <a href="#" class="navText" onclick="modelPage();">Custom Model</a>
+            <a href="#" class="navText" onclick="uploadPage();">Upload Data</a>
+        </div>
+        <div id="mainBody">
+            <div id="trendsDiv">
+                <div id="cdHeader" class="pageHeader">Course Difficulty Performance</div>
+                <div id="cdDescr" class="pageDescr">
+                    How well does each golfer perform on easy, medium, and difficult courses?
+                </div>
+                <div id="filterContainerFC">
+                    <div id="searchAreaTR">
+                        <div class="tableFilterContainer">
+                            <div id="searchInnerAreaTR">
+                                <div class="tableFilter">Search:</div>
+                                <input type="text" id="filter-text-box-course-difficulty" placeholder="Filter..." oninput="onFilterTextBoxChangedCourseDifficulty();">
+                            </div>
+                            <div id="levelRdsDiv" class="tableFilter">
+                                <div>Level Round Size:</div>
+                                <input type="text" id="levelRdsInp" value="100" onchange="onFilterTextBoxChangedCourseDifficulty(); loadCourseDifficultySheet();">
+                            </div>
+                            <div id="baseRdsDiv" class="tableFilter">
+                                <div>Base Round Size:</div>
+                                <input type="text" id="baseRdsInp" value="100" onchange="onFilterTextBoxChangedCourseDifficulty(); loadCourseDifficultySheet();">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="courseDifficultySheet" class="ag-theme-quartz">
+
+                </div>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+        <script src="functions.js"></script>
+    </body>
+</html>

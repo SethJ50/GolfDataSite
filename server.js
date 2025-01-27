@@ -62,15 +62,8 @@ const DG_TO_TOURNAMENT = {
   'TPC San Antonio (Oaks Course)':'TPC San Antonio',
   'TPC Sawgrass (THE PLAYERS Stadium Course)':'TPC Sawgrass',
   'TPC Scottsdale (Stadium Course)':'TPC Scottsdale',
+  "Arnold Palmer's Bay Hill Club &amp; Lodge":"Bay Hill Club", 
 };
-
-// Also consider course rotation tournaments...
-
-// Fix these in excel files
-// Plantation course *A*t Kapalua
-// TPC Southwind" "
-// TPC Twin Cities" "
-
 
 var TournamentRowSchema = mongoose.Schema({
     player: String,
@@ -190,6 +183,13 @@ var fieldStrengthSchema = mongoose.Schema({
 });
 
 var fieldStrength = mongoose.model('fieldStrength', fieldStrengthSchema);
+
+var courseDifficultySchema = mongoose.Schema({
+  course: String,
+  difficulty: Number,
+})
+
+var courseDifficulty = mongoose.model('courseDifficulty', courseDifficultySchema);
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -419,6 +419,32 @@ app.post('/uploadFieldStrength', upload.single('file'), async (req, res) => {
 
       await fieldStrength.create({
         tournament, year, strength
+      });
+    }
+
+    res.status(200).send('File uploaded successfully.');
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+app.post('/uploadCourseDifficulty', upload.single('file'), async (req, res) => {
+  try {
+    // Clear existing entries
+    await courseDifficulty.deleteMany({});
+
+    const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = xlsx.utils.sheet_to_json(sheet);
+
+    for (const row of data) {
+      const course = row.tournament;
+      const difficulty = row.adj_score_to_par;
+
+      await courseDifficulty.create({
+        course, difficulty
       });
     }
 
@@ -787,6 +813,45 @@ app.get('/get/fieldStrengthSheet', async (req, res) => {
       salaries: salariesResults,
       tournamentRow: tournamentRowResults,
       fieldStrength: fieldStrengthResults
+    }
+
+    res.json(combinedResults);
+  } catch(error) {
+    console.error('Error retrieving data:', error);
+    res.status(500).json({error: 'Internal Server Error'});
+  }
+});
+
+app.get('/get/courseDifficultySheet', async (req, res) => {
+  try {
+    const salariesResults = await salaries.find({});
+
+    if(salariesResults.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    // Extract player names from salariesResults
+    const playerNames = salariesResults.map(result => result.player);
+
+    const convertedPlayerNamesPga = playerNames.map(name => FD_TO_PGA[name] || name);
+
+    const convertedPlayerNamesTournament = playerNames.map(name => FD_TO_TOURNAMENT[name] || name);
+
+    // Perform subsequent queries using the filtered player names
+    const tournamentRowResults = await TournamentRow.find({$or: [{player: {$in: convertedPlayerNamesTournament}}, {player: {$in: playerNames}}], 'Round': {$ne: 'Event'}});
+    const courseDifficultyResults = await courseDifficulty.find({});
+
+    tournamentRowResults.forEach(result => {
+      if (TO_FD[result.player]) {
+        result.player = TO_FD[result.player];
+      }
+    });
+
+    const combinedResults = {
+      salaries: salariesResults,
+      tournamentRow: tournamentRowResults,
+      courseDifficulty: courseDifficultyResults
     }
 
     res.json(combinedResults);

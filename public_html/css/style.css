@@ -567,6 +567,16 @@ div.dt-button-collection {
     margin-bottom: 2px;
 }
 
+#cdHeader {
+    margin-left: 8px;
+    margin-bottom: 5px;
+}
+
+#cdDescr {
+    margin-left: 20px;
+    margin-bottom: 2px;
+}
+
 #fsDescr2 {
     margin-left: 24px;
     margin-bottom: 7px;
