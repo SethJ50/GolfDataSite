@@ -1948,7 +1948,7 @@ function loadModelResults() {
         'drDist', 'bob', 'sandSave', 'par3scoring', 'par5scoring', 'prox', 'app50_75', 'app100_125', 
         'app150_175', 'app200_up', 'bonusPutt', 'drAcc', 'bogAvd', 'scrambling', 'par4scoring', 
         'gir', 'roughProx', 'app75_100', 'app125_150', 'app175_200', 'puttingBob', 'threePuttAvd', 
-        'easyField', 'mediumField', 'hardField', 'courseHistory'
+        'easyField', 'mediumField', 'hardField','easyCourse','mediumCourse','hardCourse', 'courseHistory'
     ];
 
     // Create dictionary of inputs
@@ -1964,6 +1964,12 @@ function loadModelResults() {
             key = 'sgMed';
         } else if(key == 'hardField') {
             key = 'sgHard';
+        } else if(key == 'easyCourse') {
+            key = 'sgEasyCD';
+        } else if(key == 'mediumCourse') {
+            key = 'sgMedCD';
+        } else if(key == 'hardCourse') {
+            key = 'sgHardCD';
         } else if(key == 'courseHistory') {
             key = 'chAvg';
         }
@@ -1978,10 +1984,18 @@ function loadModelResults() {
     })
     .then((jsonData) =>{
         // Ensure that all parts of the jsonData are there.
-        if (!jsonData.salaries || !jsonData.pgatour || !jsonData.courseHistory || !jsonData.tournamentRow || !jsonData.fieldStrength) {
-            console.log('Invalid data format. Expected "salaries", "pgatour", "courseHistory","tournamentRow", and "fieldStrength" properties.');
+        if (!jsonData.salaries || !jsonData.pgatour || !jsonData.courseHistory || !jsonData.tournamentRow || !jsonData.fieldStrength || !jsonData.courseDifficulty) {
+            console.log('Invalid data format. Expected "salaries", "pgatour", "courseHistory","tournamentRow", "fieldStrength", and "courseDifficulty" properties.');
             return;
         }
+
+        courseDiffMap = {};
+        for(let i = 0; i < jsonData.courseDifficulty.length; i++) {
+            let currCourseRow = jsonData.courseDifficulty[i]
+            courseDiffMap[currCourseRow.course] = currCourseRow.difficulty;
+        }
+
+        console.log(courseDiffMap);
 
         // For each salary row (essentially for each player)
         let dataTableData = [];
@@ -2094,6 +2108,7 @@ function loadModelResults() {
            // FIELD STRENGTH PERFORMANCE
            let fieldStrengthData = {};
            let playerTournamentData = jsonData.tournamentRow.filter((round) => round.player === player);
+           playerTournamentData.sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round);
 
            let fieldStrength = {
                 easy: {total: 0, count: 0},
@@ -2127,7 +2142,7 @@ function loadModelResults() {
                     fieldStrength.medium.count++;
                 }
             }
-            
+
             // Calculate averages for each field strength
             //     Note: We use difference of sg_avg_for_difficulty_level - sg_average_overall
             //           to adjust for player strength
@@ -2166,6 +2181,63 @@ function loadModelResults() {
             if(fieldStrengthData.sgHardN == 0) {
                 fieldStrengthData.sgHard = 0;
             } 
+
+             // Course Difficulty PERFORMANCE
+            let courseDifficultyData = {};
+            let playerTournamentDataCD = jsonData.tournamentRow.filter((round) => round.player === player);
+            playerTournamentDataCD.sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round);
+
+            let courseDifficulty = {
+                easy: {total: 0, count: 0},
+                medium: {total: 0, count: 0},
+                hard: {total: 0, count: 0}
+            }
+
+            for (let i = 0; i < playerTournamentDataCD.length; i++) {
+                let row = playerTournamentDataCD[i];
+                let rowCourse = row.course;
+
+                let courseDiffVal = courseDiffMap[rowCourse] || null;
+                if(courseDiffVal != null) {
+                    if (courseDiffVal <= -0.9 && courseDifficulty.easy.count < 100) {
+                        courseDifficulty.easy.total += row.sgTot;
+                        courseDifficulty.easy.count++;
+                    } else if (courseDiffVal >= 0.9 && courseDifficulty.hard.count < 100) {
+                        courseDifficulty.hard.total += row.sgTot;
+                        courseDifficulty.hard.count++;
+                    } else if (courseDifficulty.medium.count < 100) {
+                        courseDifficulty.medium.total += row.sgTot;
+                        courseDifficulty.medium.count++;
+                    }
+                }
+            }
+
+            // Calculate averages for each course history
+            //     Note: We use difference of sg_avg_for_difficulty_level - sg_average_overall
+            //           to adjust for player strength
+            courseDifficultyData = {
+                sgEasyCD: Number((calculateAverage(courseDifficulty.easy.total, courseDifficulty.easy.count) - avgRoundData100.sgTot100).toFixed(2)),
+                sgEasyNCD: Number(courseDifficulty.easy.count),
+                sgMedCD: Number((calculateAverage(courseDifficulty.medium.total, courseDifficulty.medium.count) - avgRoundData100.sgTot100).toFixed(2)),
+                sgMedNCD: Number(courseDifficulty.medium.count),
+                sgHardCD: Number((calculateAverage(courseDifficulty.hard.total, courseDifficulty.hard.count) - avgRoundData100.sgTot100).toFixed(2)),
+                sgHardNCD: Number(courseDifficulty.hard.count),
+            };
+
+            courseDifficultyData.sgEasyAdjCD = powerAdjust(courseDifficultyData.sgEasyCD, courseDifficultyData.sgEasyNCD, avgRoundData100.sgTot100);
+            courseDifficultyData.sgMedAdjCD = powerAdjust(courseDifficultyData.sgMedCD, courseDifficultyData.sgMedNCD, avgRoundData100.sgTot100);
+            courseDifficultyData.sgHardAdjCD = powerAdjust(courseDifficultyData.sgHardCD, courseDifficultyData.sgHardNCD, avgRoundData100.sgTot100);
+
+            // Set to zero if player has no rounds at this difficulty
+            if(courseDifficultyData.sgEasyNCD == 0) {
+                courseDifficultyData.sgEasyCD = 0;
+            }
+            if(courseDifficultyData.sgMedNCD == 0) {
+                courseDifficultyData.sgMedCD = 0;
+            }
+            if(courseDifficultyData.sgHardNCD == 0) {
+                courseDifficultyData.sgHardCD = 0;
+            }
 
             function formatData(value) {
                 // Returns null or the stat value
@@ -2217,12 +2289,16 @@ function loadModelResults() {
                 }, {}),
                 tournamentAbbreviations,
                 ...fieldStrengthData,
+                ...courseDifficultyData
             };
 
             if(rowData) {
                 dataTableData.push(rowData);
             }
         }
+
+        console.log("Data Table Data");
+        console.log(dataTableData);
 
         // Calculate average course history to quantify course history in model
         for (let i = 0; i < dataTableData.length; i++) {
@@ -2269,7 +2345,7 @@ function loadModelResults() {
             'app75_100', 'app100_125', 'app125_150', 'app150_175', 'app175_200',
             'app200_up', 'bob', 'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring',
             'prox', 'roughProx', 'puttingBob', 'threePuttAvd', 'bonusPutt', 'chAvg', 'fdSalary', 'dkSalary',
-            'sgEasy', 'sgMed', 'sgHard'
+            'sgEasy', 'sgMed', 'sgHard', 'sgEasyCD', 'sgMedCD', 'sgHardCD'
         ];
 
         // Initialize accumulators for statistics
@@ -2510,6 +2586,9 @@ function loadModelResults() {
             { headerName: 'EasyField', field: 'sgEasy', hide: true},
             { headerName: 'MedField', field: 'sgMed', hide: true},
             { headerName: 'HardField', field: 'sgHard', hide: true},
+            { headerName: 'EasyCourse', field: 'sgEasyCD', hide: true},
+            { headerName: 'MedCourse', field: 'sgMedCD', hide: true},
+            { headerName: 'HardCourse', field: 'sgHardCD', hide: true},
             { headerName: 'CourseHist', field: 'chAvg', hide: true, comparator: customComparator },
         ];
 
@@ -2559,7 +2638,9 @@ function loadModelResults() {
                                         'drDist', 'drAcc', 'gir', 'sandSave', 'scrambling', 'app50_75', 'app75_100',
                                         'app100_125', 'app125_150', 'app150_175', 'app175_200', 'app200_up', 'bob',
                                         'bogAvd', 'par3Scoring', 'par4Scoring', 'par5Scoring', 'prox', 'roughProx',
-                                        'puttingBob', 'threePuttAvd', 'bonusPutt', 'rating', 'chAvg', 'sgEasy', 'sgMed', 'sgHard'];
+                                        'puttingBob', 'threePuttAvd', 'bonusPutt', 'rating', 'chAvg', 'sgEasy', 'sgMed', 'sgHard',
+                                        'sgEasyCD', 'sgMedCD', 'sgHardCD'
+                                    ];
 
         const colorScales = makeColorScales(dataTableData, columnsWithColorScale, columnsWithReversedColorScale);
         
@@ -3218,7 +3299,7 @@ function loadCourseDifficultySheet() {
             courseDiffMap[currCourseRow.course] = currCourseRow.difficulty;
         }
 
-        console.log(courseDiffMap)
+        console.log(courseDiffMap);
 
         let unfoundCourses = [];
 

@@ -705,6 +705,13 @@ app.get('/get/modelSheet/', async (req, res) => {
       }
     });
 
+    // Grab course difficulty
+    const courseDifficultyResults = await courseDifficulty.find({});
+    for (let i = 0; i < courseDifficultyResults.length; i++) {
+      if (DG_TO_TOURNAMENT[courseDifficultyResults[i].course]) {
+        courseDifficultyResults[i].course = DG_TO_TOURNAMENT[courseDifficultyResults[i].course];
+      }
+    }
 
     // Combine the results into a single JSON object
     const combinedResults = {
@@ -713,6 +720,7 @@ app.get('/get/modelSheet/', async (req, res) => {
       pgatour: pgatourResults,
       courseHistory: courseHistoryResults,
       fieldStrength: fieldStrengthResults,
+      courseDifficulty: courseDifficultyResults
     };
 
     // Send the combined results as JSON
