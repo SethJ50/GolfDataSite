@@ -440,7 +440,7 @@ app.post('/uploadCourseDifficulty', upload.single('file'), async (req, res) => {
     const data = xlsx.utils.sheet_to_json(sheet);
 
     for (const row of data) {
-      const course = row.tournament;
+      const course = row.course;
       const difficulty = row.adj_score_to_par;
 
       await courseDifficulty.create({
@@ -841,6 +841,11 @@ app.get('/get/courseDifficultySheet', async (req, res) => {
     // Perform subsequent queries using the filtered player names
     const tournamentRowResults = await TournamentRow.find({$or: [{player: {$in: convertedPlayerNamesTournament}}, {player: {$in: playerNames}}], 'Round': {$ne: 'Event'}});
     const courseDifficultyResults = await courseDifficulty.find({});
+    for (let i = 0; i < courseDifficultyResults.length; i++) {
+      if (DG_TO_TOURNAMENT[courseDifficultyResults[i].course]) {
+        courseDifficultyResults[i].course = DG_TO_TOURNAMENT[courseDifficultyResults[i].course];
+      }
+    }
 
     tournamentRowResults.forEach(result => {
       if (TO_FD[result.player]) {

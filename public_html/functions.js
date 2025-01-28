@@ -3204,12 +3204,23 @@ function loadCourseDifficultySheet() {
         return response.json();
     })
     .then((jsonData) => {
+        console.log("Json Data");
         console.log(jsonData);
 
         if(!jsonData.salaries || !jsonData.tournamentRow || !jsonData.courseDifficulty) {
             console.log('Invalid data format. Expected "salaries", "tournamentRow", and "courseDifficulty" properties.');
             return;
         }
+
+        courseDiffMap = {};
+        for(let i = 0; i < jsonData.courseDifficulty.length; i++) {
+            let currCourseRow = jsonData.courseDifficulty[i]
+            courseDiffMap[currCourseRow.course] = currCourseRow.difficulty;
+        }
+
+        console.log(courseDiffMap)
+
+        let unfoundCourses = [];
 
         dataTableData = [];
         for(let i = 0; i < jsonData.salaries.length; i++) {
@@ -3260,12 +3271,12 @@ function loadCourseDifficultySheet() {
             }
             avgRoundDataN = updatedAvgRoundDataN;
 
-            // FIELD STRENGTH PERFORMANCE
-           let fieldStrengthData = {};
+            // Course Difficulty PERFORMANCE
+           let courseDifficultyData = {};
            let playerTournamentData = jsonData.tournamentRow.filter((round) => round.player === player);
            playerTournamentData.sort((a, b) => new Date(b.dates) - new Date(a.dates) || b.Round - a.Round);
 
-           let fieldStrength = {
+           let courseDifficulty = {
                 easy: {total: 0, count: 0},
                 medium: {total: 0, count: 0},
                 hard: {total: 0, count: 0}
@@ -3275,39 +3286,41 @@ function loadCourseDifficultySheet() {
                 return count === 0 ? null : Number((total / count).toFixed(2));
             }
 
-            // Sum up sg and num rds for different field strengths for player
+            // Sum up sg and num rds for different course difficulties for player
             for (let i = 0; i < playerTournamentData.length; i++) {
                 let row = playerTournamentData[i];
-                let sofTournament = jsonData.fieldStrength.find(tourneyData => tourneyData.tournament === row.tournament);
-                
-                if (!sofTournament) {
-                    console.error("Couldn't find tournament:", row.tournament);
-                    continue; // Skip this row if no strength data is found
-                }
-            
-                let sof = sofTournament.strength;
-                if (sof <= -0.15 && fieldStrength.easy.count < levelRounds) {
-                    fieldStrength.easy.total += row.sgTot;
-                    fieldStrength.easy.count++;
-                } else if (sof >= 0.7 && fieldStrength.hard.count < levelRounds) {
-                    fieldStrength.hard.total += row.sgTot;
-                    fieldStrength.hard.count++;
-                } else if (fieldStrength.medium.count < levelRounds) {
-                    fieldStrength.medium.total += row.sgTot;
-                    fieldStrength.medium.count++;
+                let rowCourse = row.course;
+
+                let courseDiffVal = courseDiffMap[rowCourse] || null;
+                if(courseDiffVal != null) {
+                    console.log("here");
+                    if (courseDiffVal <= -0.9 && courseDifficulty.easy.count < levelRounds) {
+                        courseDifficulty.easy.total += row.sgTot;
+                        courseDifficulty.easy.count++;
+                    } else if (courseDiffVal >= 0.9 && courseDifficulty.hard.count < levelRounds) {
+                        courseDifficulty.hard.total += row.sgTot;
+                        courseDifficulty.hard.count++;
+                    } else if (courseDifficulty.medium.count < levelRounds) {
+                        courseDifficulty.medium.total += row.sgTot;
+                        courseDifficulty.medium.count++;
+                    }
+                } else {
+                    if(!unfoundCourses.includes(rowCourse)) {
+                        unfoundCourses.push(rowCourse)
+                    }
                 }
             }
             
-            // Calculate averages for each field strength
+            // Calculate averages for each course history
             //     Note: We use difference of sg_avg_for_difficulty_level - sg_average_overall
             //           to adjust for player strength
-            fieldStrengthData = {
-                sgEasy: Number((calculateAverage(fieldStrength.easy.total, fieldStrength.easy.count) - avgRoundDataN.sgTotN).toFixed(2)),
-                sgEasyN: Number(fieldStrength.easy.count),
-                sgMed: Number((calculateAverage(fieldStrength.medium.total, fieldStrength.medium.count) - avgRoundDataN.sgTotN).toFixed(2)),
-                sgMedN: Number(fieldStrength.medium.count),
-                sgHard: Number((calculateAverage(fieldStrength.hard.total, fieldStrength.hard.count) - avgRoundDataN.sgTotN).toFixed(2)),
-                sgHardN: Number(fieldStrength.hard.count),
+            courseDifficultyData = {
+                sgEasy: Number((calculateAverage(courseDifficulty.easy.total, courseDifficulty.easy.count) - avgRoundDataN.sgTotN).toFixed(2)),
+                sgEasyN: Number(courseDifficulty.easy.count),
+                sgMed: Number((calculateAverage(courseDifficulty.medium.total, courseDifficulty.medium.count) - avgRoundDataN.sgTotN).toFixed(2)),
+                sgMedN: Number(courseDifficulty.medium.count),
+                sgHard: Number((calculateAverage(courseDifficulty.hard.total, courseDifficulty.hard.count) - avgRoundDataN.sgTotN).toFixed(2)),
+                sgHardN: Number(courseDifficulty.hard.count),
             };
 
             // Adjusts the above by neutralizing players with less rounds towards 0
@@ -3321,32 +3334,36 @@ function loadCourseDifficultySheet() {
                 }
             }
 
-            fieldStrengthData.sgEasyAdj = powerAdjust(fieldStrengthData.sgEasy, fieldStrengthData.sgEasyN, avgRoundDataN.sgTotN);
-            fieldStrengthData.sgMedAdj = powerAdjust(fieldStrengthData.sgMed, fieldStrengthData.sgMedN, avgRoundDataN.sgTotN);
-            fieldStrengthData.sgHardAdj = powerAdjust(fieldStrengthData.sgHard, fieldStrengthData.sgHardN, avgRoundDataN.sgTotN);
+            courseDifficultyData.sgEasyAdj = powerAdjust(courseDifficultyData.sgEasy, courseDifficultyData.sgEasyN, avgRoundDataN.sgTotN);
+            courseDifficultyData.sgMedAdj = powerAdjust(courseDifficultyData.sgMed, courseDifficultyData.sgMedN, avgRoundDataN.sgTotN);
+            courseDifficultyData.sgHardAdj = powerAdjust(courseDifficultyData.sgHard, courseDifficultyData.sgHardN, avgRoundDataN.sgTotN);
 
             // Set to zero if player has no rounds at this difficulty
-            if(fieldStrengthData.sgEasyN == 0) {
-                fieldStrengthData.sgEasy = null;
+            if(courseDifficultyData.sgEasyN == 0) {
+                courseDifficultyData.sgEasy = null;
             }
-            if(fieldStrengthData.sgMedN == 0) {
-                fieldStrengthData.sgMed = null;
+            if(courseDifficultyData.sgMedN == 0) {
+                courseDifficultyData.sgMed = null;
             }
-            if(fieldStrengthData.sgHardN == 0) {
-                fieldStrengthData.sgHard = null;
+            if(courseDifficultyData.sgHardN == 0) {
+                courseDifficultyData.sgHard = null;
             } 
 
             let finalData = {
                 player,
                 fdSalary,
                 dkSalary,
-                ...fieldStrengthData,
+                ...courseDifficultyData,
                 ...avgRoundDataN,
             }
 
             dataTableData.push(finalData);
         }
 
+        console.log("Unfound Courses: ");
+        console.log(unfoundCourses);
+
+        console.log("Data Table Data: ");
         console.log(dataTableData);
 
         const columnsWithColorScale = ['sgEasy', 'sgMed', 'sgHard', 'sgTotN', 'sgEasyAdj', 'sgMedAdj', 'sgHardAdj'];
@@ -3433,7 +3450,7 @@ function loadCourseDifficultySheet() {
 }
 
 function onFilterTextBoxChangedCourseDifficulty() {
-    gridApiFieldStrength.setGridOption(
+    gridApiCourseDifficulty.setGridOption(
         'quickFilterText',
         document.getElementById('filter-text-box-course-difficulty').value
       );

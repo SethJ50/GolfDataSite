@@ -567,6 +567,11 @@ div.dt-button-collection {
     margin-bottom: 2px;
 }
 
+#fsDescr2 {
+    margin-left: 24px;
+    margin-bottom: 7px;
+}
+
 #cdHeader {
     margin-left: 8px;
     margin-bottom: 5px;
@@ -577,7 +582,7 @@ div.dt-button-collection {
     margin-bottom: 2px;
 }
 
-#fsDescr2 {
+#cdDescr2 {
     margin-left: 24px;
     margin-bottom: 7px;
 }
@@ -644,6 +649,14 @@ div.dt-button-collection {
     margin-bottom: 10px;
 }
 
+#courseDifficultySheet {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 975px;
+    height: 700px;
+}
+
 .pageHeader {
     font-size: 25px;
     font-family: 'Roboto', sans-serif;
@@ -700,6 +713,9 @@ div.dt-button-collection {
     filter: brightness(0.7);
 }
 
+#courseDifficultySheet .ag-row:hover {
+    filter: brightness(0.7);
+}
 
 #flagSheet{
     width: 95%;
