@@ -687,7 +687,7 @@ app.get('/get/modelSheet/', async (req, res) => {
     // Perform subsequent queries using the filtered player names
     const tournamentRowResults = await TournamentRow.find({$or: [{player: {$in: convertedPlayerNamesTournament}}, {player: {$in: playerNames}}], 'Round': {$ne: 'Event'}});
     const pgatourResults = await pgatour.find({ player: { $in: convertedPlayerNamesPga } });
-    const courseHistoryResults = await courseHistory.find({ player: { $in: playerNames } });
+    const courseHistoryResults = await courseHistory.find({ player: { $in: convertedPlayerNamesPga } });
     const fieldStrengthResults = await fieldStrength.find({});
 
     tournamentRowResults.forEach(result => {
@@ -770,7 +770,7 @@ app.get('/get/cheatSheet/', async (req, res) => {
         }
       });
 
-      const courseHistoryResults = await courseHistory.find({ player: { $in: playerNames } });
+      const courseHistoryResults = await courseHistory.find({ player: { $in: convertedPlayerNamesPga } });
 
       courseHistoryResults.forEach(result => {
         if (TO_FD[result.player]) {
