@@ -532,9 +532,12 @@ app.get('/get/profOverview/:PLAYER', async (req, res) => {
     }
   });
 
+  const salariesResults = await salaries.find({});
+
   const combinedResults = {
     tournaments: tournamentRowResults,
-    pgatour: pgatourResults
+    pgatour: pgatourResults,
+    salaries: salariesResults
   }
 
   res.json(combinedResults);

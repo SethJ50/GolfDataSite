@@ -135,6 +135,21 @@ tr.tableBodyRow:hover {
     text-align: center;
 }
 
+#profSalaryDiv {
+    width: 200px;
+    margin: auto;
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: black;
+    border: 1px solid rgb(170, 170, 170);
+    border-radius: 5px;
+    background-color: white;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
 #mainBodyGolferProfiles {
     display: inline;
     width: 250px;

@@ -1158,6 +1158,7 @@ let ovrProfGridApi;
 function loadProfOverview(){
     let profOvrTbl = document.getElementById("overallStatsProfile");
     let currGolfer = document.getElementById('playerNameProf');
+    let salaryDiv = document.getElementById("profSalaryDiv");
 
     let url = "/get/profOverview/" + currGolfer.value;
 
@@ -1166,6 +1167,27 @@ function loadProfOverview(){
         return response.json();
     })
     .then((jsonData) => {
+
+        salaryDiv.innerText = "";
+
+        console.log(jsonData.salaries.length);
+
+        // Populate Salary
+        for(let i = 0; i < jsonData.salaries.length; i++) {
+            let currRec = jsonData.salaries[i];
+            let currPlayer = currRec.player;
+            let fdSalary = currRec.fdSalary;
+            let dkSalary = currRec.dkSalary;
+            
+            if(currPlayer == currGolfer.value) {
+                salaryDiv.innerText = "";
+                salaryDiv.innerText = "FanDuel: $" + fdSalary + "\n" + "DraftKings: $" + dkSalary;
+                break;
+            }
+        }
+
+        console.log(jsonData.salaries[0].player);
+
 
         let lastN = 50; // IMPORTANT - can change this!!!
 
@@ -1245,7 +1267,6 @@ function loadProfOverview(){
         function getColorFromScale2(value, stat){
             let dom;
             if(stat == 'sgPutt' | stat == 'sgArg' | stat == 'sgApp' | stat == 'sgOtt'){
-                console.log('main');
                 dom = [-1.5,0,1.5];
             } else if (stat == 'sgT2G'){
                 dom = [-2, 0, 2];
@@ -1271,7 +1292,7 @@ function loadProfOverview(){
                     let col;
 
                     if(rankValue == '-'){
-                        col = getColorFromScale2(statValue, statName);
+                        col = getColorFromScale2(statValue, stat);
                     } else if (rankValue !== null && rankValue !== undefined){
                         col = getColorFromScale(rankValue);
                     } else {
@@ -1322,17 +1343,18 @@ function loadProfOverview(){
             bonusPutt: 'BonusPutt',
         };
 
-        if (pgatourData == null){ // Player doesn't have PGA Tour data
+        if (pgatourData.sgPutt == null){ // Player doesn't have PGA Tour data
             // Add SG averages to the table
             const noPgaStats = ['sgPutt', 'sgArg', 'sgApp', 'sgOtt', 'sgT2G', 'sgTot'];
-            noPgaStats.forEach(stat => {
+            for(let i in noPgaStats) {
+                let stat = noPgaStats[i];
                 rowData.push({
                     statName: statMappings[stat],
                     value: avgRoundData[stat],
                     rank: '-',
                     valueColor: getColorFromScale2(avgRoundData[stat], stat)
                 });
-            });
+            }
         } else {
             // Add SG averages and PGA Tour stats to the table
             for (let stat in pgatourData) {
@@ -2801,7 +2823,8 @@ function onModelInputChange() {
         'sgPutt50input', 'sgApp50input', 'sgT2G50input', 'sgArg50input', 'sgOtt50input', 'sgTot50input',
         'drDist', 'bob', 'sandSave', 'par3scoring', 'par5scoring', 'prox', 'app50_75', 'app100_125', 'app150_175',
         'app200_up', 'bonusPutt', 'drAcc', 'bogAvd', 'scrambling', 'par4scoring', 'gir', 'roughProx', 'app75_100',
-        'app125_150', 'app175_200', 'puttingBob', 'threePuttAvd', 'easyField', 'mediumField', 'hardField', 'courseHistory'
+        'app125_150', 'app175_200', 'puttingBob', 'threePuttAvd', 'easyField', 'mediumField', 'hardField',
+        'easyCourse', 'mediumCourse','hardCourse', 'courseHistory'
     ];
 
     // Sum of all input values
