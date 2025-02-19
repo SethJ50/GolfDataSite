@@ -44,7 +44,7 @@ const FD_TO_PGA = {
 const FD_TO_TOURNAMENT = {
   'Robert Macintyre': 'Robert MacIntyre',
   'Seonghyeon Kim': 'S.H. Kim',
-  'Nicolai Højgaard': 'Nicolai Hojgaard',
+  'Nicolai Hojgaard': 'Nicolai Højgaard',
   'Thorbjørn Olesen' : 'Thorbjorn Olesen',
   'Jordan L. Smith': 'Jordan Smith',
   'Rasmus Hojgaard': 'Rasmus Højgaard',
