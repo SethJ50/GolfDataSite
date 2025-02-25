@@ -27,7 +27,8 @@ const TO_FD = {
   'Rasmus Højgaard': 'Rasmus Hojgaard',
   'Ludvig Åberg': 'Ludvig Aberg',
   'Nico Echavarria':'Nicolas Echavarria',
-  'Frankie Capan III':'Frankie Capan'
+  'Frankie Capan III':'Frankie Capan',
+  'Niklas Nørgaard': 'Niklas Norgaard Moller'
 };
 
 const FD_TO_PGA = {
@@ -39,6 +40,7 @@ const FD_TO_PGA = {
   'Rasmus Hojgaard': 'Rasmus Højgaard',
   'Ludvig Aberg': 'Ludvig Åberg',
   'Nicolas Echavarria':'Nico Echavarria',
+  'Niklas Norgaard Moller': 'Niklas Nørgaard',
 };
 
 const FD_TO_TOURNAMENT = {
@@ -50,7 +52,8 @@ const FD_TO_TOURNAMENT = {
   'Rasmus Hojgaard': 'Rasmus Højgaard',
   'Ludvig Aberg': 'Ludvig Åberg',
   'Nicolas Echavarria':'Nico Echavarria',
-  'Frankie Capan':'Frankie Capan III'
+  'Frankie Capan':'Frankie Capan III',
+  'Niklas Norgaard Moller': 'Niklas Nørgaard',
 };
 
 // DataGolf course table to tournament naming
