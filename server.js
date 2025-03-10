@@ -65,7 +65,7 @@ const DG_TO_TOURNAMENT = {
   'TPC San Antonio (Oaks Course)':'TPC San Antonio',
   'TPC Sawgrass (THE PLAYERS Stadium Course)':'TPC Sawgrass',
   'TPC Scottsdale (Stadium Course)':'TPC Scottsdale',
-  "Arnold Palmer's Bay Hill Club &amp; Lodge":"Bay Hill Club",
+  "Arnold Palmer's Bay Hill Club &amp; Lodge":"Arnold Palmer's Bay Hill Club & Lodge",
   'PGA National Resort (The Champion - Par 71)' : 'PGA National Resort (The Champion Course)' 
 };
 
