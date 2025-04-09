@@ -297,13 +297,13 @@ tr.profBodyRow:hover {
 }
 
 #overallStatsProfile {
-    height: 570px;
+    height: 600px;
     width: 220px;
     margin-left: auto;
     margin-right: auto;
     margin-bottom: auto;
     overflow-x: hidden;
-    overflow-y: hidden;
+    overflow-y: none;
 }
 
 #golferProfTable .ag-row:hover {
