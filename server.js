@@ -47,7 +47,7 @@ const FD_TO_TOURNAMENT = {
   'Robert Macintyre': 'Robert MacIntyre',
   'Seonghyeon Kim': 'S.H. Kim',
   'Nicolai Hojgaard': 'Nicolai Højgaard',
-  'Thorbjørn Olesen' : 'Thorbjorn Olesen',
+  'Thorbjorn Olesen' : 'Thorbjørn Olesen',
   'Jordan L. Smith': 'Jordan Smith',
   'Rasmus Hojgaard': 'Rasmus Højgaard',
   'Ludvig Aberg': 'Ludvig Åberg',
