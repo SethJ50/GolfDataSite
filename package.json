@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.5",
+    "multer": "^2.0.2",
+    "xlsx": "^0.18.5"
+  }
+}

@@ -881,7 +881,7 @@ app.get('/get/courseDifficultySheet', async (req, res) => {
   }
 });
 
-app.listen(port, () =>
+app.listen(port, '0.0.0.0', () =>
 console.log(
-    `Example app listening at http://127.0.0.1:${port}` // Change this ip address
+    `Example app listening at http://0.0.0.0:${port}` // Change this ip address
 ));
